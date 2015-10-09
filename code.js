@@ -61,5 +61,17 @@ module.exports = {
 				return console.log(err);
 			}
 		});
+	},
+
+	sendCards: function(res){
+		fs.readdir(p, function(err, filenames) {
+	        var javaCards = [];
+	        filenames.filter(function (file) {
+	            return fs.statSync(path.join(p, file)).isDirectory();
+	        }).forEach(function (file) {
+	            javaCards.push({cardName : file});
+	        });
+	        res.send(JSON.stringify(javaCards));
+	    });
 	}
 };

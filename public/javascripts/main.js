@@ -39,33 +39,22 @@ $(function() {
     jqconsole.RegisterMatching('[', ']', 'bracket');
     // Handle a command.
     var handler = function(command) {
-      console.log(command);
       if (command) {
+        console.log(command);
         try {
-          jqconsole.Write('==> ' + window.eval(command) + '\n');
+          sendCommand(command, handler);
         } catch (e) {
           jqconsole.Write('ERROR: ' + e.message + '\n');
         }
+      } else {
+        jqconsole.Prompt(true, handler);
       }
-      jqconsole.Prompt(true, handler, function(command) {
-        // Continue line if can't compile the command.
-        try {
-          Function(command);
-        } catch (e) {
-          if (/[\[\{\(]$/.test(command)) {
-            return 1;
-          } else {
-            return 0;
-          }
-        }
-        return false;
-      });
+      
     };
 
 // Initiate the first prompt.
 handler();
 });
-
 
 function selectCard()
 {
@@ -86,6 +75,38 @@ function selectCard()
 
 }
 
+function sendCommand(input, handler){
+
+    var words = input.split(" ");
+    switch(words[0]){
+        case "ls":
+            ls(handler);
+            break;
+        case "load":
+            break;
+        default:
+            res.end();
+    };
+
+    
+}
+
+function ls(handler){
+    $.ajax({
+        type: "GET",
+        url: "/ls",
+        success: function(data){
+            console.log("ss");
+            var opts = $.parseJSON(data);
+            $.each(opts, function(i, d) {
+
+                jqconsole.Write(d.cardName + " ");
+           });
+            jqconsole.Write('\n'); 
+            jqconsole.Prompt(true, handler);
+        }
+    });
+}
 //used by EEPROM.js (Recover.RecoverAll) to recover backed-up EEPROM to server's EEPROM
 //Planned design will see this function restore to a local EEPROM (maybe)
 function recoverAll(cardName, pkID, values, callback)
@@ -177,5 +198,5 @@ function newCard()
 
 function evalCommnad(string)
 {
-    
+
 }

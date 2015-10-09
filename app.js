@@ -4,7 +4,8 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var tools = require('./code.js')
+var tools = require('./code.js');
+var inputMgr = require('./inputmgr.js');
 var app = express();
 
 // view engine setup
@@ -44,6 +45,9 @@ app.get('/getcard', function(req, res) {
 
 });
 
+app.get('/ls', function(req, res){
+    tools.sendCards(res);
+});
 //reads synchronously then return result - currently solution may be slow
 app.get('/backupall', function(req, res){
     var fs = require('fs');
