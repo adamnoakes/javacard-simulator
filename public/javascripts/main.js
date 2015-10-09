@@ -81,14 +81,46 @@ function sendCommand(input, handler){
     switch(words[0]){
         case "ls":
             ls(handler);
-            break;
+            break;            
         case "load":
+            loadCard(handler);
             break;
         default:
-            res.end();
+            sendAPDU(words, handler);
+            break;
     };
 
     
+}
+
+function loadCard(handler){
+    $.ajax({
+        type: "GET",
+        url: "/load",
+        success: function(data){
+            console.log(data);
+            if(data.result){
+
+            }
+            jqconsole.Write("Successfully loaded: " + data.cardName);
+            jqconsole.Write('\n'); 
+            jqconsole.Prompt(true, handler);
+        }
+    });
+}
+
+function sendAPDU(APDU, handler){
+    console.log(APDU);
+    $.ajax({
+        type: "POST",
+        url: "/sendAPDU",
+        data: { 'APDU': APDU },
+        success: function(data) { 
+            jqconsole.Write("==> " + data.APDU); 
+            jqconsole.Write('\n'); 
+            jqconsole.Prompt(true, handler);
+        }
+    });
 }
 
 function ls(handler){

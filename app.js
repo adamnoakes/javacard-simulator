@@ -6,6 +6,8 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var tools = require('./code.js');
 var inputMgr = require('./inputmgr.js');
+var appletMgrJS = require('./appletmgr.js');
+var javacard;
 var app = express();
 
 // view engine setup
@@ -47,6 +49,22 @@ app.get('/getcard', function(req, res) {
 
 app.get('/ls', function(req, res){
     tools.sendCards(res);
+});
+
+app.get('/load', function(req, res){
+    //needs to actually load from file
+    javacard = new appletMgrJS.JavaCard();
+    res.send({'result': true, 'cardName': javacard.cardName});
+});
+
+app.post('/sendapdu', function(req, res){
+    if(javacard == null){
+        res.send({'APDU': "0x6A82"});
+    } else {
+        var response = javacard.processAPDU(req.body["APDU[]"]);
+        console.log(javacard.sAID);
+        res.send({'APDU': response});
+    }
 });
 //reads synchronously then return result - currently solution may be slow
 app.get('/backupall', function(req, res){
