@@ -13,6 +13,60 @@ $(function(){
     newCard();       
 });
 
+$(function() {
+    // Creating the console.
+    var header = 'Welcome to the Java Card online simulator!\n' +
+                 'Adam Noakes - University of Southampton\n';
+    window.jqconsole = $('#console').jqconsole(header, 'Java Card> ');
+
+    // Abort prompt on Ctrl+Z.
+    jqconsole.RegisterShortcut('Z', function() {
+      jqconsole.AbortPrompt();
+      handler();
+    });
+    // Move to line start Ctrl+A.
+    jqconsole.RegisterShortcut('A', function() {
+      jqconsole.MoveToStart();
+      handler();
+    });
+    // Move to line end Ctrl+E.
+    jqconsole.RegisterShortcut('E', function() {
+      jqconsole.MoveToEnd();
+      handler();
+    });
+    jqconsole.RegisterMatching('{', '}', 'brace');
+    jqconsole.RegisterMatching('(', ')', 'paran');
+    jqconsole.RegisterMatching('[', ']', 'bracket');
+    // Handle a command.
+    var handler = function(command) {
+      console.log(command);
+      if (command) {
+        try {
+          jqconsole.Write('==> ' + window.eval(command) + '\n');
+        } catch (e) {
+          jqconsole.Write('ERROR: ' + e.message + '\n');
+        }
+      }
+      jqconsole.Prompt(true, handler, function(command) {
+        // Continue line if can't compile the command.
+        try {
+          Function(command);
+        } catch (e) {
+          if (/[\[\{\(]$/.test(command)) {
+            return 1;
+          } else {
+            return 0;
+          }
+        }
+        return false;
+      });
+    };
+
+// Initiate the first prompt.
+handler();
+});
+
+
 function selectCard()
 {
     var cardName = $("#availableCards").val();
@@ -118,4 +172,10 @@ function newCard()
            });
         }
     });
+}
+
+
+function evalCommnad(string)
+{
+    
 }
