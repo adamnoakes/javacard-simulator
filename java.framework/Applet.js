@@ -51,11 +51,13 @@ function Applet() {
         if (str.length == 1) { str = "0" + str; };
         return str;
     }
-    
-    this.selectingApplet = function() {
+    /*
+     * @adam May never be used? Removing select_statement_flag
+     */
+    /*this.selectingApplet = function() {
         //03
         return select_statement_flag;
-    }
+    }*/
 
     this.deselect = function() {
         //04

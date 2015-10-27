@@ -16,6 +16,24 @@ function packageItem(packageIndex, AID){
 	this.AID = AID;
 }
 
+var jcPackage = {
+    currentComponent: null;,
+    
+};
+var eeprom = {
+    packages: undefined,
+    init: function() {
+
+    },
+
+    addPackage: function(){
+
+    }, 
+
+    addComponent: function(){
+
+    },
+};
 function EEPROM() { 
 	this.heap = [];
 	this.packages = [];
@@ -30,16 +48,6 @@ function EEPROM() {
 		} else {
 		    transaction_buffer.push(value);
 		}
-	}
-
-	this.getHeapSize = function(){
-		return heap.length;
-	}
-	this.writePackage = function(capfile){
-		this.packages[this.packages.length] = capfile;
-	}
-	this.getPackage = function(index){
-		return this.packages[index];
 	}
 }
 

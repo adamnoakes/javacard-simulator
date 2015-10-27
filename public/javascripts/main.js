@@ -76,7 +76,7 @@ function selectCard()
 }
 
 function sendCommand(input, handler){
-
+    
     var words = input.split(" ");
     switch(words[0]){
         case "ls":
@@ -86,7 +86,11 @@ function sendCommand(input, handler){
             loadCard(handler);
             break;
         default:
-            sendAPDU(words, handler);
+            var lines = input.split(";");
+            for(i=0; i<lines.length; i++){
+                lines[i] = lines[i].split(" ");
+            }
+            sendAPDU(lines, handler);
             break;
     };
 
@@ -110,11 +114,17 @@ function loadCard(handler){
 }
 
 function sendAPDU(APDU, handler){
-    console.log(APDU);
+    for(i=0; i<APDU.length; i++){
+        for(j=0; j<APDU[i].length; j++){
+            APDU[i][j] = parseInt(APDU[i][j], 16);
+        }
+    }
     $.ajax({
         type: "POST",
         url: "/sendAPDU",
-        data: { 'APDU': APDU },
+        dataType: 'json',
+        contentType: 'application/json',
+        data: JSON.stringify({"APDU": APDU}),
         success: function(data) { 
             jqconsole.Write("==> " + data.APDU); 
             jqconsole.Write('\n'); 

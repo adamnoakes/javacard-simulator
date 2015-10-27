@@ -24,6 +24,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function(err, req, res, next) {
+    res.end();
             res.status(err.status || 500);
             console.log(here);
             console.log(err.message);
@@ -61,8 +62,17 @@ app.post('/sendapdu', function(req, res){
     if(javacard == null){
         res.send({'APDU': "0x6A82"});
     } else {
-        var response = javacard.processAPDU(req.body["APDU[]"]);
-        console.log(javacard.sAID);
+        var response = undefined;
+        console.log(req.body.APDU);
+        for(i=0; i<req.body.APDU.length; i++){
+            if(req.body.APDU[i][0] != null){
+                response = javacard.processAPDU(req.body.APDU[i]);
+                console.log("response: " + response);
+                if(response != "0x9000"){
+                    break;
+                }
+            }
+        }
         res.send({'APDU': response});
     }
 });
