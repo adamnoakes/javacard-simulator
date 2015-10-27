@@ -45,13 +45,15 @@ function EEPROM() {
     this.getPackage = function(AID){
         console.log("Given Package: ");
         console.log(AID);
+        console.log(this.packages.length);
+        this.packages[0].COMPONENT_Header.AID.join() 
+        AID.join();
+        //return this.packages[0];
+        //return false;
         //find the package with given AID and return it.
-        for(i=0; i< this.packages.length; i++){
-            console.log("Package: " + i);
-            console.log(this.packages[i].COMPONENT_Header.AID);
-            if(this.packages[i].COMPONENT_Header.AID.join() === AID.join()){
-                console.log("match");
-                return this.packages[i];
+        for(var i = 0; i < 1; i++){
+            if(this.packages[0].COMPONENT_Header.AID.join() === AID.join()){
+                return this.packages[0];
             }
         }
     }

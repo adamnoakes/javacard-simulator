@@ -2,6 +2,7 @@ var eepromJS = require('./eeprom2.js');
 var apduJS = require('./java.framework/APDU.js');
 var jcvmJS = require('./jcvm.js');
 var capJS = require('./cap.js');
+var installJS = require('./installer.js');
 
 function JavaCard(){
     this.cardName = "Calculator";
@@ -21,8 +22,8 @@ function JavaCard(){
     this.appletInstance = null;
     this.selectedAID = [];  //selected applet id
     this.installation_failed = false;
-    this.currentComponent;
-    this.tempComponents = [];
+    this.installer = new installJS.Installer(this.EEPROM);;//new installJS.Installer();;
+
 
     this.processAPDU = function(buffer){
         var apdu = new apduJS.APDU();
@@ -38,7 +39,6 @@ function JavaCard(){
         var P1 = buffer[2];     //@adam parameter 1
         var P2 = buffer[3];     //@adam parameter 2
         var LC = buffer[4];     //@adam length of command data
-        
         var CAP;
 
         var found = false;
@@ -50,110 +50,15 @@ function JavaCard(){
         }
         console.log("selectedAID: " + selectedAID + " CLA: " + CLA + " INS: " + INS);
         if((selectedAID.join() === installerAID.join()) && (CLA == 0x80)){
-            console.log("ready to install cap file");
-            switch (INS){
-                case 0xB0:
-                    newPackage();
-                    console.log("new package"); 
-                    response = "0x9000"
-                    break;
-                case 0xB2: //New Component
-                console.log("new compoent");
-                    if (!this.installation_failed) {//replace with installation failed
-                        this.currentComponent = P1;
-                        this.tempComponents[this.currentComponent] = [];
-                        console.log("set currentComponent");
-                        //AppletManager.CurrentComponent = P1;
-                        //PageMethods.startComponent(cardname, P1);
-                        console.log("new compoent");
-                        response = "0x9000";
-                    } else { response = "0x6421"; }
-                    break;
-                case 0xB4: //Component Data
-                    var data = buffer.slice(5, 5 + LC);
-                    if (!this.installation_failed) {
-                        this.asyncState = false;
-                        console.log("component data: " + data);
-                        //why get current component from variable and not from parameter?
-                        //PageMethods.writeComponent(cardname, AppletManager.CurrentComponent, data, Result_Method);
-                        //response = Result;
-                        //this.tempComponents[this.currentComponent] = [null];
-                        this.tempComponents[this.currentComponent].push.apply(this.tempComponents[this.currentComponent], data);
-                        console.log("saved data");
-                        response = "0x9000";
-                        //if (response == 0) { gSW = "0x9000" } else { gSW = "0x" + response.toString(16); PageMethods.abortPackage(cardname); installation_failed = true;};
-                    } else { response = "0x6421"; };
-                    break;
-                case 0xBC: //End Component
-                    this.currentComponent = null;
-                    if (!this.installation_failed) {
-                        response = "0x9000";
-                    } else { response = "0x6421";}
-                    break;
-                case 0xBA: //End Package (write package)
-                    //gcardname = cardname;
-                    if (!this.installation_failed) {
-                        this.EEPROM.writePackage(new capJS.CAPfile(this.tempComponents));
-                        //PageMethods.endPackage(gcardname, Result_Method);
-                        //gpID = Number(Result);
-                        //clear tempcomponents
-                        //var CAP = getCAP(cardname, gpID);
-
-                        //setupStaticFields(CAP, gpID);
-                        response = "0x9000";
-                    } else { response = "0x6421";}
-
-                    
-                    break;
-                case 0xB8:
-                    //not sure why we need this yet
-                    var AIDLength = buffer[5];
-                    var createAID = buffer.slice(6, 6+AIDLength);
-                    //get the cap 
-                    var packageToCreate = this.EEPROM.getPackage(createAID);
-                    //if the package does not exists the we can't create an instance --> fail.
-                    if(!packageToCreate){
-                        return "0x6443";
-                    }
-                    console.log("Creating package: ");
-                    console.log(packageToCreate);
-
-                    //For every applet in the package, we are going to create an instance of it
-                    //normally only one applet
-                    for(i=0; i < packageToCreate.COMPONENT_Applet.applets.length; i++){
-                        install_method_offset = packageToCreate.COMPONENT_Applet[i].install_method_offset;
-                    }
-                    //get applet install method offset
-                    break;
-            }
+            response = this.installer.execute(buffer);
         } 
         //console.log("tempComponents");
         //console.log(this.tempComponents);
         //console.log("Current component: " + this.currentComponent);
 
-
-
-
-
-
-
-
-
-
-
-
         /*
          *Functions
          */
-        function newPackage(){
-            this.currentComponent = null;
-            this.tempComponents = [];
-        }
-
-        function newComponent(i){
-            this.currentComponent = i;
-        }
-
         function selectApplet(){
             this.transient_data = []; //reset transient data
             this.select_statement_flag = 1;
@@ -180,6 +85,10 @@ function JavaCard(){
             if (installer) {
                 this.selectedAID = installerAID;
                 console.log("installerAID " + installerAID + "selectedAID: " + selectedAID + ".");
+                //create installer applet and send it reference to the EEPROM so that it can program the card :-) <-- didn't work moving that code up to the top
+                console.log("E@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+                console.log(this.EEPROM);
+                
                 
                 //could add help message to return (e.g. selected AID is ...)
 
