@@ -19,7 +19,7 @@ function JavaCard(){
     this.transient_data = [];
     this.select_statement_flag = 0;
     this.appletInstance = null;
-    this.sAID = "";  //selected applet id
+    this.selectedAID = [];  //selected applet id
     this.installation_failed = false;
     this.currentComponent;
     this.tempComponents = [];
@@ -42,14 +42,14 @@ function JavaCard(){
         var CAP;
 
         var found = false;
-        var iapp = [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01];
+        var installerAID = [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01];
 
         //@adam if select applet command
         if ((CLA == 0) && (INS == 0xA4) && (P1 == 0x04) && (P2 == 0x00)) {
             selectApplet();
         }
-        console.log("sAID: " + sAID + " CLA: " + CLA + " INS: " + INS);
-        if((sAID == "A0 00 00 00 62 03 01 08 01") && (CLA == 0x80)){
+        console.log("selectedAID: " + selectedAID + " CLA: " + CLA + " INS: " + INS);
+        if((selectedAID.join() === installerAID.join()) && (CLA == 0x80)){
             console.log("ready to install cap file");
             switch (INS){
                 case 0xB0:
@@ -94,10 +94,9 @@ function JavaCard(){
                     //gcardname = cardname;
                     if (!this.installation_failed) {
                         this.EEPROM.writePackage(new capJS.CAPfile(this.tempComponents));
-                        console.log(this.EEPROM.getPackage(0));
                         //PageMethods.endPackage(gcardname, Result_Method);
                         //gpID = Number(Result);
-
+                        //clear tempcomponents
                         //var CAP = getCAP(cardname, gpID);
 
                         //setupStaticFields(CAP, gpID);
@@ -106,11 +105,31 @@ function JavaCard(){
 
                     
                     break;
+                case 0xB8:
+                    //not sure why we need this yet
+                    var AIDLength = buffer[5];
+                    var createAID = buffer.slice(6, 6+AIDLength);
+                    //get the cap 
+                    var packageToCreate = this.EEPROM.getPackage(createAID);
+                    //if the package does not exists the we can't create an instance --> fail.
+                    if(!packageToCreate){
+                        return "0x6443";
+                    }
+                    console.log("Creating package: ");
+                    console.log(packageToCreate);
+
+                    //For every applet in the package, we are going to create an instance of it
+                    //normally only one applet
+                    for(i=0; i < packageToCreate.COMPONENT_Applet.applets.length; i++){
+                        install_method_offset = packageToCreate.COMPONENT_Applet[i].install_method_offset;
+                    }
+                    //get applet install method offset
+                    break;
             }
-        }
-        console.log("tempComponents");
-        console.log(this.tempComponents);
-        console.log("Current component: " + this.currentComponent);
+        } 
+        //console.log("tempComponents");
+        //console.log(this.tempComponents);
+        //console.log("Current component: " + this.currentComponent);
 
 
 
@@ -140,7 +159,7 @@ function JavaCard(){
             this.select_statement_flag = 1;
 
             //delect curent applet
-            this.sAID = ""; //not the way to deselect, see code below
+            this.selectedAID = []; //not the way to deselect, see code below
             this.appletInstance = null;// not the way to delect see code below
             /*if (AppletManager.SelectedAppletIndex >= 0) {
                 
@@ -154,36 +173,34 @@ function JavaCard(){
                     executeBytecode(CAP, startcode, params, 3, gRef);
                 }
             }*/
-            var installer = true;//@adam checks if command data is installer appler
-            for (var j = 0; j < LC; j++) {if (buffer[5 + j] != iapp[j]) { installer = false;} }
+            var installer = true;//@adam checks if command data is installer appler //TODO can probably replace with SLICE to get AID
+            for (var j = 0; j < LC; j++) {if (buffer[5 + j] != installerAID[j]) { installer = false;} }
                 console.log(installer);
             //@if above is true then select the installer applet
             if (installer) {
-                for (var j = 0; j < iapp.length - 1; j++) {
-                    this.sAID = this.sAID + addpad(iapp[j]) + " ";//aAid = 
-                    console.log("iapp[j] " + iapp[j] + "sAID: " + sAID + ".");
-                }
-                this.sAID = this.sAID + addpad(iapp[j]);
-                console.log("iapp[j] " + iapp[j] + "sAID: " + sAID + ".");
+                this.selectedAID = installerAID;
+                console.log("installerAID " + installerAID + "selectedAID: " + selectedAID + ".");
                 
                 //could add help message to return (e.g. selected AID is ...)
 
                 found = true;
             } else {
+                //TODO convert to integer storage
+                /*
                 for (var j = 0; j < LC; j++) {
-                    this.sAID = this.sAID + addpad(buffer[5+j]) + " ";
+                    this.selectedAID = this.selectedAID + addpad(buffer[5+j]) + " ";
                 }
                 
                 for (a of this.appletInstances) {
-                    console.log(a.AID + " " + this.sAID.toUpperCase());
-                    if(a.AID == this.sAID.toUpperCase()){
+                    console.log(a.AID + " " + this.selectedAID.toUpperCase());
+                    if(a.AID == this.selectedAID.toUpperCase()){
                         this.appletInstance = a;
                     }
                 }
                 if(this.appletInstance != null){
                     console.log("heap loc: " + this.appletInstance.addressPointer);
                     found = true;
-                }
+                }*/
 
             }
 

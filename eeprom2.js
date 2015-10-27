@@ -38,9 +38,23 @@ function EEPROM() {
 	this.writePackage = function(capfile){
 		this.packages[this.packages.length] = capfile;
 	}
-	this.getPackage = function(index){
+	this.getPackageByIndex = function(index){
 		return this.packages[index];
 	}
+
+    this.getPackage = function(AID){
+        console.log("Given Package: ");
+        console.log(AID);
+        //find the package with given AID and return it.
+        for(i=0; i< this.packages.length; i++){
+            console.log("Package: " + i);
+            console.log(this.packages[i].COMPONENT_Header.AID);
+            if(this.packages[i].COMPONENT_Header.AID.join() === AID.join()){
+                console.log("match");
+                return this.packages[i];
+            }
+        }
+    }
 }
 
 function APISave(lineno, value) {

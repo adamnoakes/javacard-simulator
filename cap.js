@@ -1,4 +1,4 @@
-﻿
+﻿var aux = require('./aux.js');
 function pad(val) {
     var rval;
     if (val.length == 1) {
@@ -74,7 +74,7 @@ function COMPONENT(inputData) {
         switch (Tag) {
             case 1:
                 //Header
-                var AID = "";
+                var AID = [];
                 this.magic = Data[0].toString(16) + Data[1].toString(16) + Data[2].toString(16) + Data[3].toString(16);
                 this.minor_version = Data[4];
                 
@@ -85,7 +85,7 @@ function COMPONENT(inputData) {
                 this.package_majorversion = Data[8];
                 this.AID_length = Data[9];
 
-                for (var i = 0; i < this.AID_length; i++) { AID = AID + Data[10+i].toString(16); };
+                for (var i = 0; i < this.AID_length; i++) { AID[i] = Data[10+i]; };
                 this.AID = AID;
 
                 if ((10 + this.AID_length) < Data.length) {
@@ -94,6 +94,7 @@ function COMPONENT(inputData) {
                     var name = "";
                     for (var i = 0; i < this.package_namelength; i++) { name = name + Data[11 + this.AID_length + i].toString(16); }
                     this.package_name = name;
+                    console.log(this.package_name )
 
                 }
 
