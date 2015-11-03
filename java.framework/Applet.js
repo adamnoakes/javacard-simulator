@@ -1,7 +1,4 @@
-﻿
-
-
-function Applet() {
+﻿function Applet() {
     //Class Token - 03
     this.cls = 3;
     var appAID = "";
@@ -105,8 +102,4 @@ function Applet() {
 
 }
 
-
- 
-
-
-
+exports.Applet = Applet;

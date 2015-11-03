@@ -1,5 +1,7 @@
 var capJS = require('./cap.js');
-function Installer(EEPROM) {
+var jcvm = require('./jcvm.js');
+//later just pass card?
+function Installer(EEPROM, RAM) {
 
 	this.EEPROM = EEPROM;
 	this.INS = 0;
@@ -71,6 +73,7 @@ function Installer(EEPROM) {
     this[0xB8] = function(){
         var AIDLength = this.buffer[5];
         var createAID = this.buffer.slice(6, 6+AIDLength);
+        var params = undefined;
         //get the cap 
         var packageToCreate = this.EEPROM.getPackage(createAID);
         //if the package does not exists the we can't create an instance --> fail.
@@ -83,6 +86,12 @@ function Installer(EEPROM) {
         //normally only one applet
         for(var i=0; i < packageToCreate.COMPONENT_Applet.applets.length; i++){
             install_method_offset = packageToCreate.COMPONENT_Applet.applets[0].install_method_offset;
+            params =[];
+            params[0] = this.buffer;
+            params[1] = AIDLength + 7;
+            params[2] = this.buffer[AIDLength + 1];
+            console.log("attempt jcvm");
+            jcvm.executeBytecode(packageToCreate, install_method_offset, params, 1, -1, this.EEPROM, RAM);
        	}
         return "0x9000";
     };

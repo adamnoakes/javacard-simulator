@@ -19,7 +19,7 @@
      import_count: 0,
      applet_count: undefined,
      custom_count: undefined },
-  COMPONENT_Applet: { Tag: 3, Size: 14, count: 1, applets: [ [ { AID_length: 10, AID: 'a00006231c11', install_method_offset: 20 } ] },
+  COMPONENT_Applet: { Tag: 3, Size: 14, count: 1, applets: [ [ { AID_length: 10, AID: 'a0 0 0 0 62 3 1 c1 1', install_method_offset: 20 } ] },
   COMPONENT_Import: { Tag: 4, Size: 11, count: 1, packages: [ [Object] ] },
   COMPONENT_ConstantPool: 
    { Tag: 5,

@@ -17,23 +17,54 @@ function packageItem(packageIndex, AID){
 }
 
 function EEPROM() { 
-	this.heap = [];
+	this.heap = [0xA0,0x00];
 	this.packages = [];
+    this.objectheap = [];
 	this.appletInstances = [];  //array of type appletInstance
 	this.packageApplets = []; //array of type appletInstance
 	this.packageTables = []; //array of type packageItem
-	this.newHeap = function(value) {
-		if (!transaction_flag) {
-		    asyncState = false;
-		    //PageMethods.newHeap(gcardname, value, HeapRes);
-		    this.heap = value.split(','); //need to check
-		} else {
-		    transaction_buffer.push(value);
-		}
+	this.appendHeap = function(arr) {
+		//if (!transaction_flag) {//need to fix this later, add transaction flag and asyncState etc.
+		    //asyncState = false;
+            if(arr.constructor === Array){//aprox 3 times quicker than instance of array
+                this.heap.push.apply(this.heap, arr);
+            } else {
+                this.heap.push(arr);
+            }
+		    //this.heap = value.split(','); //need to check
+		//} else {
+		//    transaction_buffer.push(value);
+		//}
 	}
+    //api objects?
+    this.appendObjectHeap = function(arr) {
+        //if (!transaction_flag) {//need to fix this later, add transaction flag and asyncState etc.
+            //asyncState = false;
+            if(arr.constructor === Array){//aprox 3 times quicker than instance of array
+                this.objectheap.push.apply(this.heap, arr);
+            } else {
+                this.objectheap.push(arr);
+            }
+            //this.heap = value.split(','); //need to check
+        //} else {
+        //    transaction_buffer.push(value);
+        //}
+    }
+
+    this.setHeapValue = function(pos, value){
+        if(pos > this.heap.length){
+            this.heap[this.heap.length] = value;
+        } else{
+            this.heap[pos] = value;
+        }
+    }
+
+    this.getHeapValue = function(value){
+        return this.heap[value];
+    }
 
 	this.getHeapSize = function(){
-		return heap.length;
+		return this.heap.length;
 	}
 	this.writePackage = function(capfile){
 		this.packages[this.packages.length] = capfile;
@@ -64,84 +95,6 @@ function APISave(lineno, value) {
     PageMethods.APISave(gcardname, lineno, value); // objectheap.length
 }
 
-
-function newAPIObject(lib,cls) {
-   
-    var obj;
-    switch (lib) {
-        case jframework:
-
-            switch (cls) {
-                case 3:
-                    obj = new Applet();
-                    break;
-                case 6:
-                    obj = new AID();
-                    break;
-                case 9:
-                    obj = new OwnerPIN();
-                    break;
-                case 10:
-                    obj = new APDU();
-                    break;
-                default:
-                    break;
-            }
-            break;
-        case jlang:
-            switch (cls) {
-                case 0:
-                    obj = new Object();
-                    break;
-                case 1:
-                    obj = new Throwable();
-                    break;
-                case 2:
-                    obj = new Exception();
-                    break;
-                case 3:
-                    obj = new RuntimeException();
-                    break;
-                case 4:
-                    obj = new IndexOutOfBoundsException();
-                    break;
-                case 5:
-                    obj = new ArrayIndexOutOfBoundsException();
-                    break;
-                case 6:
-                    obj = new NegativeArraySizeException();
-                    break;
-                case 7:
-                    obj = new NullPointerException();
-                    break;
-                case 8:
-                    obj = new ClassCastException();
-                    break;
-                case 9:
-                    obj = new ArithmeticException();
-                    break;
-                case 10:
-                    obj = new SecurityException();
-                    break;
-                case 11:
-                    obj = new ArrayStoreException();
-                    break;
-
-            }
-            break;
-        case jsecurity:
-
-
-            break;
-        case jxcrypto:
-
-
-            break;
-        default:
-    }
-    APISave(objectheap.length, obj.save());
-    objectheap.push(obj);
-}
 
 function newStaticField(pk,val) {
 

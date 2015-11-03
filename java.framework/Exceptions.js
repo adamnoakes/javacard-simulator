@@ -1,7 +1,4 @@
-﻿
-
-
-function CardException() {
+﻿function CardException() {
     var res = 0;
     this.constr = function (reason) { res = reason; }
 
@@ -17,9 +14,6 @@ function CardException() {
     this.restore = function (pars) { res = pars[0]; }
     this.save = function () { return "f04/" + res; }
 }
-
-
-
 
 function CardRuntimeException() {
     var res = 0;
@@ -37,7 +31,6 @@ function CardRuntimeException() {
     this.restore = function (pars) { res = pars[0];}
     this.save = function () { return "f05/" + res; }
 }
-
 
 function PINException() {
     var res = 0;
@@ -60,7 +53,6 @@ function PINException() {
     this.restore = function (pars) { res = pars[0]; }
     this.save = function () { return "f0B/" + res; }
 }
-
 
 function SystemException() {
     var res = 0;

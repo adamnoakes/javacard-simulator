@@ -117,3 +117,5 @@
 
 
 }
+
+exports.AID = AID;

@@ -1,3 +1,5 @@
 auxialry functions
 
 get AID as string from buffer
+
+add padding
