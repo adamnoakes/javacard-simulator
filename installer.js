@@ -1,9 +1,9 @@
 var capJS = require('./cap.js');
 var jcvm = require('./jcvm.js');
 //later just pass card?
-function Installer(EEPROM, RAM) {
+function Installer(javacard) {
 
-	this.EEPROM = EEPROM;
+	this.javacard = javacard;
 	this.INS = 0;
 	this.P1 = 0;
 	this.P2 = 0;
@@ -61,7 +61,7 @@ function Installer(EEPROM, RAM) {
     this[0xBA] = function(){
     	//End Package (write package)
         //gcardname = cardname;
-        this.EEPROM.writePackage(new capJS.CAPfile(this.tempComponents));
+        this.javacard.EEPROM.writePackage(new capJS.CAPfile(this.tempComponents));
         //PageMethods.endPackage(gcardname; Result_Method);
         //gpID = Number(Result);
         //clear tempcomponents
@@ -75,7 +75,7 @@ function Installer(EEPROM, RAM) {
         var createAID = this.buffer.slice(6, 6+AIDLength);
         var params = undefined;
         //get the cap 
-        var packageToCreate = this.EEPROM.getPackage(createAID);
+        var packageToCreate = this.javacard.EEPROM.getPackage(createAID);
         //if the package does not exists the we can't create an instance --> fail.
         if(!packageToCreate){
             return "0x6443";
@@ -84,14 +84,15 @@ function Installer(EEPROM, RAM) {
 
         //For every applet in the package; we are going to create an instance of it
         //normally only one applet
-        for(var i=0; i < packageToCreate.COMPONENT_Applet.applets.length; i++){
+        for(var i=0; i < packageToCreate.COMPONENT_Applet.applets.length; i++){//TODO --> change from 0
             install_method_offset = packageToCreate.COMPONENT_Applet.applets[0].install_method_offset;
+            this.javacard.RAM.installingAppletAID = packageToCreate.COMPONENT_Applet.applets[0].AID;
             params =[];
             params[0] = this.buffer;
             params[1] = AIDLength + 7;
             params[2] = this.buffer[AIDLength + 1];
             console.log("attempt jcvm");
-            jcvm.executeBytecode(packageToCreate, install_method_offset, params, 1, -1, this.EEPROM, RAM);
+            jcvm.executeBytecode(packageToCreate, install_method_offset, params, 1, -1, this.javacard);
        	}
         return "0x9000";
     };

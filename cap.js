@@ -57,8 +57,35 @@ function CAPfile(textArray) {
                 break;
             default:
                 break;
+        }
+    }
+
+    this.getStartCode = function(appletAID, token){
+        var methdiff = 10000;
+        var startcode = 0;
+        //find class
+        for(var j = 0; j < this.COMPONENT_Class.i_count; j++) {
+            var cc = this.COMPONENT_Class.interface_info[j];
+            if(!cc.flag_interface) {
+                if ((cc.super_class_ref1 >= 128) && (cc.super_class_ref2 == 3) && (cc.public_method_table_base + cc.public_method_table_count - 1 >= token) && (cc.public_method_table_base <= token)) {
+                    var tempdiff = cc.public_virtual_method_table[token - cc.public_method_table_base] - this.getInstallOfset(appletAID);
+                    if ((tempdiff < methdiff) && (tempdiff > 0)) {
+                        methdiff = tempdiff;
+                        startcode = cc.public_virtual_method_table[token - cc.public_method_table_base];
+                    }
+                }
+             }
+        }
+        return startcode;
+    }
+
+    this.getInstallOfset = function(appletAID){
+        for(var i=0; i < this.COMPONENT_Applet.applets.length; i++){//TODO --> change from 0
+            if(this.COMPONENT_Applet.applets[i].AID.join() === appletAID.join()){
+                return this.COMPONENT_Applet.applets[0].install_method_offset;
             }
-        } 
+        }
+    }
 };
 
 function COMPONENT(inputData) {
@@ -126,10 +153,12 @@ function COMPONENT(inputData) {
                 if (this.count > 0) {
                     for (var i = 0; i < this.count; i++) {
                         applets[i] = new function () {
-                            var temp = "";
+                            var AID = [];
                             this.AID_length = Data[pointer + 1];
-                            for (var j = 0; j < this.AID_length; j++) { temp = temp + Data[pointer + 2 + j].toString(16)};
-                            this.AID = temp;
+                            for (var j = 0; j < this.AID_length; j++) { AID[j] = Data[pointer + 2 + j]};
+                            this.AID = AID;
+
+
                             this.install_method_offset =
                                 (Data[pointer + this.AID_length + 2] << 8) + Data[pointer + this.AID_length + 3];
                             pointer = pointer + this.AID_length + 3;
@@ -149,9 +178,9 @@ function COMPONENT(inputData) {
                         this.minor_version = Data[1 + pointer];
                         this.major_version = Data[2 + pointer];
                         this.AID_length = Data[3 + pointer];
-                        var AID = "";
+                        var AID = [];
                         for (var j = 0; j < this.AID_length; j++) {
-                            AID = AID + pad(Data[4 + j + pointer].toString(16));
+                            AID[j] = Data[4 + j + pointer];
                         }
                         this.AID = AID;
                         pointer = pointer + this.AID_length + 3;

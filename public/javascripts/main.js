@@ -129,6 +129,13 @@ function sendAPDU(APDU, handler){
             jqconsole.Write("==> " + data.APDU); 
             jqconsole.Write('\n'); 
             jqconsole.Prompt(true, handler);
+        },
+        error: function(xhr, error){
+                jqconsole.Write(error);
+                jqconsole.Write(xhr);
+                console.debug(xhr);
+                jqconsole.Write('\n'); 
+                jqconsole.Prompt(true, handler);
         }
     });
 }

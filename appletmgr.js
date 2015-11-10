@@ -1,12 +1,14 @@
 var eepromJS = require('./eeprom2.js');
 var ramJS = require('./ram.js');
 var apduprocessorJS = require('./processor.js');
+var jcsystemJS = require('./java.framework/JCSystem.js')
 
 function JavaCard(){
     this.cardName = "Calculator";
-    this.EEPROM = new eepromJS.EEPROM();
     this.RAM = new ramJS.RAM();
-    this.APDUProcessor = new apduprocessorJS.APDUProcessor(this.EEPROM, this.RAM);
+    this.EEPROM = new eepromJS.EEPROM(this.RAM);//TODO --> should not have access to RAM, functions should be called through javacard/ processor
+    this.APDUProcessor = new apduprocessorJS.APDUProcessor(this);
+    this.JCSystem = new jcsystemJS.JCSystem(this.EEPROM, this.RAM);
     //this.JCVM = new jcvmJS.JCVM();
     //this.EEPROM.heap = "A10,0,128,128,184,0,0,8,6,221,2,3,4,5,0,0,127,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,0,T0#2#1,T2#1#1,T3#1#1,0,A3,1".split(",");
     //.packages = [];

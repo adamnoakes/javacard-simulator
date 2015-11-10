@@ -6,6 +6,7 @@ function RAM(){
 	this.transaction_buffer = [];
 	this.select_statement_flag = 0;
 	this.installation_failed = false;
+	this.installingAppletAID = undefined;
 }
 
 exports.RAM = RAM;

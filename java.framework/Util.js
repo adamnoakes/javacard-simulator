@@ -1,17 +1,18 @@
-﻿
-function Util() {
+﻿var jcvm = require('../jcvm.js');
+//should be part of processor or ram, used for storing and loading from array
+module.exports = {
     //Class Token - 10
-    //Util.Token = 0x10;
+    //Token = 0x10;
 
-    Util.arrayCompare = function (src, srcOff, dest, destOff, length) {
+    arrayCompare: function(src, srcOff, dest, destOff, length, javacard) {
 
         try {
-            
+
             for (var j = 0; j < length; j++) {
- 
-                if (arrload(src, srcOff + j) > arrload(dest, destOff + j)) {
+
+                if (jcvm.arrload(src, srcOff + j, javacard) > jcvm.arrload(dest, destOff + j, javacard)) {
                     return 1;
-                } else if (arrload(src, srcOff + j) > arrload(dest, destOff + j)) {
+                } else if (jcvm.arrload(src, srcOff + j, javacard) > jcvm.arrload(dest, destOff + j, javacard)) {
                     return -1;
                 }
             }
@@ -20,13 +21,13 @@ function Util() {
             return 2;
         }
         return 0;
-    }; //00 byte
+    }, //00 byte
 
-    Util.arrayCopy = function (src, srcOff, dest, destOff, length) {
+    arrayCopy: function(src, srcOff, dest, destOff, length, javacard) {
         JCSystem.beginTransaction();
-        try{
+        try {
             for (var j = 0; j < length; j++) {
-                arrstore(dest, destOff + j, arrload(src, srcOff + j));
+                jcvm.arrstore(dest, destOff + j, jcvm.arrload(src, srcOff + j), javacard);
             }
         } catch (err) {
             JCSystem.abortTransaction();
@@ -35,25 +36,25 @@ function Util() {
         }
         JCSystem.commitTransaction();
         return 1;
-    }; //01 short
+    }, //01 short
 
-    Util.arrayCopyNonAtomic = function (src, srcOff, dest, destOff, length) {
-        
+    arrayCopyNonAtomic: function(src, srcOff, dest, destOff, length, javacard) {
+
         try {
             for (var j = 0; j < length; j++) {
-                arrstore(dest, destOff + j, arrload(src, srcOff + j));
+                jcvm.arrstore(dest, destOff + j, jcvm.arrload(src, srcOff + j), javacard);
                 //alert(arrload(src, srcOff + j));
             }
         } catch (err) {
             //throw "ArrayOutofBoundsException";
             return 0;
         }
-    }; //02 short
+    }, //02 short
 
-    Util.arrayFillNonAtomic = function (bArray, bOff, bLen, bValue) {
+    arrayFillNonAtomic: function(bArray, bOff, bLen, bValue, javacard) {
         try {
             for (var j = 0; j < length; j++) {
-                arrstore(bArray, bOff + j, bValue);
+                jcvm.arrstore(bArray, bOff + j, bValue, javacard);
             }
         } catch (err) {
             return 0;
@@ -61,30 +62,25 @@ function Util() {
         }
         return 1;
 
-    }; //03 short
-    Util.getShort = function (bArray, bOff) {
-        Util.makeShort(arrload(bArray, bOff), arrload(bArray, bOff+1));
+    }, //03 short
+    getShort: function(bArray, bOff, javacard) {
+        makeShort(jcvm.arrload(bArray, bOff), jcvm.arrload(bArray, bOff + 1), javacard);
         return 1;
-    }; //04 short
-    Util.makeShort = function (b1, b2) {
+    }, //04 short
+    makeShort: function(b1, b2) {
         return (((b1 << 8) & 0xFF00) | (b2 & 0xFF))
-    } //05 short
-    Util.setShort = function (bArray, bOff, sValue) {
+    }, //05 short
+    setShort: function(bArray, bOff, sValue, javacard) {
         var b1 = ((sValue & 0xFF00) >> 8);
         var b2 = (sValue & 0xFF);
         try {
             //alert(bArray + " " + bOff + " " + sValue);
-            arrstore(bArray, bOff, b1);
-            arrstore(bArray, bOff+1, b2)
+            jcvm.arrstore(bArray, bOff, b1, javacard);
+            jcvm.arrstore(bArray, bOff + 1, b2, javacard)
         } catch (err) {
             return 0;
             //throw "ArrayOutofBoundsException";
         }
         return 1;
-    }; //06 short
-    
-
-    
-
-
-}
+    }, //06 short
+};

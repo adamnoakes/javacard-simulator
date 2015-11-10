@@ -7,8 +7,8 @@ function frame() {
     this.invoker = -1;
     this.return_pointer = 0;
 }
-//later have jcvm as object and store reference to javacard to remove eeprom and RAM.transient_data parameters
-function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEPROM, RAM) {
+//later have jcvm as object and store reference to javacard to remove eeprom and javacard.RAM.transient_data parameters //TODO --> send JCSystem as a parameter
+function executeBytecode(CAPfile, startbytecode, parameters, method, appref, javacard) {
     console.log("executing byte code");
     var frames = [];
     var heap = [];
@@ -46,7 +46,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             break;
         case 1:
             //install method
-            var address = EEPROM.getHeapSize();
+            var address = javacard.EEPROM.getHeapSize();
             var bArr = parameters[0];
             var ghs;
             console.log("install method");
@@ -60,8 +60,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
             }*/
             //@anoakes
-            EEPROM.appendHeap(bArr.length);
-            EEPROM.appendHeap(bArr);
+            javacard.EEPROM.appendHeap(bArr.length);
+            javacard.EEPROM.appendHeap(bArr);
 
             frames[current_frame].local_vars.push(address);
             frames[current_frame].local_vars.push(parameters[1]);
@@ -94,7 +94,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i++;
                 break;
             case opcodes.sconst_m1: //0x02
-                frames[current_frame].operand_stack.push(short_s - 1);
+                frames[current_frame].operand_stack.push(opcodes.short_s - 1);
                 i++;
                 break;
             case opcodes.sconst_0: //0x03
@@ -122,8 +122,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i++;
                 break;
             case opcodes.iconst_m1: //0x09
-                frames[current_frame].operand_stack.push(short_s - 1);
-                frames[current_frame].operand_stack.push(short_s - 1);
+                frames[current_frame].operand_stack.push(opcodes.short_s - 1);
+                frames[current_frame].operand_stack.push(opcodes.short_s - 1);
                 i++;
                 break;
             case opcodes.iconst_0: //0x0A
@@ -158,7 +158,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 break;
             case opcodes.bspush: //0x10
                 //bspush, byte
-                frames[current_frame].operand_stack.push(ByteToShort(opcode[i + 1]));
+                frames[current_frame].operand_stack.push(opcodes.ByteToShort(opcode[i + 1]));
                 i += 2;
                 break;
             case opcodes.sspush: //0x11
@@ -168,14 +168,14 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 break;
             case opcodes.bipush: //0x12
                 //bipush, byte
-                var v = convertIntegerToWords(ByteToInt(opcode[i + 1], 16));
+                var v = opcodes.convertIntegerToWords(opcodes.ByteToInt(opcode[i + 1], 16));
                 frames[current_frame].operand_stack.push(v[0]);
                 frames[current_frame].operand_stack.push(v[1]);
                 i += 2;
                 break;
             case opcodes.sipush: //0x13
                 //bipush, byte1, byte2
-                var v = convertIntegerToWords(ShortToInt((opcode[i + 1] << 8) + opcode[i + 2]));
+                var v = opcodes.convertIntegerToWords(opcodes.ShortToInt((opcode[i + 1] << 8) + opcode[i + 2]));
                 frames[current_frame].operand_stack.push(v[0]);
                 frames[current_frame].operand_stack.push(v[1]);
                 i += 3;
@@ -258,7 +258,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.aaload: //0x24
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                var value = arrload(arref, index, RAM.transient_data);
+                var value = arrload(arref, index, javacard);
 
                 frames[current_frame].operand_stack.push(value);
                 i++;
@@ -266,7 +266,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.baload: //0x25
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                var value = ByteToShort(arrload(arref, index, RAM.transient_data));
+                var value = opcodes.ByteToShort(arrload(arref, index, javacard));
 
                 frames[current_frame].operand_stack.push(value);
                 i++;
@@ -274,7 +274,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.saload: //0x26
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                var value = arrload(arref, index, RAM.transient_data);
+                var value = arrload(arref, index, javacard);
 
                 frames[current_frame].operand_stack.push(value);
                 i++;
@@ -282,8 +282,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.iaload: //0x27
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                var value = arrload(arref, index, RAM.transient_data);
-                var val = convertIntegerToWords(value);
+                var value = arrload(arref, index, javacard);
+                var val = opcodes.convertIntegerToWords(value);
                 frames[current_frame].operand_stack.push(val[0]);
                 frames[current_frame].operand_stack.push(val[1]);
                 i++;
@@ -339,28 +339,28 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.istore_0: //0x33
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
-                v1 = (v1 * short_s + v2) % int_s;
+                v1 = (v1 * opcodes.short_s + v2) % opcodes.int_s;
                 frames[current_frame].local_vars[1] = v1;
                 i++;
                 break;
             case opcodes.istore_1: //0x34
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
-                v1 = (v1 * short_s + v2) % int_s;
+                v1 = (v1 * opcodes.short_s + v2) % opcodes.int_s;
                 frames[current_frame].local_vars[2] = v1;
                 i++;
                 break;
             case opcodes.istore_2: //0x35
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
-                v1 = (v1 * short_s + v2) % int_s;
+                v1 = (v1 * opcodes.short_s + v2) % opcodes.int_s;
                 frames[current_frame].local_vars[2] = v1;
                 i++;
                 break;
             case opcodes.istore_3: //0x36
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
-                v1 = (v1 * short_s + v2) % int_s;
+                v1 = (v1 * opcodes.short_s + v2) % opcodes.int_s;
                 frames[current_frame].local_vars[3] = v1;
                 i++;
                 break;
@@ -368,21 +368,21 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var value = frames[current_frame].operand_stack.pop();
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                arrstore(arref, index, value, RAM.transient_data);
+                arrstore(arref, index, value, javacard);
                 i++;
                 break;
             case opcodes.bastore: //0x38 update byte array index
                 var value = frames[current_frame].operand_stack.pop();
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                arrstore(arref, index, value, RAM.transient_data);
+                arrstore(arref, index, value, javacard);
                 i++;
                 break;
             case opcodes.sastore: //0x39
                 var value = frames[current_frame].operand_stack.pop();
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                arrstore(arref, index, value, RAM.transient_data);
+                arrstore(arref, index, value, javacard);
                 i++;
                 break;
             case opcodes.iastore: //0x3A
@@ -391,7 +391,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
                 var value = (v1 << 8) + v2;
-                arrstore(arref, index, value, RAM.transient_data);
+                arrstore(arref, index, value, javacard);
                 i++;
                 break;
             case opcodes.pop: //0x3B
@@ -470,7 +470,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.sadd:  //0x41
                 var sa = Number(frames[current_frame].operand_stack.pop());
                 sa += Number(frames[current_frame].operand_stack.pop());
-                frames[current_frame].operand_stack.push(sa % short_s);
+                frames[current_frame].operand_stack.push(sa % opcodes.short_s);
                 i++;
                 break;
             case opcodes.iadd:  //0x42
@@ -480,7 +480,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v1w1 = Number(frames[current_frame].operand_stack.pop());
 
                 var val = (v2w1 << 8) + v2w2 + (v1w1 << 8) + v1w2;
-                var words = convertIntegerToWords(val % int_s);
+                var words = opcodes.convertIntegerToWords(val % opcodes.int_s);
 
                 frames[current_frame].operand_stack.push(words[0]);
                 frames[current_frame].operand_stack.push(words[1]);
@@ -489,7 +489,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.ssub:  //0x43
                 var sa = Number(frames[current_frame].operand_stack.pop());
                 sa = Number(frames[current_frame].operand_stack.pop()) - sa;
-                frames[current_frame].operand_stack.push(sa % short_s);
+                frames[current_frame].operand_stack.push(sa % opcodes.short_s);
                 i++;
                 break;
             case opcodes.isub:  //0x44
@@ -499,7 +499,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v1w1 = Number(frames[current_frame].operand_stack.pop());
 
                 var val = ((v1w1 << 8) + v1w2) - ((v2w1 << 8) + v2w2);
-                var words = convertIntegerToWords(val % int_s);
+                var words = opcodes.convertIntegerToWords(val % opcodes.int_s);
 
                 frames[current_frame].operand_stack.push(words[0]);
                 frames[current_frame].operand_stack.push(words[1]);
@@ -518,7 +518,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v1w1 = Number(frames[current_frame].operand_stack.pop());
 
                 var val = ((v1w1 << 8) + v1w2) * ((v2w1 << 8) + v2w2);
-                var words = convertIntegerToWords(val % int_s);
+                var words = opcodes.convertIntegerToWords(val % opcodes.int_s);
 
                 frames[current_frame].operand_stack.push(words[0]);
                 frames[current_frame].operand_stack.push(words[1]);
@@ -539,8 +539,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var val = (v2w1 << 8) + v2w2;
                 if (val == 0) { executeBytecode.exception_handler(jlang,9,""); };
 
-                val = Math.round((v1w1 * short_s + v1w2) / val);
-                var words = convertIntegerToWords(val % int_s);
+                val = Math.round((v1w1 * opcodes.short_s + v1w2) / val);
+                var words = opcodes.convertIntegerToWords(val % opcodes.int_s);
 
                 frames[current_frame].operand_stack.push(words[0]);
                 frames[current_frame].operand_stack.push(words[1]);
@@ -563,21 +563,21 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v2 = v2w1 << 8 + v2w2;
                 var v1 = v1w1 << 8 + v1w2;
                 if (v2 == 0) { executeBytecode.exception_handler(jlang,9,""); };
-                var vres = convertIntegerToWords(v1 - (v1 / v2) * v2);
+                var vres = opcodes.convertIntegerToWords(v1 - (v1 / v2) * v2);
 
                 frames[current_frame].operand_stack.push(vres[0]);
                 frames[current_frame].operand_stack.push(vres[1]);
                 i++;
                 break;
             case opcodes.sneg: //0x4B
-                var v = (-Number(frames[current_frame].operand_stack.pop())) % short_s;
+                var v = (-Number(frames[current_frame].operand_stack.pop())) % opcodes.short_s;
                 frames[current_frame].operand_stack.push(v);
                 i++;
                 break;
             case opcodes.ineg: //0x4C
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
-                var vres = convertIntegerToWords((-v1 * short_s + v2) % int_s);
+                var vres = opcodes.convertIntegerToWords((-v1 * opcodes.short_s + v2) % opcodes.int_s);
                 frames[current_frame].operand_stack.push(vres[0]);
                 frames[current_frame].operand_stack.push(vres[1]);
                 i++;
@@ -587,7 +587,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v1 = frames[current_frame].operand_stack.pop();
 
                 v2 = v2 & 31;
-                var vres = (v1 << v2) % short_s;
+                var vres = (v1 << v2) % opcodes.short_s;
                 frames[current_frame].operand_stack.push(vres);
                 i++;
                 break;
@@ -596,12 +596,12 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v2w1 = frames[current_frame].operand_stack.pop();
                 var v1w2 = frames[current_frame].operand_stack.pop();
                 var v1w1 = frames[current_frame].operand_stack.pop();
-                var v2 = v2w1 * short_s + v2w2;
-                var v1 = (v1w1 * short_s + v1w2) % Math.pow(2, 32);
+                var v2 = v2w1 * opcodes.short_s + v2w2;
+                var v1 = (v1w1 * opcodes.short_s + v1w2) % Math.pow(2, 32);
                 var vres = 0;
 
                 v2 = v2 & 31;
-                vres = convertIntegerToWords((v1 << v2) % int_s);
+                vres = opcodes.convertIntegerToWords((v1 << v2) % opcodes.int_s);
 
                 frames[current_frame].operand_stack.push(vres[0]);
                 frames[current_frame].operand_stack.push(vres[1]);
@@ -612,7 +612,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v1 = frames[current_frame].operand_stack.pop();
 
                 v2 = v2 & 31;
-                var vres = (v1 >> v2) % short_s;
+                var vres = (v1 >> v2) % opcodes.short_s;
                 frames[current_frame].operand_stack.push(vres);
                 i++;
                 break;
@@ -621,12 +621,12 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v2w1 = frames[current_frame].operand_stack.pop();
                 var v1w2 = frames[current_frame].operand_stack.pop();
                 var v1w1 = frames[current_frame].operand_stack.pop();
-                var v2 = v2w1 * short_s + v2w2;
-                var v1 = (v1w1 * short_s + v1w2) % Math.pow(2, 32);
+                var v2 = v2w1 * opcodes.short_s + v2w2;
+                var v1 = (v1w1 * opcodes.short_s + v1w2) % Math.pow(2, 32);
                 var vres = 0;
 
                 v2 = v2 & 31;
-                vres = convertIntegerToWords((v1 >> v2) % int_s);
+                vres = opcodes.convertIntegerToWords((v1 >> v2) % opcodes.int_s);
 
                 frames[current_frame].operand_stack.push(vres[0]);
                 frames[current_frame].operand_stack.push(vres[1]);
@@ -639,7 +639,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
 
                 v1 = v1 % Math.pow(2, 32);
                 v2 = v2 & 31;
-                vres = (v1 >> v2) & short_s;
+                vres = (v1 >> v2) & opcodes.short_s;
                 frames[current_frame].operand_stack.push(vres);
 
                 i++;
@@ -649,12 +649,12 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v2w1 = frames[current_frame].operand_stack.pop();
                 var v1w2 = frames[current_frame].operand_stack.pop();
                 var v1w1 = frames[current_frame].operand_stack.pop();
-                var v2 = v2w1 * short_s + v2w2;
-                var v1 = v1w1 * short_s + v1w2;
+                var v2 = v2w1 * opcodes.short_s + v2w2;
+                var v1 = v1w1 * opcodes.short_s + v1w2;
                 var vres = 0;
 
                 v2 = 31 & v2;
-                vres = convertIntegerToWords((v1 >> v2) % int_s);
+                vres = opcodes.convertIntegerToWords((v1 >> v2) % opcodes.int_s);
                 frames[current_frame].operand_stack.push(vres[0]);
                 frames[current_frame].operand_stack.push(vres[1]);
                 i++;
@@ -671,9 +671,9 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v2w1 = frames[current_frame].operand_stack.pop();
                 var v1w2 = frames[current_frame].operand_stack.pop();
                 var v1w1 = frames[current_frame].operand_stack.pop();
-                var v2 = v2w1 * short_s + v2w2;
-                var v1 = v1w1 * short_s + v1w2;
-                var res = convertIntegerToWords(v1 & v2);
+                var v2 = v2w1 * opcodes.short_s + v2w2;
+                var v1 = v1w1 * opcodes.short_s + v1w2;
+                var res = opcodes.convertIntegerToWords(v1 & v2);
 
                 frames[current_frame].operand_stack.push(res[0]);
                 frames[current_frame].operand_stack.push(res[1]);
@@ -691,9 +691,9 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v2w1 = frames[current_frame].operand_stack.pop();
                 var v1w2 = frames[current_frame].operand_stack.pop();
                 var v1w1 = frames[current_frame].operand_stack.pop();
-                var v2 = v2w1 * short_s + v2w2;
-                var v1 = v1w1 * short_s + v1w2;
-                var res = convertIntegerToWords(v1 | v2);
+                var v2 = v2w1 * opcodes.short_s + v2w2;
+                var v1 = v1w1 * opcodes.short_s + v1w2;
+                var res = opcodes.convertIntegerToWords(v1 | v2);
 
                 frames[current_frame].operand_stack.push(res[0]);
                 frames[current_frame].operand_stack.push(res[1]);
@@ -711,9 +711,9 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v2w1 = frames[current_frame].operand_stack.pop();
                 var v1w2 = frames[current_frame].operand_stack.pop();
                 var v1w1 = frames[current_frame].operand_stack.pop();
-                var v2 = v2w1 * short_s + v2w2;
-                var v1 = v1w1 * short_s + v1w2;
-                var res = convertIntegerToWords(v1 ^ v2);
+                var v2 = v2w1 * opcodes.short_s + v2w2;
+                var v1 = v1w1 * opcodes.short_s + v1w2;
+                var res = opcodes.convertIntegerToWords(v1 ^ v2);
 
                 frames[current_frame].operand_stack.push(res[0]);
                 frames[current_frame].operand_stack.push(res[1]);
@@ -723,13 +723,13 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 //sinc, index, const
                 var lc = opcode[i + 1];
                 frames[current_frame].local_vars[lc] =
-                    (frames[current_frame].local_vars[lc] + ByteToShort(opcode[i + 2], 16)) % short_s;
+                    (frames[current_frame].local_vars[lc] + opcodes.ByteToShort(opcode[i + 2], 16)) % opcodes.short_s;
                 i += 3;
                 break;
             case opcodes.iinc: //0x5A
                 //iinc, index, const
                 var lc = opcode[i + 1];
-                var v = convertIntegerToWords((frames[current_frame].local_vars[lc] * short_s + frames[current_frame].local_vars[lc + 1] + ByteToInt(opcode[i + 2], 16)) % int_s);
+                var v = opcodes.convertIntegerToWords((frames[current_frame].local_vars[lc] * opcodes.short_s + frames[current_frame].local_vars[lc + 1] + opcodes.ByteToInt(opcode[i + 2], 16)) % opcodes.int_s);
                 frames[current_frame].local_vars[lc] = v[0];
                 frames[current_frame].local_vars[lc + 1] = v[1];
                 i += 3;
@@ -740,7 +740,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i++;
                 break;
             case opcodes.s2i: //0x5C
-                var val = convertIntegerToWords(ShortToInt(frames[current_frame].operand_stack.pop()));
+                var val = opcodes.convertIntegerToWords(opcodes.ShortToInt(frames[current_frame].operand_stack.pop()));
                 frames[current_frame].operand_stack.push(val[0]);
                 frames[current_frame].operand_stack.push(val[1]);
                 i++;
@@ -748,7 +748,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.i2b: //0x5D
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
-                var v = ByteToShort(v2 & 0xFF);
+                var v = opcodes.ByteToShort(v2 & 0xFF);
                 frames[current_frame].operand_stack.push(v);
                 i++;
                 break;
@@ -763,70 +763,70 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 var v2w1 = frames[current_frame].operand_stack.pop();
                 var v1w2 = frames[current_frame].operand_stack.pop();
                 var v1w1 = frames[current_frame].operand_stack.pop();
-                var v2 = IntToValue(v2w1 * short_s + v2w2);
-                var v1 = IntToValue(v1w1 * short_s + v1w2);
+                var v2 = opcodes.IntToValue(v2w1 * opcodes.short_s + v2w2);
+                var v1 = opcodes.IntToValue(v1w1 * opcodes.short_s + v1w2);
 
                 if (v1 > v2) { frames[current_frame].operand_stack.push(1); }
-                else if (v1 < v2) { frames[current_frame].operand_stack.push(short_s - 1); }
+                else if (v1 < v2) { frames[current_frame].operand_stack.push(opcodes.short_s - 1); }
                 else { frames[current_frame].operand_stack.push(0); }
                 i++;
                 break;
             case opcodes.ifeq: //0x60
                 //ifeq, branch
-                if (frames[current_frame].operand_stack.pop() == 0) { i += ByteToValue(opcode[i + 1]); }
+                if (frames[current_frame].operand_stack.pop() == 0) { i += opcodes.ByteToValue(opcode[i + 1]); }
                 else { i += 2; }
                 break;
             case opcodes.ifne: //0x61
                 //ifne, branch
-                if (frames[current_frame].operand_stack.pop() != 0) { i += ByteToValue(opcode[i + 1]); }
+                if (frames[current_frame].operand_stack.pop() != 0) { i += opcodes.ByteToValue(opcode[i + 1]); }
                 else { i += 2; }
                 break;
             case opcodes.iflt: //0x62
                 //iflt, branch
-                if (frames[current_frame].operand_stack.pop() < 0) { i += ByteToValue(opcode[i + 1]); }
+                if (frames[current_frame].operand_stack.pop() < 0) { i += opcodes.ByteToValue(opcode[i + 1]); }
                 else { i += 2; }
                 break;
             case opcodes.ifge: //0x63
                 //ifge, branch
-                if (frames[current_frame].operand_stack.pop() >= 0) { i += ByteToValue(opcode[i + 1]); }
+                if (frames[current_frame].operand_stack.pop() >= 0) { i += opcodes.ByteToValue(opcode[i + 1]); }
                 else { i += 2; }
                 break;
             case opcodes.ifgt: //0x64
                 //ifgt, branch
-                if (frames[current_frame].operand_stack.pop() > 0) { i += ByteToValue(opcode[i + 1]); }
+                if (frames[current_frame].operand_stack.pop() > 0) { i += opcodes.ByteToValue(opcode[i + 1]); }
                 else { i += 2; }
                 break;
             case opcodes.ifle: //0x65
                 //ifle, branch
-                if (frames[current_frame].operand_stack.pop() <= 0) { i += ByteToValue(opcode[i + 1]); }
+                if (frames[current_frame].operand_stack.pop() <= 0) { i += opcodes.ByteToValue(opcode[i + 1]); }
                 else { i += 2; }
                 break;
             case opcodes.ifnull: //0x66
                 //ifnull, branch
-                if (frames[current_frame].operand_stack.pop() == null) { i += ByteToValue(opcode[i + 1]); }
+                if (frames[current_frame].operand_stack.pop() == null) { i += opcodes.ByteToValue(opcode[i + 1]); }
                 else { i += 2; }
                 break;
             case opcodes.ifnonnull: //0x67
                 //ifnonnull, branch
-                if (frames[current_frame].operand_stack.pop() != null) { i += ByteToValue(opcode[i + 1]); }
+                if (frames[current_frame].operand_stack.pop() != null) { i += opcodes.ByteToValue(opcode[i + 1]); }
                 else { i += 2; }
                 break;
             case opcodes.if_acmpeq: //0x68
                 //if_acmpeq, branch
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
-                if (v1 == v2) { i += ByteToValue(opcode[i + 1]); }
+                if (v1 == v2) { i += opcodes.ByteToValue(opcode[i + 1]); }
                 else { i += 2; }
                 break;
             case opcodes.if_acmpne: //0x69
                 //if_acmpne, branch
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
-                if (v1 != v2) { i += ByteToValue(opcode[i + 1]); }
+                if (v1 != v2) { i += opcodes.ByteToValue(opcode[i + 1]); }
                 else { i += 2; }
                 break;
             case opcodes.if_scmpeq: //0x6A
-                var branch = ByteToValue(opcode[i + 1]);
+                var branch = opcodes.ByteToValue(opcode[i + 1]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -837,7 +837,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_scmpne: //0x6B
-                var branch = ByteToValue(opcode[i + 1]);
+                var branch = opcodes.ByteToValue(opcode[i + 1]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -848,7 +848,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_scmplt: //0x6C
-                var branch = ByteToValue(opcode[i + 1]);
+                var branch = opcodes.ByteToValue(opcode[i + 1]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -860,7 +860,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 break;
                 break;
             case opcodes.if_scmpge: //0x6D
-                var branch = ByteToValue(opcode[i + 1]);
+                var branch = opcodes.ByteToValue(opcode[i + 1]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -871,7 +871,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_scmpgt: //0x6E
-                var branch = ByteToValue(opcode[i + 1]);
+                var branch = opcodes.ByteToValue(opcode[i + 1]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -882,7 +882,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_scmple: //0x6F
-                var branch = ByteToValue(opcode[i + 1]);
+                var branch = opcodes.ByteToValue(opcode[i + 1]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -893,12 +893,12 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.goto: //0x70
-                i += ByteToValue(opcode[i + 1]);
+                i += opcodes.ByteToValue(opcode[i + 1]);
                 break;
             case opcodes.jsr: //0x71
                 //jsr, branchbyte1,branchbyte2
                 frames[current_frame].operand_stack.push(i + 3);
-                i += ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                i += opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 break;
             case opcodes.ret: //0x72
                 //ret, index
@@ -907,15 +907,15 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.stableswitch: //0x73
                 //stableswitch, defaultbyte1, defaultbyte2, lowbyte1, lowbyte2, 
                 //highbyte1, highbyte2, jump offsets...
-                var defaultbyte = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
-                var low = ShortToValue((opcode[i + 3] << 8) + opcode[i + 4]);
-                var high = ShortToValue((opcode[i + 5] << 8) + opcode[i + 6]);
+                var defaultbyte = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var low = opcodes.ShortToValue((opcode[i + 3] << 8) + opcode[i + 4]);
+                var high = opcodes.ShortToValue((opcode[i + 5] << 8) + opcode[i + 6]);
                 var arrsize = high - low + 1;
                 var jumptable = [];
-                var index = ShortToValue(frames[current_frame].operand_stack.pop());
+                var index = opcodes.ShortToValue(frames[current_frame].operand_stack.pop());
 
                 for (var j = 0; j < arrsize; j++) {
-                    jumptable[j] = ShortToValue((opcode[i + 2 * j + 7] << 8) + opcode[i + 2 * j + 8]);
+                    jumptable[j] = opcodes.ShortToValue((opcode[i + 2 * j + 7] << 8) + opcode[i + 2 * j + 8]);
                 }
 
                 if ((index < low) || (index > high)) {
@@ -928,17 +928,17 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.itableswitch: //0x74
                 //itableswitch, defaultbyte1, defaultbyte2, lowbyte1, lowbyte2, lowbyte3, lowbyte4, 
                 //highbyte1, highbyte2, highbyte3, highbyte4, jump offsets...
-                var defaultbyte = ShortToValue((opcode[i + 1] + opcode[i + 2], 16));
-                var low = IntToValue((opcode[i + 3] << 24) + (opcode[i + 4] << 16) + (opcode[i + 5] << 8) + opcode[i + 6]);
-                var high = IntToValue((opcode[i + 7] << 24) + (opcode[i + 8] << 16) + (opcode[i + 9] << 8) + opcode[i + 10]);
+                var defaultbyte = opcodes.ShortToValue((opcode[i + 1] + opcode[i + 2], 16));
+                var low = opcodes.IntToValue((opcode[i + 3] << 24) + (opcode[i + 4] << 16) + (opcode[i + 5] << 8) + opcode[i + 6]);
+                var high = opcodes.IntToValue((opcode[i + 7] << 24) + (opcode[i + 8] << 16) + (opcode[i + 9] << 8) + opcode[i + 10]);
                 var arrsize = high - low + 1;
                 var jumptable = [];
                 var index2 = frames[current_frame].operand_stack.pop();
                 var index = frames[current_frame].operand_stack.pop();
 
-                index = IntToValue(index * short_s + index2);
+                index = opcodes.IntToValue(index * opcodes.short_s + index2);
                 for (var j = 0; j < arrsize; j++) {
-                    jumptable[j] = ShortToValue((opcode[i + 2 * j + 11] << 8) + opcode[i + 2 * j + 12]);
+                    jumptable[j] = opcodes.ShortToValue((opcode[i + 2 * j + 11] << 8) + opcode[i + 2 * j + 12]);
                 }
 
                 if ((index < low) || (index > high)) {
@@ -950,15 +950,15 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.slookupswitch: //0x75
                 //slookupswitch, defaultbyte1, defaultbyte2, npairs1, npairs2, 
                 //match-offset pairs...
-                var key = ShortToValue(frames[current_frame].operand_stack.pop());
-                var defaultbyte = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var key = opcodes.ShortToValue(frames[current_frame].operand_stack.pop());
+                var defaultbyte = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var npairs = (opcode[i + 3] << 8) + opcode[i + 4];
 
                 var bfound = false;
                 for (var j = 0; j < npairs; j++) {
-                    if (ShortToValue((opcode[i + 4 * j + 5] << 8) + opcode[i + 4 * j + 6]) == key) {
+                    if (opcodes.ShortToValue((opcode[i + 4 * j + 5] << 8) + opcode[i + 4 * j + 6]) == key) {
                         bfound = true;
-                        i += ShortToValue((opcode[i + 4 * j + 7] << 8) + opcode[i + 4 * j + 8]);
+                        i += opcodes.ShortToValue((opcode[i + 4 * j + 7] << 8) + opcode[i + 4 * j + 8]);
                         break;
                     }
                 }
@@ -970,15 +970,15 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 //match-offset pairs...
                 var key2 = frames[current_frame].operand_stack.pop();
                 var key = frames[current_frame].operand_stack.pop();
-                var defaultbyte = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var defaultbyte = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var npairs = (opcode[i + 3] << 8) + opcode[i + 4];
-                key = IntToValue(key * short_s + key2);
+                key = opcodes.IntToValue(key * opcodes.short_s + key2);
 
                 var bfound = false;
                 for (var j = 0; j < npairs; j++) {
-                    if (IntToValue((opcode[i + 6 * j + 5] << 24) + (opcode[i + 6 * j + 6] << 16) + (opcode[i + 6 * j + 7] << 8) + opcode[i + 6 * j + 8]) == key) {
+                    if (opcodes.IntToValue((opcode[i + 6 * j + 5] << 24) + (opcode[i + 6 * j + 6] << 16) + (opcode[i + 6 * j + 7] << 8) + opcode[i + 6 * j + 8]) == key) {
                         bfound = true;
-                        i += ShortToValue((opcode[i + 6 * j + 9] << 8) + opcode[i + 6 * j + 10]);
+                        i += opcodes.ShortToValue((opcode[i + 6 * j + 9] << 8) + opcode[i + 6 * j + 10]);
                         break;
                     }
                 }
@@ -1020,51 +1020,51 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 } else { i = -1; }
                 break;
             case opcodes.getstatic_a: //0x7B
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);//slice stops the constantpool being edited
                 var val = getstatic(info, 2);
                 frames[current_frame].operand_stack.push(val);
                 i += 3;
                 break;
             case opcodes.getstatic_b: //0x7C
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var val = getstatic(info, 1);
                 frames[current_frame].operand_stack.push(val);
                 i += 3;
                 break;
             case opcodes.getstatic_s: //0x7D
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var val = getstatic(info, 2);
                 frames[current_frame].operand_stack.push(val);
                 i += 3;
                 break;
             case opcodes.getstatic_i: //0x7E
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var val = getstatic(info, 4);
-                var w = convertIntegerToWords(val);
+                var w = opcodes.convertIntegerToWords(val);
                 frames[current_frame].operand_stack.push(w[0]);
                 frames[current_frame].operand_stack.push(w[1]);
                 i += 3;
                 break;
             case opcodes.putstatic_a: //0x7F
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var val = frames[current_frame].operand_stack.pop();
                 putstatic(info, val, 2);
                 i += 3;
                 break;
             case opcodes.putstatic_b: //0x80
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var val = frames[current_frame].operand_stack.pop();
                 putstatic(info, val, 1);
                 i += 3;
                 break;
             case opcodes.putstatic_s: //0x81
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var val = frames[current_frame].operand_stack.pop();
                 putstatic(info, val, 2);
                 i += 3;
                 break;
             case opcodes.putstatic_i: //0x82
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
                 var val = (v1 << 8) + v2;
@@ -1072,39 +1072,39 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 3;
                 break;
             case opcodes.getfield_a: //0x83
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].operand_stack.pop();
                 var retval = getfield(info, objref);
                 frames[current_frame].operand_stack.push(retval);
                 i += 2;
                 break;
             case opcodes.getfield_b: //0x84
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].operand_stack.pop();
                 var retval = getfield(info, objref);
                 frames[current_frame].operand_stack.push(retval);
                 i += 2;
                 break;
             case opcodes.getfield_s: //0x85
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].operand_stack.pop();
                 var retval = getfield(info, objref);
                 frames[current_frame].operand_stack.push(retval);
                 i += 2;
                 break;
             case opcodes.getfield_i: //0x86
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].operand_stack.pop();
                 var retval = getfield(info, objref);
 
-                var val = convertIntegerToWords(retval);
+                var val = opcodes.convertIntegerToWords(retval);
                 frames[current_frame].operand_stack.push(val[0]);
                 frames[current_frame].operand_stack.push(val[1]);
 
                 i += 2;
                 break;
             case opcodes.putfield_a: //0x87
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var val = frames[current_frame].operand_stack.pop();
                 var objref = frames[current_frame].operand_stack.pop();
 
@@ -1112,7 +1112,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 2;
                 break;
             case opcodes.putfield_b: //0x88
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var val = frames[current_frame].operand_stack.pop();
                 var objref = frames[current_frame].operand_stack.pop();
 
@@ -1121,7 +1121,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 2;
                 break;
             case opcodes.putfield_s: //0x89
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var val = frames[current_frame].operand_stack.pop();
                 var objref = frames[current_frame].operand_stack.pop();
 
@@ -1129,7 +1129,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 2;
                 break;
             case opcodes.putfield_i: //0x8A
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
                 var val = (val1 << 8) + val2;
@@ -1144,7 +1144,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
 
                 frames[current_frame].return_pointer = i + 3;
                 var par = [];
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var i0 = info[0];
                 var ref = -1;
                 var objref;
@@ -1168,20 +1168,20 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                     
                     oref = frames[current_frame].operand_stack.pop();
                     
-                    var ocls = EEPROM.getHeapValue(oref);
+                    var ocls = javacard.EEPROM.getHeapValue(oref);
                     
                     oheap = oref;
                     var clssig = ((i0 << 8) + info[1]);
                     while (!found) {
-                        
-                        if ("A" + clssig == ocls) {
+                        //anoakes removed "A" +, replaced with 160
+                        if (160 + clssig == ocls) {
                             found = true;
                             oheap++;
                         } else {
                             for (var j = 0; j < CAPfile.COMPONENT_Class.i_count; j++) {
                                 if (CAPfile.COMPONENT_Class.interface_info[j].start == ocls) {
                                     oheap += CAPfile.COMPONENT_Class.interface_info[j].declared_instance_size + 1;
-                                    ocls = EEPROM.getHeapValue(oheap);
+                                    ocls = javacard.EEPROM.getHeapValue(oheap);
                                     break;
                                 }
                             }
@@ -1189,7 +1189,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
 
                     }
                     
-                    var apiresult = API.runMethod(mAID, info[1], info[2], 3, par, EEPROM.objectheap, EEPROM.getHeapValue(oheap));
+                    var apiresult = API.runMethod(mAID, info[1], info[2], 3, par, javacard.EEPROM.objectheap, javacard.EEPROM.getHeapValue(oheap), javacard);
 
 
                     //var rval = API.getVal();
@@ -1203,13 +1203,13 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                         case 3:
                             //@anoakes
                             //var hv = [rval.length.toString];
-                            var hl = EEPROM.getHeapSize();
+                            var hl = javacard.EEPROM.getHeapSize();
                             /*if (rval.length > 0) {
                                 for (var j = 0; j < rval.length; j++) { hv += "," + rval[j]; }
                             }
                             newHeap(hv);*/
-                            EEPROM.appendHeap(apiresult.val.length);
-                            EEPROM.appendHeap(apiresult.val);
+                            javacard.EEPROM.appendHeap(apiresult.val.length);
+                            javacard.EEPROM.appendHeap(apiresult.val);
                             frames[current_frame].operand_stack.push(hl);
                         default:
                             break;
@@ -1267,7 +1267,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 break;
             case opcodes.invokespecial: //0x8C
                 var tag = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].tag;
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var i0 = info[0];
                 //static method
                 var par = [];
@@ -1301,7 +1301,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
 
                     oref = frames[current_frame].operand_stack.pop();
  
-                    var ocls = EEPROM.getHeapValue(oref);
+                    var ocls = javacard.EEPROM.getHeapValue(oref);
                     oheap = oref;
                     var clssig = ((i0 << 8) + info[1]);
                     while (!found) {
@@ -1312,7 +1312,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                             for (var j = 0; j < CAPfile.COMPONENT_Class.i_count; j++) {
                                 if (CAPfile.COMPONENT_Class.interface_info[j].start === ocls) {
                                     oheap += CAPfile.COMPONENT_Class.interface_info[j].declared_instance_size + 1;
-                                    ocls = EEPROM.getHeapValue(oheap);
+                                    ocls = javacard.EEPROM.getHeapValue(oheap);
                                     break;
                                 }
                             }
@@ -1321,12 +1321,12 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                     }
                     
                     //execute method
-                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, EEPROM.objectheap, EEPROM.getHeapValue(oheap));
+                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, javacard.EEPROM.objectheap, javacard.EEPROM.getHeapValue(oheap), javacard);
 
                     //process results
                     //var rval = API.getVal();
                     //var rtype = API.getType();
-                    var hl = EEPROM.getHeapSize();
+                    var hl = javacard.EEPROM.getHeapSize();
                     switch (apiresult.typ) {
                         case 1: //Normal return value
                             frames[current_frame].operand_stack.push(apiresult.val);
@@ -1343,8 +1343,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                                 }
                             }*/
                             frames[current_frame].operand_stack.push(hl);
-                            EEPROM.appendHeap(apiresult.val.length);
-                            EEPROM.appendHeap(apiresult.val);
+                            javacard.EEPROM.appendHeap(apiresult.val.length);
+                            javacard.EEPROM.appendHeap(apiresult.val);
                             //newHeap(hv);
                             break;
                         
@@ -1389,7 +1389,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 break;
             case opcodes.invokestatic: //0x8D
                 var tag = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].tag;
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var i0 = info[0];
                 //static method
                 var par = [];
@@ -1410,10 +1410,10 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                     var na = API.nargAPI(mAID, info[1], info[2], 6);
                     for (var j = 0; j < na; j++) { args.push(frames[current_frame].operand_stack.pop()); };
                     for (var j = 0; j < na; j++) { par.push(args.pop()); };
-                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, EEPROM.objectheap, null);
+                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, javacard.EEPROM.objectheap, null, javacard);
 
 
-                    var hl = EEPROM.getHeapSize();
+                    var hl = javacard.EEPROM.getHeapSize();
 
                     switch (apiresult.typ) {
                         case 1:
@@ -1421,8 +1421,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                             break;
                         case 2:
                             //New Transient Array
-                            frames[current_frame].operand_stack.push("T" + RAM.transient_data.length + "#" + apiresult.val.length + "#" + par[1]);
-                            for (var j = 0; j < apiresult.val.length; j++) { RAM.transient_data.push(apiresult.val[j]); }
+                            frames[current_frame].operand_stack.push("T" + javacard.RAM.transient_data.length + "#" + apiresult.val.length + "#" + par[1]);
+                            for (var j = 0; j < apiresult.val.length; j++) { javacard.RAM.transient_data.push(apiresult.val[j]); }
                             break;
                         case 3:
                             //New Persistent Array
@@ -1430,8 +1430,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                             for (var j = 0; j < rval.length; j++) { hv += "," + rval[j]; }
                             newHeap(hv);*/
 
-                            EEPROM.appendHeap(apiresult.val.length);
-                            EEPROM.appendHeap(apiresult.val);
+                            javacard.EEPROM.appendHeap(apiresult.val.length);
+                            javacard.EEPROM.appendHeap(apiresult.val);
                             frames[current_frame].operand_stack.push(hl);
                             break;
                         default:
@@ -1469,7 +1469,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.invokeinterface: //0x8E
                 //invokeinterface, nargs, ind1, ind2, method
                 var nargs = opcode[i + 1];
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 2] << 8) + opcode[i + 3]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 2] << 8) + opcode[i + 3]].info.slice(0);
                 var class_offset = (info[0] << 8) + info[1];
                 var method = opcode[i + 4];
                 var args = [];
@@ -1520,11 +1520,11 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.new_v: //0x8F
 
                 //new, ind1, ind2
-                var ref = EEPROM.getHeapSize();
+                var ref = javacard.EEPROM.getHeapSize();
                 
 
                 var done = false;
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 //var hv = "";
 
                 while (!done) {
@@ -1539,10 +1539,10 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                                 clsno = j;
                                 var dis = CAPfile.COMPONENT_Class.interface_info[j].declared_instance_size;
                                 //hv += ","+offset;
-                                EEPROM.appendHeap(offset);
+                                javacard.EEPROM.appendHeap(offset);
                                 
                                 //for (var k = 0; k < dis; k++) { hv += ",0"; }
-                                for (var k = 0; k < dis; k++) { EEPROM.appendHeap(0); }
+                                for (var k = 0; k < dis; k++) { javacard.EEPROM.appendHeap(0); }
                                 
                                 info[0] = CAPfile.COMPONENT_Class.interface_info[j].super_class_ref1;
                                 info[1] = CAPfile.COMPONENT_Class.interface_info[j].super_class_ref2;
@@ -1554,11 +1554,11 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                     } else {
                         var clsno = ((info[0] - 128) << 8) + info[1];
                         //hv += ",A"+clsno+","+objectheap.length;
-                        EEPROM.appendHeap(160+clsno);
-                        EEPROM.appendHeap(EEPROM.objectheap.length);
-                        if ((info[1] == 3) && (CAPfile.COMPONENT_Import.packages[info[0] - 128].AID == opcodes.jframework)) { RAM.gRef = ref; };
+                        javacard.EEPROM.appendHeap(160+clsno);
+                        javacard.EEPROM.appendHeap(javacard.EEPROM.objectheap.length);
+                        if ((info[1] == 3) && (CAPfile.COMPONENT_Import.packages[info[0] - 128].AID.join() === opcodes.jframework.join())) { javacard.RAM.gRef = ref; };
 
-                        EEPROM.appendObjectHeap(API.newAPIObject(CAPfile.COMPONENT_Import.packages[info[0] - 128].AID, info[1]));
+                        javacard.EEPROM.appendObjectHeap(API.newAPIObject(CAPfile.COMPONENT_Import.packages[info[0] - 128].AID, info[1]));
                         done = true;
                     }
                 }
@@ -1571,14 +1571,14 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 //newarray, atype
                 var count = frames[current_frame].operand_stack.pop();
                 var atype = opcode[i + 1];
-                var ref = EEPROM.getHeapSize();
+                var ref = javacard.EEPROM.getHeapSize();
                 if (count < 0) { executeBytecode.exception_handler(jlang,6,"");}
 
                 //allocate space on heap
                // var heapspace = [];
-                EEPROM.appendHeap(count);
+                javacard.EEPROM.appendHeap(count);
                 for (var j = 0; j < count; j++) {
-                   EEPROM.appendHeap(0);
+                   javacard.EEPROM.appendHeap(0);
                 };
                 //newHeap(hv);
                 //push ref onto operand stack
@@ -1589,14 +1589,14 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 break;
             case opcodes.anewarray: //0x91
                 var index = (opcode[i + 1] << 8) + opcode[i + 2];
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[index].info;
-                var count = ShortToValue(frames[current_frame].operand_stack().pop());
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[index].info.slice(0);
+                var count = opcodes.ShortToValue(frames[current_frame].operand_stack().pop());
                 if (count < 0) { executeBytecode.exception_handler(jlang,6,""); }
                 var dis = 0;
                 //var ref = heap.length;
 
                 var done = false;
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var hv = "";
                 var tv = [];
                 var totalsize = 0;
@@ -1625,30 +1625,30 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                     } else {
                         var clsno = ((info[0] - 128) << 8) + info[1];
                         //tv += ",A" + clsno + "," + objectheap.length;
-                        tv.push(10+clsno);
-                        tv.push(EEPROM.objectheap.length);
-                        if ((info[1] == 3) && (CAPfile.COMPONENT_Import.packages[info[0] - 128].AID == jframework)) { RAM.gRef = ref; };
+                        tv.push(160+clsno);
+                        tv.push(javacard.EEPROM.objectheap.length);
+                        if ((info[1] == 3) && (CAPfile.COMPONENT_Import.packages[info[0] - 128].AID.join() === jframework.join())) { javacard.RAM.gRef = ref; };
 
-                        EEPROM.appendObjectHeap(API.newAPIObject(CAPfile.COMPONENT_Import.packages[info[0] - 128].AID, info[1]));
+                        javacard.EEPROM.appendObjectHeap(API.newAPIObject(CAPfile.COMPONENT_Import.packages[info[0] - 128].AID, info[1]));
                         done = true;
                     }
                 }
 
-                var ref = EEPROM.getHeapSize();
+                var ref = javacard.EEPROM.getHeapSize();
 
                 //var hv = "," + count;
-                EEPROM.appendHeap(count);
+                javacard.EEPROM.appendHeap(count);
                 var ival = 0;
                 for (var j = 0; j < count; j++) {
                     ival = ref + dis * (j + 1) + 1;
-                    EEPROM.appendHeap(ival);
+                    javacard.EEPROM.appendHeap(ival);
                     //hv += "," + ival;
                 }
 
                 for (var j = 0; j < count; j++) {
                     //hv += ","+ dis;
                     //hv += tv;
-                    EEPROM.appendHeap(tv);
+                    javacard.EEPROM.appendHeap(tv);
                 }
                 //newHeap(hv);
                 frames[current_frame].operand_stack.push(ref);
@@ -1657,7 +1657,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.arraylength: //0x92
                 var arref = frames[current_frame].operand_stack.pop();
                 if (arref == null) { executeBytecode.exception_handler(jlang,6,""); }
-                var ar = EEPROM.getHeapValue(arref);
+                var ar = javacard.EEPROM.getHeapValue(arref);
                 if (ar.slice(0, 1) == "H") {
                     ar = ar.split("#")[2];
                     ar = parseInt(ar.slice(1));
@@ -1669,7 +1669,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 break;
             case opcodes.athrow: //0x93
                 var objref = frames[current_frame].operand_stack.pop();
-                var oheap = EEPROM.getHeapValue(objref);
+                var oheap = javacard.EEPROM.getHeapValue(objref);
                 //search for catch clause
                 if(oheap.slice(0,1) == "A") {
                     var ncls = Number(oheap.slice(1));
@@ -1700,14 +1700,14 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             case opcodes.iinc_w: //0x97
                 var index = opcode[i + 1];
                 var byte = (opcode[i + 2] << 8) + opcode[i + 3];
-                var inc = convertIntegerToWords(frames[current_frame].local_vars[index] * short_s + frames[current_frame].local_vars[index + 1] + byte);
+                var inc = opcodes.convertIntegerToWords(frames[current_frame].local_vars[index] * opcodes.short_s + frames[current_frame].local_vars[index + 1] + byte);
                 frames[current_frame].local_vars[index] = inc[0];
                 frames[current_frame].local_vars[index + 1] = inc[1];
                 i += 4;
                 break;
             case opcodes.ifeq_w: //0x98
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
-                var val = ShortToValue(frames[current_frame].operand_stack.pop());
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var val = opcodes.ShortToValue(frames[current_frame].operand_stack.pop());
 
                 if (val == 0) {
                     i += branch;
@@ -1716,8 +1716,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.ifne_w: //0x99
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
-                var val = ShortToValue(frames[current_frame].operand_stack.pop());
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var val = opcodes.ShortToValue(frames[current_frame].operand_stack.pop());
 
                 if (val != 0) {
                     i += branch;
@@ -1726,8 +1726,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.iflt_w: //0x9A
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
-                var val = ShortToValue(frames[current_frame].operand_stack.pop());
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var val = opcodes.ShortToValue(frames[current_frame].operand_stack.pop());
 
                 if (val < 0) {
                     i += branch;
@@ -1736,8 +1736,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.ifge_w: //0x9B
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
-                var val = ShortToValue(frames[current_frame].operand_stack.pop());
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var val = opcodes.ShortToValue(frames[current_frame].operand_stack.pop());
 
                 if (val >= 0) {
                     i += branch;
@@ -1746,8 +1746,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.ifgt_w: //0x9C
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
-                var val = ShortToValue(frames[current_frame].operand_stack.pop());
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var val = opcodes.ShortToValue(frames[current_frame].operand_stack.pop());
 
                 if (val > 0) {
                     i += branch;
@@ -1756,8 +1756,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.ifle_w: //0x9D
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
-                var val = ShortToValue(frames[current_frame].operand_stack.pop());
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var val = opcodes.ShortToValue(frames[current_frame].operand_stack.pop());
 
                 if (val < 0) {
                     i += branch;
@@ -1766,7 +1766,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.ifnull_w: //0x9E
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var val = frames[current_frame].operand_stack.pop();
 
                 if (val == null) {
@@ -1776,7 +1776,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.ifnonnull_w: //0x9F
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var val = frames[current_frame].operand_stack.pop();
 
                 if (val != null) {
@@ -1786,7 +1786,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_acmpeq_w: //0xA0
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -1797,7 +1797,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_acmpne_w: //0xA1
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -1808,7 +1808,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_scmpeq_w: //0xA2
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -1819,7 +1819,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_scmpne_w: //0xA3
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -1830,7 +1830,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_scmplt_w: //0xA4
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -1841,7 +1841,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_scmpge_w: //0xA5
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -1852,7 +1852,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_scmpgt_w: //0xA6
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -1863,7 +1863,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.if_scmple_w: //0xA7
-                var branch = ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                var branch = opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
 
@@ -1874,42 +1874,42 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 }
                 break;
             case opcodes.goto_w: //0xA8
-                i += ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
+                i += opcodes.ShortToValue((opcode[i + 1] << 8) + opcode[i + 2]);
                 break;
             case opcodes.getfield_a_w: //0xA9
                 var objref = frames[current_frame].operand_stack.pop();
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var retval = getfield(info, objref);
                 frames[current_frame].operand_stack.push(retval);
                 i += 3;
                 break;
             case opcodes.getfield_b_w: //0xAA
                 var objref = frames[current_frame].operand_stack.pop();
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var retval = getfield(info, objref);
                 frames[current_frame].operand_stack.push(retval);
                 i += 3;
                 break;
             case opcodes.getfield_s_w: //0xAB
                 var objref = frames[current_frame].operand_stack.pop();
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var retval = getfield(info, objref);
                 frames[current_frame].operand_stack.push(retval);
                 i += 3;
                 break;
             case opcodes.getfield_i_w: //0xAC
                 var objref = frames[current_frame].operand_stack.pop();
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var retval = getfield(info, objref);
 
-                var val = convertIntegerToWords(retval);
+                var val = opcodes.convertIntegerToWords(retval);
                 frames[current_frame].operand_stack.push(val[0]);
                 frames[current_frame].operand_stack.push(val[1]);
                 i += 3;
                 break;
             case opcodes.getfield_a_this: //0xAD
 
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].local_vars[0];
 
                 var retval = getfield(info, objref);
@@ -1918,7 +1918,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 2;
                 break;
             case opcodes.getfield_b_this: //0xAE
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].local_vars[0];
                 
                 var retval = getfield(info, objref);
@@ -1926,7 +1926,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 2;
                 break;
             case opcodes.getfield_s_this: //0xAF
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].local_vars[0];
 
                 var retval = getfield(info, objref);
@@ -1934,18 +1934,18 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 2;
                 break;
             case opcodes.getfield_i_this: //0xB0
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].local_vars[0];
 
                 var retval = getfield(info, objref);
 
-                var val = convertIntegerToWords(retval);
+                var val = opcodes.convertIntegerToWords(retval);
                 frames[current_frame].operand_stack.push(val[0]);
                 frames[current_frame].operand_stack.push(val[1]);
                 i += 2;
                 break;
             case opcodes.putfield_a_w: //0xB1
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var val = frames[current_frame].operand_stack.pop();
                 var objref = frames[current_frame].operand_stack.pop();
 
@@ -1953,7 +1953,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 3;
                 break;
             case opcodes.putfield_b_w: //0xB2
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var val = frames[current_frame].operand_stack.pop();
                 var objref = frames[current_frame].operand_stack.pop();
 
@@ -1961,7 +1961,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 3;
                 break;
             case opcodes.putfield_s_w: //0xB3
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var val = frames[current_frame].operand_stack.pop();
                 var objref = frames[current_frame].operand_stack.pop();
 
@@ -1970,7 +1970,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 break;
             case opcodes.putfield_i_w: //0xB4
 
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[(opcode[i + 1] << 8) + opcode[i + 2]].info.slice(0);
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
                 var val = (val1 << 8) + val2;
@@ -1981,7 +1981,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 3;
                 break;
             case opcodes.putfield_a_this: //0xB5
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].local_vars[0];
                 var val = frames[current_frame].operand_stack.pop();
 
@@ -1989,7 +1989,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 2;
                 break;
             case opcodes.putfield_b_this: //0xB6
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].local_vars[0];
                 var val = frames[current_frame].operand_stack.pop();
 
@@ -1997,7 +1997,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 2;
                 break;
             case opcodes.putfield_s_this: //0xB7
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].local_vars[0];
                 var val = frames[current_frame].operand_stack.pop();
 
@@ -2005,7 +2005,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 i += 2;
                 break;
             case opcodes.putfield_i_this: //0xB8
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[opcode[i + 1]].info.slice(0);
                 var objref = frames[current_frame].local_vars[0];
                 var val2 = frames[current_frame].operand_stack.pop();
                 var val1 = frames[current_frame].operand_stack.pop();
@@ -2037,14 +2037,14 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 barr[j] = sf[offset + j];
             };
 
-            return convertFromBytes(barr);
+            return opcodes.convertFromBytes(barr);
         }
 
 
 
         function putstatic(info,val,size) {
 
-            var barr = convertToBytes(val, size);
+            var barr = opcodes.convertToBytes(val, size);
             var offset = (info[1] << 8) + info[2];
             var sf = readStaticField().split(",");
 
@@ -2073,12 +2073,12 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             var jf;
             
             //assume internal
-            var refclass = EEPROM.getHeapValue(objref);
+            var refclass = javacard.EEPROM.getHeapValue(objref);
             while (!bfound) {
                 //get object field size
                 if (refclass == infoclass) {
                     bfound = true;
-                    retval = EEPROM.getHeapValue(oheap + info[2] + 1);
+                    retval = javacard.EEPROM.getHeapValue(oheap + info[2] + 1);
                 } else {
 
                     for (var j = 0; j < CAPfile.COMPONENT_Class.i_count; j++) {
@@ -2108,12 +2108,12 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
             var jf;
 
             //assume internal
-            var refclass = EEPROM.getHeapValue(objref);
+            var refclass = javacard.EEPROM.getHeapValue(objref);
             while (!bfound) {
                 //get object field size
-                if (refclass == infoclass) {
+                if (refclass === infoclass) {
                     bfound = true;
-                    EEPROM.setHeapValue(oheap + info[2] + 1, val);
+                    javacard.EEPROM.setHeapValue(oheap + info[2] + 1, val);
                 } else {
                     for (var j = 0; j < CAPfile.COMPONENT_Class.i_count; j++) {
                         if (CAPfile.COMPONENT_Class.interface_info[j].start == refclass) {
@@ -2141,7 +2141,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
 
             for (var j = 0; j < ehc; j++) {
                 //get class ref
-                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[ehs[j].catch_type_index].info;
+                var info = CAPfile.COMPONENT_ConstantPool.constant_pool[ehs[j].catch_type_index].info.slice(0);
                 info[0] -= 128;
                 handlertype = info[1];
                 //check correct package and bytecode range
@@ -2149,17 +2149,17 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                 if((i >= ehs[j].start_offset) && (i < (ehs[j].start_offset + ehs[j].active_length)) && (ehs[j].catch_type_index > 0)) {
 
                     var handlerpk = CAPfile.COMPONENT_Import.packages[info[0]].AID;
-                    if ((handlerpk == throwpk) && (handlertype == throwtype)) { bfound = true; }
-                    if (handlerpk == jlang) {
+                    if ((handlerpk.join() === throwpk.join()) && (handlertype.join() === throwtype.join())) { bfound = true; }
+                    if (handlerpk.join() === jlang.join()) {
                         switch (handlertype) {
                             case 2: bfound = true; break;
                             case 3: if (throwtype > 2) { bfound = true; }; break;
-                            case 4: if ((throwtype == 5) && (handlerpk == throwpk)) { bfound = true; }; break;
+                            case 4: if ((throwtype == 5) && (handlerpk.join() === throwpk.join())) { bfound = true; }; break;
                         }
-                    } else if (handlerpk == jframework) {
+                    } else if (handlerpk.join() === jframework.join()) {
                         switch (handlertype) {
-                            case 5: if ((handlerpk == throwpk) && (throwtype>5) && (throwtype<16)) { bfound = true; }; break;
-                            case 4: if ((throwtype == 16) && (handlerpk == throwpk)) { bfound = true; }; break;
+                            case 5: if ((handlerpk.join() === throwpk.join()) && (throwtype>5) && (throwtype<16)) { bfound = true; }; break;
+                            case 4: if ((throwtype == 16) && (handlerpk.join() === throwpk)) { bfound = true; }; break;
                          }
                     }
 
@@ -2169,8 +2169,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
 
             if (bfound) { i = hoffset-1;
             } else {
-                switch (throwpk) {
-                    case jframework:
+                switch (throwpk.join()) {
+                    case jframework.join():
                         switch (throwtype) {
                             case 4:
                                 CardException.throwIt(reason); break;
@@ -2191,7 +2191,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
                             default:
                                 Exception.throwIt(reason); break;
                         }
-                    case jlang:
+                    case jlang.join():
                         switch (throwtype) {
                             case 1:
                                 Throwable.throwIt(reason); break;
@@ -2227,39 +2227,40 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, EEP
         
 }
 
-//maybe RAM.transient_data not passed but a global to jcvm later?
-function arrstore(arref, index, value, RAM) {
+//TODO --> put this somewhere else later, like EEPROM or Processor
+//maybe javacard.RAM.transient_data not passed but a global to jcvm later?
+function arrstore(arref, index, value, javacard) {
 
 
     if (arref == null) { executeBytecode.exception_handler(jlang, 7, ""); }
 
     if (arref.toString().slice(0, 1) == "H") {
         var ref = arref.slice(1).split("#");
-        var obj = EEPROM.objectheap[Number(ref[0])];
+        var obj = javacard.EEPROM.objectheap[Number(ref[0])];
         if ((index >= Number(ref[2])) || (index < 0)) { executeBytecode.exception_handler(jlang, 5, ""); }
         else {
             obj.setArray(Number(ref[1]), index, value);
-            APISave(ref[0], obj.save());
+            //APISave(ref[0], obj.save());
         }
     } else if (arref.toString().slice(0, 1) == "T") {
         var ref = arref.slice(1).split("#");
         var tpsn = Number(ref[0])
         if ((index >= Number(ref[1]))|| (index < 0)) { executeBytecode.exception_handler(jlang, 5, ""); }
         else {
-            RAM.transient_data[tpsn + index] = value;
+            javacard.RAM.transient_data[tpsn + index] = value;
         }
       } else {
 
         arref = Number(arref);
         index = Number(index);
-        if ((index >= EEPROM.getHeapValue(arref)) || (index < 0)) { executeBytecode.exception_handler(jlang, 5, ""); }
+        if ((index >= javacard.EEPROM.getHeapValue(arref)) || (index < 0)) { executeBytecode.exception_handler(jlang, 5, ""); }
         else {
-            EEPROM.setHeapValue(arref + index + 1, value);
+            javacard.EEPROM.setHeapValue(arref + index + 1, value);
         };
     }
 }
 
-function arrload(arref, index, RAM) {
+function arrload(arref, index, javacard) {
 
     if (arref == null) { executeBytecode.exception_handler(jlang, 7, ""); }
     if (arref.toString().slice(0, 1) == "H") {
@@ -2267,7 +2268,7 @@ function arrload(arref, index, RAM) {
         if ((index >= Number(ref[2])) || (index < 0)) { executeBytecode.exception_handler(jlang, 5, ""); }
         else {
 
-            var obj = EEPROM.objectheap[Number(ref[0])];
+            var obj = javacard.EEPROM.objectheap[Number(ref[0])];
             var out = obj.getArray(Number(ref[1]), index);
  
         }
@@ -2276,15 +2277,17 @@ function arrload(arref, index, RAM) {
         var tpsn = Number(ref[0])
         if ((index >= Number(ref[1])) || (index < 0)) { executeBytecode.exception_handler(jlang, 5, ""); }
         else {
-            out = RAM.transient_data[tpsn + index];
+            out = javacard.RAM.transient_data[tpsn + index];
         } 
     } else {
         arref = Number(arref);
         index = Number(index);
-        if ((index >= EEPROM.getHeapValue(arref)) || (index < 0)) { executeBytecode.exception_handler(jlang, 5, ""); }
-        else { out = EEPROM.getHeapValue(arref + index + 1); };
+        if ((index >= javacard.EEPROM.getHeapValue(arref)) || (index < 0)) { executeBytecode.exception_handler(jlang, 5, ""); }
+        else { out = javacard.EEPROM.getHeapValue(arref + index + 1); };
     }
     return out;
 }
 
+exports.arrstore = arrstore;
+exports.arrload = arrload;
 exports.executeBytecode = executeBytecode;

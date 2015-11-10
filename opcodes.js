@@ -191,16 +191,16 @@ module.exports = {
     swap_x: 0x40,
     sxor: 0x57,
 
-    jframework: "a0000000620101",
-    jlang: "a0000000620001",
-    jsecurity: "a0000000620102",
-    jxcrypto: "a0000000620201",
+    jframework: [0xA0,0x00,0x00,0x00,0x62,0x01,0x01],//"a0000000620101",
+    jlang: [0xA0,0x00,0x00,0x00,0x62,0x00,0x01],//"a0 00 00 00 62 00 01",
+    jsecurity: [0xA0,0x00,0x00,0x00,0x62,0x01,0x02],//"a0 00 00 00 62 01 02",
+    jxcrypto: [0xA0,0x00,0x00,0x00,0x62,0x02,0x01],//"a0 00 00 00 62 02 01",
 
     pad: function(val) {
         var rval;
         if (val.length == 1) {
             rval = "0" + val;
-        } else { rval= val }
+        } else { rval= val; }
 
         return rval;
     },
@@ -219,59 +219,59 @@ module.exports = {
 
     ByteToShort: function(val) {
         //Sign extends a byte to short
-        if (val >= 0 && val < (byte_s/2)) {
+        if (val >= 0 && val < (this.byte_s/2)) {
             return val;
         } else {
-            val = byte_s - val;
-            return (short_s - val);
+            val = this.byte_s - val;
+            return (this.short_s - val);
         }
     },
 
     ByteToInt: function(val) {
         //Sign extends a byte to int
-        if (val >= 0 && val < (byte_s / 2)) {
+        if (val >= 0 && val < (this.byte_s / 2)) {
             return val;
         } else {
-            val = byte_s - val;
-            return (int_s - val);
+            val = this.byte_s - val;
+            return (this.int_s - val);
         }
     },
 
     ShortToInt: function(val) {
         //Sign extends a short to int
-        if (val >= 0 && val < (short_s / 2)) {
+        if (val >= 0 && val < (this.short_s / 2)) {
             return val;
         } else {
-            val = short_s - val;
-            return (int_s - val);
+            val = this.short_s - val;
+            return (this.int_s - val);
         }
     },
 
 
     ByteToValue: function(val) {
         //Converts unsigned byte to number
-        if (val >= 0 && val < (byte_s / 2)) {
+        if (val >= 0 && val < (this.byte_s / 2)) {
             return val;
         } else {
-            val = val - byte_s;
+            val = val - this.byte_s;
             return (val);
         }
     },
     ShortToValue: function(val) {
         //Converts unsigned short to number
-        if (val >= 0 && val < (short_s / 2)) {
+        if (val >= 0 && val < (this.short_s / 2)) {
             return val;
         } else {
-            val = val - short_s;
+            val = val - this.short_s;
             return (val);
         }
     },
     IntToValue: function(val) {
         //Converts unsigned int to number
-        if (val >= 0 && val < (int_s / 2)) {
+        if (val >= 0 && val < (this.int_s / 2)) {
             return val;
         } else {
-            val = val - int_s;
+            val = val - this.int_s;
             return (val);
         }
     },
@@ -290,8 +290,9 @@ module.exports = {
     convertToBytes: function(val, size) {
         var nBytes = [];
 
-        for (var j = 0; j < size; j++)
-        { nBytes[j] = (val >> (8 * (size-j-1))) & 0xff }
+        for (var j = 0; j < size; j++){
+            Bytes[j] = (val >> (8 * (size-j-1))) & 0xff;
+        }
 
         return nBytes;
     },
@@ -305,4 +306,4 @@ module.exports = {
         return res;
 
     }
-}
+};

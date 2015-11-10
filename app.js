@@ -68,7 +68,7 @@ app.post('/sendapdu', function(req, res){
             if(req.body.APDU[i][0] != null){
                 response = javacard.APDUProcessor.process(req.body.APDU[i]);
                 console.log("response: " + response);
-                if(response != "0x9000"){
+                if(response == ""){
                     break;
                 }
             }

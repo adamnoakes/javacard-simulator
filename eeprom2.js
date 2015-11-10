@@ -1,41 +1,23 @@
-//change to hashmaps
-function appletInstance(parentPackageIndex, AID, addressPointer){
-	this.parentPackageIndex = parentPackageIndex;
-	this.AID = AID;
-	this.addressPointer = addressPointer;
-}
-
-function packageAppletInstance(parentPackageIndex, AID, addressPointer){
-	this.parentPackageIndex = parentPackageIndex;
-	this.AID = AID;
-	this.addressPointer = addressPointer;
-}
-
-function packageItem(packageIndex, AID){
-	this.packageIndex = packageIndex;
-	this.AID = AID;
-}
-
-function EEPROM() { 
+function EEPROM(RAM) {
+    this.RAM = RAM; //TODO --> These functions should be called by processor which modifies EEPROM, and no RAM in here.
 	this.heap = [0xA0,0x00];
 	this.packages = [];
+    this.installedApplets = [{'AID': [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01], 'appletRef': -1}];
+    this.selectedApplet = {'AID': undefined, 'appletRef': undefined, 'CAP': undefined};
     this.objectheap = [];
-	this.appletInstances = [];  //array of type appletInstance
-	this.packageApplets = []; //array of type appletInstance
-	this.packageTables = []; //array of type packageItem
-	this.appendHeap = function(arr) {
 		//if (!transaction_flag) {//need to fix this later, add transaction flag and asyncState etc.
 		    //asyncState = false;
-            if(arr.constructor === Array){//aprox 3 times quicker than instance of array
-                this.heap.push.apply(this.heap, arr);
-            } else {
-                this.heap.push(arr);
-            }
-		    //this.heap = value.split(','); //need to check
-		//} else {
-		//    transaction_buffer.push(value);
-		//}
-	}
+    this.appendHeap = function(arr) {
+        if (arr.constructor === Array) {//aprox 3 times quicker than instance of array
+            this.heap.push.apply(this.heap, arr);
+        } else {
+            this.heap.push(arr);
+        }
+        //this.heap = value.split(','); //need to check
+        //} else {
+        //    transaction_buffer.push(value);
+        //}
+    }
     //api objects?
     this.appendObjectHeap = function(arr) {
         //if (!transaction_flag) {//need to fix this later, add transaction flag and asyncState etc.
@@ -57,6 +39,33 @@ function EEPROM() {
         } else{
             this.heap[pos] = value;
         }
+    }
+
+    this.setSelectedApplet = function(appletAID){
+        for(var i = 0; i<this.installedApplets.length; i++){
+            if(this.installedApplets[i].AID.join() === appletAID.join()) {
+                this.selectedApplet.AID =  this.installedApplets[i].AID;
+                this.selectedApplet.appletRef = this.installedApplets[i].appletRef;
+                this.selectedApplet.CAP = this.getAppletCAP(appletAID);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    this.getAppletCAP = function(appletAID){
+        for(var i = 0; i<this.packages.length; i++){
+            for(var j = 0; j<this.packages[i].COMPONENT_Applet.applets.length; i++){
+                if(this.packages[i].COMPONENT_Applet.applets[j].AID.join() === appletAID.join()){
+                    return this.packages[i];
+                }
+            }
+        }
+        return undefined;
+    }
+
+    this.addInstalledApplet = function(){
+        this.installedApplets.push({'AID': this.RAM.installingAppletAID, 'appletRef': this.RAM.gRef});
     }
 
     this.getHeapValue = function(value){
@@ -165,4 +174,3 @@ function Recover() {
 
 
 exports.EEPROM = EEPROM;
-exports.appletInstance = appletInstance;
