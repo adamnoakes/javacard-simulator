@@ -1,5 +1,4 @@
-function EEPROM(RAM) {
-    this.RAM = RAM; //TODO --> These functions should be called by processor which modifies EEPROM, and no RAM in here.
+function EEPROM() {
 	this.heap = [0xA0,0x00];
 	this.packages = [];
     this.installedApplets = [{'AID': [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01], 'appletRef': -1}];
@@ -64,9 +63,6 @@ function EEPROM(RAM) {
         return undefined;
     }
 
-    this.addInstalledApplet = function(){
-        this.installedApplets.push({'AID': this.RAM.installingAppletAID, 'appletRef': this.RAM.gRef});
-    }
 
     this.getHeapValue = function(value){
         return this.heap[value];
@@ -98,6 +94,47 @@ function EEPROM(RAM) {
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function APISave(lineno, value) {
     

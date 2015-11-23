@@ -3,6 +3,7 @@ var AID = require('./java.framework/AID.js').AID;
 var Applet = require('./java.framework/Applet.js').Applet;//TODO --> Finish all imports
 var APDU = require('./java.framework/APDU.js').APDU;
 var Util = require('./java.framework/Util.js');
+var JCSystem = require('./java.framework/JCSystem.js');
 
 function newAPIObject(lib,cls) {
    
@@ -83,9 +84,9 @@ function newAPIObject(lib,cls) {
     return obj;
 }
 
-exports.newAPIObject = newAPIObject; //TODO --> replace with module.exports for one below too //TODO --> replace javacard with processor and add processor functions
+exports.newAPIObject = newAPIObject; //TODO --> replace with module.exports for one below too //TODO --> replace processor with processor and add processor functions
 
-function runMethod (id, clas, method, type, param, objectheap, objref, javacard) {
+function runMethod (id, clas, method, type, param, objectheap, objref, processor) {
     var bbb = "";
     var pm = "";
     var retval;
@@ -139,7 +140,7 @@ function runMethod (id, clas, method, type, param, objectheap, objref, javacard)
 
                             //obj.reg();
                             //EEPROM.registerApplet();
-                            javacard.EEPROM.addInstalledApplet();
+                            processor.addInstalledApplet();//ISSUE
                             rettype = 0;
                             retval = "";
                             break;
@@ -149,7 +150,7 @@ function runMethod (id, clas, method, type, param, objectheap, objref, javacard)
                             retval = "";
                             break;
                         case 3:
-                            retval = javacard.RAM.select_statement_flag;//obj.selectingApplet();
+                            retval = processor.getSelectStatementFlag;//obj.selectingApplet();
                             rettype = 1;
                             break;
                         case 4:
@@ -222,35 +223,35 @@ function runMethod (id, clas, method, type, param, objectheap, objref, javacard)
 
                     switch (method) {
                         case 0:
-                            javacard.JCSystem.abortTransaction();
+                            processor.abortTransaction();
                             retval = "";
                             rettype = 0;
                             break;
                         case 1:
-                            javacard.JCSystem.beginTransaction();
+                            processor.beginTransaction();
                             retval = "";
                             rettype = 0;
                             break;
                         case 2:
-                            javacard.JCSystem.commitTransaction();
+                            processor.commitTransaction();
                             retval = "";
                             rettype = 0;
                             break;
                         case 12:
                             rettype = 2;
-                            retval = javacard.JCSystem.makeTransientBooleanArray(param[0], param[1]);
+                            retval = JCSystem.makeTransientBooleanArray(param[0], param[1]);
                             break;
                         case 13:
                             rettype = 2;
-                            retval = javacard.JCSystem.makeTransientByteArray(param[0], param[1]);
+                            retval = JCSystem.makeTransientByteArray(param[0], param[1]);
                             break;
                         case 14:
                             rettype = 2;
-                            retval = javacard.JCSystem.makeTransientObjectArray(param[0], param[1]);
+                            retval = JCSystem.makeTransientObjectArray(param[0], param[1]);
                             break;
                         case 15:
                             rettype = 2;
-                            retval = javacard.JCSystem.makeTransientShortArray(param[0], param[1]);
+                            retval = JCSystem.makeTransientShortArray(param[0], param[1]);
 
                             break;
                         default:
@@ -466,25 +467,25 @@ function runMethod (id, clas, method, type, param, objectheap, objref, javacard)
                     rettype = 1;
                     switch (method) {
                         case 0:
-                            retval = Util.arrayCompare(param[0], param[1], param[2], param[3], param[4], javacard);
+                            retval = Util.arrayCompare(param[0], param[1], param[2], param[3], param[4], processor);
                             break;
                         case 1:
-                            retval = Util.arrayCopy(param[0], param[1], param[2], param[3], param[4], javacard);
+                            retval = Util.arrayCopy(param[0], param[1], param[2], param[3], param[4], processor);
                             break;
                         case 2:
-                            retval = Util.arrayCopyNonAtomic(param[0], param[1], param[2], param[3], param[4]), javacard;
+                            retval = Util.arrayCopyNonAtomic(param[0], param[1], param[2], param[3], param[4], processor);
                             break;
                         case 3:
-                            retval = Util.arrayFillNonAtomic(param[0], param[1], param[2], param[3], javacard);
+                            retval = Util.arrayFillNonAtomic(param[0], param[1], param[2], param[3], processor);
                             break;
                         case 4:
-                            retval = Util.getShort(param[0], param[1], javacard);
+                            retval = Util.getShort(param[0], param[1], processor);
                             break;
                         case 5:
                             retval = Util.makeShort(param[0], param[1]);
                             break;
                         case 6:
-                            retval = Util.setShort(param[0], param[1], param[2], javacard);
+                            retval = Util.setShort(param[0], param[1], param[2], processor);
                             break;
                     }
 

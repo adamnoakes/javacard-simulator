@@ -1,9 +1,9 @@
 var capJS = require('./cap.js');
 var jcvm = require('./jcvm.js');
 //later just pass card?
-function Installer(javacard) {
+function Installer(processor) {
 
-	this.javacard = javacard;
+	this.processor = processor;
 	this.INS = 0;
 	this.P1 = 0;
 	this.P2 = 0;
@@ -61,7 +61,7 @@ function Installer(javacard) {
     this[0xBA] = function(){
     	//End Package (write package)
         //gcardname = cardname;
-        this.javacard.EEPROM.writePackage(new capJS.CAPfile(this.tempComponents));
+        this.processor.writePackage(new capJS.CAPfile(this.tempComponents));
         //PageMethods.endPackage(gcardname; Result_Method);
         //gpID = Number(Result);
         //clear tempcomponents
@@ -75,7 +75,7 @@ function Installer(javacard) {
         var createAID = this.buffer.slice(6, 6+AIDLength);
         var params = undefined;
         //get the cap 
-        var packageToCreate = this.javacard.EEPROM.getPackage(createAID);
+        var packageToCreate = this.processor.getPackage(createAID);
         //if the package does not exists the we can't create an instance --> fail.
         if(!packageToCreate){
             return "0x6443";
@@ -86,13 +86,13 @@ function Installer(javacard) {
         //normally only one applet
         for(var i=0; i < packageToCreate.COMPONENT_Applet.applets.length; i++){//TODO --> change from 0
             install_method_offset = packageToCreate.COMPONENT_Applet.applets[0].install_method_offset;
-            this.javacard.RAM.installingAppletAID = packageToCreate.COMPONENT_Applet.applets[0].AID;
+            this.processor.setInstallingAppletAID(packageToCreate.COMPONENT_Applet.applets[0].AID);
             params =[];
             params[0] = this.buffer;
             params[1] = AIDLength + 7;
             params[2] = this.buffer[AIDLength + 1];
             console.log("attempt jcvm");
-            jcvm.executeBytecode(packageToCreate, install_method_offset, params, 1, -1, this.javacard);
+            jcvm.executeBytecode(packageToCreate, install_method_offset, params, 1, -1, this.processor);
        	}
         return "0x9000";
     };

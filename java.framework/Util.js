@@ -4,15 +4,15 @@ module.exports = {
     //Class Token - 10
     //Token = 0x10;
 
-    arrayCompare: function(src, srcOff, dest, destOff, length, javacard) {
+    arrayCompare: function(src, srcOff, dest, destOff, length, processor) {
 
         try {
 
             for (var j = 0; j < length; j++) {
 
-                if (jcvm.arrload(src, srcOff + j, javacard) > jcvm.arrload(dest, destOff + j, javacard)) {
+                if (processor.loadArray(src, srcOff + j) > processor.loadArray(dest, destOff + j)) {
                     return 1;
-                } else if (jcvm.arrload(src, srcOff + j, javacard) > jcvm.arrload(dest, destOff + j, javacard)) {
+                } else if (processor.loadArray(src, srcOff + j) > processor.loadArray(dest, destOff + j)) {
                     return -1;
                 }
             }
@@ -23,11 +23,11 @@ module.exports = {
         return 0;
     }, //00 byte
 
-    arrayCopy: function(src, srcOff, dest, destOff, length, javacard) {
+    arrayCopy: function(src, srcOff, dest, destOff, length, processor) {
         JCSystem.beginTransaction();
         try {
             for (var j = 0; j < length; j++) {
-                jcvm.arrstore(dest, destOff + j, jcvm.arrload(src, srcOff + j), javacard);
+                processor.storeArray(dest, destOff + j, processor.loadArray(src, srcOff + j));
             }
         } catch (err) {
             JCSystem.abortTransaction();
@@ -38,11 +38,11 @@ module.exports = {
         return 1;
     }, //01 short
 
-    arrayCopyNonAtomic: function(src, srcOff, dest, destOff, length, javacard) {
+    arrayCopyNonAtomic: function(src, srcOff, dest, destOff, length, processor) {
 
         try {
             for (var j = 0; j < length; j++) {
-                jcvm.arrstore(dest, destOff + j, jcvm.arrload(src, srcOff + j), javacard);
+                processor.storeArray(dest, destOff + j, processor.loadArray(src, srcOff + j));
                 //alert(arrload(src, srcOff + j));
             }
         } catch (err) {
@@ -51,10 +51,10 @@ module.exports = {
         }
     }, //02 short
 
-    arrayFillNonAtomic: function(bArray, bOff, bLen, bValue, javacard) {
+    arrayFillNonAtomic: function(bArray, bOff, bLen, bValue, processor) {
         try {
             for (var j = 0; j < length; j++) {
-                jcvm.arrstore(bArray, bOff + j, bValue, javacard);
+                processor.storeArray(bArray, bOff + j, bValue);
             }
         } catch (err) {
             return 0;
@@ -63,20 +63,20 @@ module.exports = {
         return 1;
 
     }, //03 short
-    getShort: function(bArray, bOff, javacard) {
-        makeShort(jcvm.arrload(bArray, bOff), jcvm.arrload(bArray, bOff + 1), javacard);
+    getShort: function(bArray, bOff, processor) {
+        makeShort(processor.loadArray(bArray, bOff), processor.loadArray(bArray, bOff + 1));
         return 1;
     }, //04 short
     makeShort: function(b1, b2) {
         return (((b1 << 8) & 0xFF00) | (b2 & 0xFF))
     }, //05 short
-    setShort: function(bArray, bOff, sValue, javacard) {
+    setShort: function(bArray, bOff, sValue, processor) {
         var b1 = ((sValue & 0xFF00) >> 8);
         var b2 = (sValue & 0xFF);
         try {
             //alert(bArray + " " + bOff + " " + sValue);
-            jcvm.arrstore(bArray, bOff, b1, javacard);
-            jcvm.arrstore(bArray, bOff + 1, b2, javacard)
+            processor.storeArray(bArray, bOff, b1);
+            processor.storeArray(bArray, bOff + 1, b2)
         } catch (err) {
             return 0;
             //throw "ArrayOutofBoundsException";
