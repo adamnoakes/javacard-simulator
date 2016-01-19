@@ -3,8 +3,8 @@ var ramJS = require('./ram.js');
 var apduprocessorJS = require('./processor.js');
 var jcsystemJS = require('./java.framework/JCSystem.js')
 
-function JavaCard(){
-    this.cardName = "Calculator";
+function JavaCard(cardName){
+    this.cardName = cardName;
     this.RAM = new ramJS.RAM();
     this.EEPROM = new eepromJS.EEPROM(this.RAM);//TODO --> should not have access to RAM, functions should be called through javacard/ processor
     this.APDUProcessor = new apduprocessorJS.APDUProcessor(this);
