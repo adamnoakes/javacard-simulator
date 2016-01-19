@@ -300,7 +300,7 @@ Licensed under the MIT license
       this.history_new = '';
       this.history_active = false;
       this.shortcuts = {};
-      this.$container = $('<div style="height: 100%;"/>').appendTo(outer_container);//modified by adam
+      this.$container = $('<div style="height: 100%; overflow: scroll;"/>').appendTo(outer_container);//modified by adam
       //Modified by Adam
       /*this.$container.css({
         'top': 0,

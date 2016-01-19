@@ -4,6 +4,11 @@ $(function(){
    // newCard();       
 });
 
+function updateScroll(){
+    var element = document.getElementById("console");
+    element.scrollTop = element.scrollHeight + 1000;
+}
+
 $(function() {
     // Creating the console.
     var header =    'Welcome to the Java Card online simulator!\n' +
@@ -42,7 +47,6 @@ $(function() {
       } else {
         jqconsole.Prompt(true, handler);
       }
-      
     };
 
 // Initiate the first prompt.
