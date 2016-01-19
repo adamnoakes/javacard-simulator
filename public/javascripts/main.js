@@ -8,8 +8,10 @@ $(function(){
 
 $(function() {
     // Creating the console.
-    var header = 'Welcome to the Java Card online simulator!\n' +
-                 'Adam Noakes - University of Southampton\n';
+    var header =    'Welcome to the Java Card online simulator!\n' +
+                    'Adam Noakes - University of Southampton\n' +
+                    'Tip: Ensure window width is above 992px to view documentation.\n';
+                    
     window.jqconsole = $('#console').jqconsole(header, 'Java Card> ');
 
     // Abort prompt on Ctrl+Z.

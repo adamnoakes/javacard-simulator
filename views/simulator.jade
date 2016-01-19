@@ -1,6 +1,6 @@
 extends layout
 block content
-  .col-sm-6.full-height
+  .hidden-xs.hidden-sm.col-md-6.full-height
     #documentation.row.full-height
       // Nav Bar
       nav.col-xs-3.bs-docs-sidebar
@@ -24,8 +24,8 @@ block content
               li
                 a(href='#Calculator') Calculator
       // Main Content
-      .col-xs-9
-        section#Overview
+      .col-xs-9#Overview
+        section
           h3 Overview
           h4 Welcome to the Java Card online Simulator.
           p By 
@@ -192,7 +192,7 @@ block content
                     a.btn.btn-link.incomplete(href='#') View
                   td
                     a.btn.btn-danger(href='#') Execute
-  .col-sm-6.full-height
+  .col-md-6.full-height
     .row.full-height
       #console
 
