@@ -4,8 +4,6 @@ $(function(){
    // newCard();       
 });
 
-
-
 $(function() {
     // Creating the console.
     var header =    'Welcome to the Java Card online simulator!\n' +

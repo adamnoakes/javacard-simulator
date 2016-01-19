@@ -35,7 +35,7 @@ block content
             br
             | This section provides a basic documentation for the simulator.
             br 
-            | -> Sections highlighted in red have not yet been documented.
+            | <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> Sections highlighted in red have not yet been documented.
             br
             br
             | Interact with the simulator by typing commands detailed in this section, and pressing enter.
@@ -95,8 +95,8 @@ block content
                   td 0x9000
                   td Successful command execution.
                 tr
-                  td .
-                  td .
+                  td 0x6A82
+                  td No applet selected.
                 tr
                   td .
                   td .
@@ -150,51 +150,59 @@ block content
                   th Source
                   th Link
               tbody
-                tr.incomplete
+                tr
                   td 1.
                   td Create a new virtual card.
                   td
                     a.btn.btn-link.incomplete(href='#') View
                   td
-                    a.btn.btn-danger(href='#') Execute
-                tr.incomplete
+                    a.btn.btn-success(onclick='executeButton(calculatorCommands.newCard)') Execute
+                tr
                   td 2.
                   td Send Calculator applet APDU script.
                   td
                     a.btn.btn-link.incomplete(href='#') View
                   td
-                    a.btn.btn-danger(href='#') Execute
-                tr.incomplete
+                    a.btn.btn-success(onclick='executeButton(calculatorCommands.sendApplet)') Execute
+                tr
                   td 3.
+                  td Select Calculator applet.
+                  td
+                    a.btn.btn-link.incomplete(href='#') View
+                  td
+                    a.btn.btn-success(onclick='executeButton(calculatorCommands.selectApplet)') Execute
+                tr
+                  td 4.
                   td Send digit "3" to smart card.
                   td
                     a.btn.btn-link.incomplete(href='#') View
                   td
-                    a.btn.btn-danger(href='#') Execute
-                tr.incomplete
-                  td 4.
+                    a.btn.btn-success(onclick='executeButton(calculatorCommands.sendThree)') Execute
+                tr
+                  td 5.
                   td Send opcode "+" to smart card.
                   td
                     a.btn.btn-link.incomplete(href='#') View
                   td
-                    a.btn.btn-danger(href='#') Execute
-                tr.incomplete
-                  td 5.
+                    a.btn.btn-success(onclick='executeButton(calculatorCommands.sendAddition)') Execute
+                tr
+                  td 6.
                   td Send digit "2" to smart card.
                   td
                     a.btn.btn-link.incomplete(href='#') View
                   td
-                    a.btn.btn-danger(href='#') Execute
-                tr.incomplete
-                  td 6.
+                    a.btn.btn-success(onclick='executeButton(calculatorCommands.sendTwo)') Execute
+                tr
+                  td 7.
                   td Send opcode "=" to smart card.
                   td
                     a.btn.btn-link.incomplete(href='#') View
                   td
-                    a.btn.btn-danger(href='#') Execute
+                    a.btn.btn-success(onclick='executeButton(calculatorCommands.sendEquals)') Execute
   .col-md-6.full-height
     .row.full-height
       #console
 
   script(src="/javascripts/jqconsole.js")
   script(src="/javascripts/main.js")
+  script(src="/javascripts/commands.js")

@@ -4,6 +4,9 @@ body, html {
   height:100%;
 }
 
+#console{
+    overflow: scroll;
+}
 .incomplete{
     color: #933333;
 }
