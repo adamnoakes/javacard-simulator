@@ -4,10 +4,9 @@ var apduprocessorJS = require('./processor.js');
 var jcsystemJS = require('./java.framework/JCSystem.js')
 
 function JavaCard(cardName){
-    this.cardName = cardName;
     this.RAM = new ramJS.RAM();
-    this.EEPROM = new eepromJS.EEPROM();
-    this.APDUProcessor = new apduprocessorJS.APDUProcessor(this);
+    this.EEPROM = new eepromJS.EEPROM(cardName);
+    this.APDUProcessor = new apduprocessorJS.APDUProcessor(this.RAM, this.EEPROM);
 }
 
 function setupStaticFields(CAPfile,pk) {

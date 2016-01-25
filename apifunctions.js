@@ -150,7 +150,7 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
                             retval = "";
                             break;
                         case 3:
-                            retval = processor.getSelectStatementFlag;//obj.selectingApplet();
+                            retval = processor.getSelectStatementFlag();//obj.selectingApplet();
                             rettype = 1;
                             break;
                         case 4:

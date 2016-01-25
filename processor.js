@@ -3,8 +3,9 @@ var apduJS = require('./java.framework/APDU.js');
 var jcvm = require('./jcvm.js');
 var opcodes = require('./opcodes.js');
 
-function APDUProcessor(javacard){
-	this.javacard = javacard;
+function APDUProcessor(RAM, EEPROM){
+    this.EEPROM = EEPROM;
+    this.RAM = RAM;
 	this.response = undefined;
 	this.CLA = undefined;
 	this.INS = undefined;
@@ -20,11 +21,11 @@ function APDUProcessor(javacard){
 	this.process = function(buffer){
 		this.apdu = new apduJS.APDU();
         this.apdu.constr(buffer);
-        this.javacard.EEPROM.objectheap[0] = this.apdu;
+        this.EEPROM.objectheap[0] = this.apdu;
         this.response = ""; //gSW
-        this.javacard.RAM.asyncState = false;
-        this.javacard.RAM.transaction_flag = false;
-        this.javacard.RAM.transaction_buffer = [];
+        this.RAM.asyncState = false;
+        this.RAM.transaction_flag = false;
+        this.RAM.transaction_buffer = [];
 
         this.CLA = buffer[0];    //@adam class of instruction, category
         this.INS = buffer[1];    //@adam instruction
@@ -40,17 +41,17 @@ function APDUProcessor(javacard){
         if ((this.CLA == 0) && (this.INS == 0xA4) && (this.P1 == 0x04) && (this.P2 == 0x00)) {
             return this.selectApplet(buffer.slice(5,5+this.LC)); //TODO --> should probably return here
         } else {
-            this.javacard.RAM.select_statement_flag = 0;
+            this.RAM.select_statement_flag = 0;
         }
 
-        if((this.javacard.EEPROM.selectedApplet.AID.join() === this.installerAID.join()) && (this.CLA == 0x80)){
+        if((this.EEPROM.selectedApplet.AID.join() === this.installerAID.join()) && (this.CLA == 0x80)){
             return this.installer.execute(buffer);
         } 
-        var startcode = this.javacard.EEPROM.selectedApplet.CAP.getStartCode(this.javacard.EEPROM.selectedApplet.AID, 7);
+        var startcode = this.EEPROM.selectedApplet.CAP.getStartCode(this.EEPROM.selectedApplet.AID, 7);
         var params = [];
         params[0] = 0;
-        jcvm.executeBytecode(this.javacard.EEPROM.selectedApplet.CAP, startcode, params, 0,
-            this.javacard.EEPROM.selectedApplet.appletRef, this);
+        jcvm.executeBytecode(this.EEPROM.selectedApplet.CAP, startcode, params, 0,
+            this.EEPROM.selectedApplet.appletRef, this);
 
         var output = ""
             if (this.apdu.getCurrentState() >= 3) {
@@ -64,45 +65,45 @@ function APDUProcessor(javacard){
 	}
 
 	this.selectApplet = function(appletAID){
-        this.javacard.RAM.transient_data = []; //reset transient data --> instead create new ram?
-        this.javacard.RAM.select_statement_flag = 1;
+        this.RAM.transient_data = []; //reset transient data --> instead create new ram?
+        this.RAM.select_statement_flag = 1;
 
         //delect curent applet
         this.selectedAID = []; //not the way to deselect, see code below
         //set applet aid and cap file in eeprom
-        if(this.javacard.EEPROM.setSelectedApplet(appletAID)){
-            if(this.javacard.EEPROM.selectedApplet.AID.join() === this.installerAID.join()){
+        if(this.EEPROM.setSelectedApplet(appletAID)){
+            if(this.EEPROM.selectedApplet.AID.join() === this.installerAID.join()){
                 return "0x9000"//if installer then the rest is not necessary
             }
 
-            for(var j = 0; j < this.javacard.EEPROM.selectedApplet.CAP.COMPONENT_Import.count; j++) { 
-                if(this.javacard.EEPROM.selectedApplet.CAP.COMPONENT_Import.packages[j].AID.join() === opcodes.jframework.join()) {
-                    this.javacard.EEPROM.setHeapValue(0, 160 + (j*256) + 10);
+            for(var j = 0; j < this.EEPROM.selectedApplet.CAP.COMPONENT_Import.count; j++) { 
+                if(this.EEPROM.selectedApplet.CAP.COMPONENT_Import.packages[j].AID.join() === opcodes.jframework.join()) {
+                    this.EEPROM.setHeapValue(0, 160 + (j*256) + 10);
                     break;
                 }
             }
             
-            var startcode = this.javacard.EEPROM.selectedApplet.CAP.getStartCode(appletAID, 6);
+            var startcode = this.EEPROM.selectedApplet.CAP.getStartCode(appletAID, 6);
             var params = [];
 
             //if the applet has an install method, run it.
             if (startcode > 0) {
-                jcvm.executeBytecode(this.javacard.EEPROM.selectedApplet.CAP, startcode, params, 2,
-                    this.javacard.EEPROM.selectedApplet.appletRef, this);
+                jcvm.executeBytecode(this.EEPROM.selectedApplet.CAP, startcode, params, 2,
+                    this.EEPROM.selectedApplet.appletRef, this);
             }
 
             //if install method (above) executed sucessfully, start process method
             if(true){
-                startcode = this.javacard.EEPROM.selectedApplet.CAP.getStartCode(appletAID, 7);
+                startcode = this.EEPROM.selectedApplet.CAP.getStartCode(appletAID, 7);
                 params[0] = 0;
-                jcvm.executeBytecode(this.javacard.EEPROM.selectedApplet.CAP, startcode, params, 0, this.javacard.EEPROM.selectedApplet.appletRef,
+                jcvm.executeBytecode(this.EEPROM.selectedApplet.CAP, startcode, params, 0, this.EEPROM.selectedApplet.appletRef,
                     this);
             }
 
             if(true){//if the method above fails reset selectapplet
                 return "0x9000";
             } else {
-                this.javacard.EEPROM.selectedApplet = null;
+                this.EEPROM.selectedApplet = null;
             }
             
         } else {
@@ -114,7 +115,7 @@ function APDUProcessor(javacard){
             console.log("installerAID " + this.installerAID + "selectedAID: " + this.selectedAID + ".");
             //create installer applet and send it reference to the EEPROM so that it can program the card :-) <-- didn't work moving that code up to the top
             console.log("E@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-            console.log(this.javacard.EEPROM);
+            console.log(this.EEPROM);
 
 
             //could add help message to return (e.g. selected AID is ...)
@@ -154,7 +155,7 @@ function APDUProcessor(javacard){
             var tpsn = Number(ref[0])
             if ((index >= Number(ref[1]))|| (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
             else {
-                this.javacard.RAM.transient_data[tpsn + index] = value;
+                this.RAM.transient_data[tpsn + index] = value;
             }
           } else {
 
@@ -183,7 +184,7 @@ function APDUProcessor(javacard){
             var tpsn = Number(ref[0])
             if ((index >= Number(ref[1])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
             else {
-                out = this.javacard.RAM.transient_data[tpsn + index];
+                out = this.RAM.transient_data[tpsn + index];
             } 
         } else {
             arref = Number(arref);
@@ -199,35 +200,35 @@ function APDUProcessor(javacard){
      */
      this.abortTransaction = function () {
 
-        if (!this.javacard.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
+        if (!this.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
         else {
-            this.javacard.RAM.transaction_flag = false;
-            this.javacard.RAM.transaction_buffer = [];
+            this.RAM.transaction_flag = false;
+            this.RAM.transaction_buffer = [];
         }
         
         return;
     };//00
     this.beginTransaction = function () {
-        if (this.javacard.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 1); }
-        else { this.javacard.RAM.transaction_flag = true; }
+        if (this.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 1); }
+        else { this.RAM.transaction_flag = true; }
 
         return;
     };//01
     this.commitTransaction = function () {//TODO --> Execution handler convert to hex array for jframework
-        if (!this.javacard.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
+        if (!this.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
         else {
-            this.javacard.RAM.transaction_flag = false;
-            var len = this.javacard.RAM.transaction_buffer.length;
+            this.RAM.transaction_flag = false;
+            var len = this.RAM.transaction_buffer.length;
             for (var j = 0; j < len; j++) {
-                var spl = this.javacard.RAM.transaction_buffer[j].split(";");//why split on ;
+                var spl = this.RAM.transaction_buffer[j].split(";");//why split on ;
                 if (spl.length == 1) {
-                    this.javacard.EEPROM.newHeap(spl[0]);
+                    this.EEPROM.newHeap(spl[0]);
                 } else {
-                    this.javacard.EEPROM.setHeap(Number(spl[0]), Number(spl[1]));
+                    this.EEPROM.setHeap(Number(spl[0]), Number(spl[1]));
                 }
                 
             }
-            this.javacard.RAM.transaction_buffer = [];
+            this.RAM.transaction_buffer = [];
         }
 
         return;
@@ -237,31 +238,31 @@ function APDUProcessor(javacard){
      *  EEPROM Functions  
      */
     this.addInstalledApplet = function(){
-        this.javacard.EEPROM.installedApplets.push({'AID': this.javacard.RAM.installingAppletAID, 'appletRef': this.javacard.RAM.gRef});
+        this.EEPROM.installedApplets.push({'AID': this.RAM.installingAppletAID, 'appletRef': this.RAM.gRef});
     }
 
-    this.getObjectHeap = function(){ return this.javacard.EEPROM.objectheap;};
+    this.getObjectHeap = function(){ return this.EEPROM.objectheap;};
 
-    this.appendHeap = function(arr){this.javacard.EEPROM.appendHeap(arr);};
-    this.appendObjectHeap = function(arr){this.javacard.EEPROM.appendObjectHeap(arr);};
-    this.setHeapValue = function(pos, value){this.javacard.EEPROM.setHeapValue(pos, value);};
-    this.setSelectedApplet = function(appletAID){this.javacard.EEPROM.setSelectedApplet(appletAID);};
-    this.getAppletCAP = function(appletAID){return this.javacard.EEPROM.getAppletCAP(appletAID);};
-    this.getHeapValue = function(value){return this.javacard.EEPROM.getHeapValue(value);};
-    this.getHeapSize = function(){return this.javacard.EEPROM.getHeapSize();};
-    this.writePackage = function(capfile){this.javacard.EEPROM.writePackage(capfile);};
-    this.getPackageByIndex = function(index){return this.javacard.EEPROM.getPackageByIndex(index);};
-    this.getPackage = function(AID){return this.javacard.EEPROM.getPackage(AID);};
+    this.appendHeap = function(arr){this.EEPROM.appendHeap(arr);};
+    this.appendObjectHeap = function(arr){this.EEPROM.appendObjectHeap(arr);};
+    this.setHeapValue = function(pos, value){this.EEPROM.setHeapValue(pos, value);};
+    this.setSelectedApplet = function(appletAID){this.EEPROM.setSelectedApplet(appletAID);};
+    this.getAppletCAP = function(appletAID){return this.EEPROM.getAppletCAP(appletAID);};
+    this.getHeapValue = function(value){return this.EEPROM.getHeapValue(value);};
+    this.getHeapSize = function(){return this.EEPROM.getHeapSize();};
+    this.writePackage = function(capfile){this.EEPROM.writePackage(capfile);};
+    this.getPackageByIndex = function(index){return this.EEPROM.getPackageByIndex(index);};
+    this.getPackage = function(AID){return this.EEPROM.getPackage(AID);};
 
     /* 
      *  RAM Functions  
      */
 
-     this.getTransientData = function(){return this.javacard.RAM.transient_data;};
-     this.pushTransientData = function(val){this.javacard.RAM.transient_data.push(val);};
-     this.setGRef = function(val){this.javacard.RAM.gRef = val;};
-     this.getSelectStatementFlag = function(){return this.javacard.RAM.select_statement_flag;};
-     this.setInstallingAppletAID = function(aid){this.javacard.RAM.installingAppletAID = aid;};
+     this.getTransientData = function(){return this.RAM.transient_data;};
+     this.pushTransientData = function(val){this.RAM.transient_data.push(val);};
+     this.setGRef = function(val){this.RAM.gRef = val;};
+     this.getSelectStatementFlag = function(){return this.RAM.select_statement_flag;};
+     this.setInstallingAppletAID = function(aid){this.RAM.installingAppletAID = aid;};
 
      
 }
