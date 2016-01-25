@@ -34,6 +34,8 @@ app.use(function(err, req, res, next) {
 //app.use('/users', users);
 
 app.get('/', function(req, res) {res.render('index')});
+app.get('/about', function(req, res) {res.render('about')});
+app.get('/simulator', function(req, res) {res.render('simulator')});
 
 app.get('/getcard', function(req, res) {
     var fs = require('fs');
@@ -52,9 +54,9 @@ app.get('/ls', function(req, res){
     tools.sendCards(res);
 });
 
-app.get('/load', function(req, res){
+app.get('/newcard', function(req, res){
     //needs to actually load from file
-    javacard = new appletMgrJS.JavaCard();
+    javacard = new appletMgrJS.JavaCard(req.query.cardName);
     res.send({'result': true, 'cardName': javacard.cardName});
 });
 

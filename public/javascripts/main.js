@@ -1,22 +1,20 @@
-$(function(){
-    $('#search').on('keyup', function(e){
-        if(e.keyCode === 13) {
-            var parameters = { search: $(this).val() };
-            $.get( '/searching',parameters, function(data) {
-                $('#results').html(data);
-            });
-        };
-    });
-});
+var handler;
 
 $(function(){
-    newCard();       
+   // newCard();       
 });
+
+function updateScroll(){
+    var element = document.getElementById("console");
+    element.scrollTop = element.scrollHeight + 1000;
+}
 
 $(function() {
     // Creating the console.
-    var header = 'Welcome to the Java Card online simulator!\n' +
-                 'Adam Noakes - University of Southampton\n';
+    var header =    'Welcome to the Java Card online simulator!\n' +
+                    'Adam Noakes - University of Southampton\n' +
+                    'Tip: Ensure window width is above 992px to view documentation.\n';
+                    
     window.jqconsole = $('#console').jqconsole(header, 'Java Card> ');
 
     // Abort prompt on Ctrl+Z.
@@ -38,7 +36,7 @@ $(function() {
     jqconsole.RegisterMatching('(', ')', 'paran');
     jqconsole.RegisterMatching('[', ']', 'bracket');
     // Handle a command.
-    var handler = function(command) {
+    handler = function(command) {
       if (command) {
         console.log(command);
         try {
@@ -49,12 +47,18 @@ $(function() {
       } else {
         jqconsole.Prompt(true, handler);
       }
-      
     };
 
 // Initiate the first prompt.
 handler();
 });
+
+function executeButton(command)
+{
+    jqconsole.Write("Java Card> " + command, "jqconsole-old-prompt");
+    jqconsole.Write('\n'); 
+    handler(command);
+}
 
 function selectCard()
 {
@@ -85,6 +89,9 @@ function sendCommand(input, handler){
         case "load":
             loadCard(handler);
             break;
+        case "newcard":
+            newCard(handler,  words[1]);
+            break;
         default:
             var lines = input.split(";");
             for(i=0; i<lines.length; i++){
@@ -97,6 +104,23 @@ function sendCommand(input, handler){
     
 }
 
+function newCard(handler, cardName){
+    $.ajax({
+        type: "GET",
+        data: {'cardName' : cardName},
+        url: "/newcard" ,
+        success: function(data){
+            console.log(data);
+            if(data.result){
+
+            }
+            jqconsole.Write("Successfully created virtual smart card: " + data.cardName, "response-ok");
+            jqconsole.Write('\n'); 
+            jqconsole.Prompt(true, handler);
+        }
+    });
+}
+
 function loadCard(handler){
     $.ajax({
         type: "GET",
@@ -106,7 +130,7 @@ function loadCard(handler){
             if(data.result){
 
             }
-            jqconsole.Write("Successfully loaded: " + data.cardName);
+            jqconsole.Write("Successfully loaded: " + data.cardName, "response-ok");
             jqconsole.Write('\n'); 
             jqconsole.Prompt(true, handler);
         }
@@ -126,7 +150,7 @@ function sendAPDU(APDU, handler){
         contentType: 'application/json',
         data: JSON.stringify({"APDU": APDU}),
         success: function(data) { 
-            jqconsole.Write("==> " + data.APDU); 
+            jqconsole.Write("==> " + data.APDU, "response-ok"); 
             jqconsole.Write('\n'); 
             jqconsole.Prompt(true, handler);
         },
@@ -217,7 +241,7 @@ function deleteCard()
     });    
 }
 
-function newCard()
+/*function newCard()
 {
     //document.getElementById("results").innerHTML = "Hello World";
     //$('#results').html("hi");
@@ -238,11 +262,11 @@ function newCard()
             $.each(opts, function(i, d) {
                 // You will need to alter the below to get the right values from your json object.  Guessing that d.id / d.modelName are columns in your carModels data
                 // $('#emptyDropdown').append('<option value="' + d.ModelID + '">' + d.ModelName + '</option>');*/
-                $('#availableCards').append('<option value="' + d.cardName + '">' + d.cardName + '</option>');
-           });
-        }
-    });
-}
+   //             $('#availableCards').append('<option value="' + d.cardName + '">' + d.cardName + '</option>');
+    //       });
+     //   }
+    //});
+//}*/
 
 
 function evalCommnad(string)

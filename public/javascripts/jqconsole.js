@@ -300,15 +300,16 @@ Licensed under the MIT license
       this.history_new = '';
       this.history_active = false;
       this.shortcuts = {};
-      this.$container = $('<div/>').appendTo(outer_container);
-      this.$container.css({
+      this.$container = $('<div style="height: 100%; overflow: scroll;"/>').appendTo(outer_container);//modified by adam
+      //Modified by Adam
+      /*this.$container.css({
         'top': 0,
         'left': 0,
         'right': 0,
         'bottom': 0,
         'position': 'absolute',
         'overflow': 'auto'
-      });
+      });*/
       this.$console = $('<pre class="jqconsole"/>').appendTo(this.$container);
       this.$console.css({
         'margin': 0,
