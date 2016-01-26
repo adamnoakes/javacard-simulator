@@ -2,8 +2,30 @@ var express = require('express');
 var validator = require('validator');
 var router = express.Router();
 var smartCardJS = require('../smartcard.js');
-
 var javacard;
+
+function isCyclic (obj) {
+  var seenObjects = [];
+
+  function detect (obj) {
+    if (obj && typeof obj === 'object') {
+      if (seenObjects.indexOf(obj) !== -1) {
+        return true;
+      }
+      seenObjects.push(obj);
+      for (var key in obj) {
+        if (obj.hasOwnProperty(key) && detect(obj[key])) {
+          console.log(obj, 'cycle at ' + key);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  return detect(obj);
+}
+
 module.exports = function (db) {
 	var smartcardsCollection = db.get('smartcards');
     var router = express.Router();
@@ -25,7 +47,7 @@ module.exports = function (db) {
 	    });
 	    
 	    //Check if the cardname already exists
-	    smartcardsCollection.find(
+	    /*smartcardsCollection.find(
 	        {cardName: req.body.cardName},
 	        { limit : 1 }, 
 	        function(e, docs){
@@ -48,7 +70,8 @@ module.exports = function (db) {
 	                        });
 	                    } else {
 	                        //success
-	                        javacard = newcard;
+	                        console.log(doc);
+	                        req.session.smartcard = newcard;
 	                        res.send({
 	                            'result': true,
 	                            'cardName': newcard.EEPROM.cardName
@@ -57,13 +80,13 @@ module.exports = function (db) {
 	                });
 	            }
 	        }
-	    );
-		/*console.log(req.body.cardName);
+	    );*/
+		console.log(req.body.cardName);
 	    javacard = new smartCardJS.SmartCard(req.body.cardName);
 	    res.send({
 	        'result': true,
-	        'cardName': newcard.EEPROM.cardName
-	    });*/
+	        'cardName': javacard.processor.getCardName()
+	    });
 	});
 	
 	/* POST apdu -> Send APDU to card's processor for execution. */
@@ -75,7 +98,7 @@ module.exports = function (db) {
 	        console.log(req.body.APDU);
 	        for(i=0; i<req.body.APDU.length; i++){
 	            if(req.body.APDU[i][0] != null){
-	                response = javacard.APDUProcessor.process(req.body.APDU[i]);
+	                response = javacard.processor.process(req.body.APDU[i]);
 	                console.log("response: " + response);
 	                if(response == ""){
 	                    break;

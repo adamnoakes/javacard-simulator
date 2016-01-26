@@ -1,12 +1,15 @@
-var installJS = require('./installer.js');
+var installer = require('./installer.js');
 var apduJS = require('./java.framework/APDU.js');
 var jcvm = require('./jcvm.js');
 var opcodes = require('./opcodes.js');
+var eepromJS = require('./eeprom.js');
+var ramJS = require('./ram.js');
 
-function APDUProcessor(RAM, EEPROM){
-    this.EEPROM = EEPROM;
-    this.RAM = RAM;
+function Processor(RAM, EEPROM){
+    this.RAM = new ramJS.RAM();
+    this.EEPROM = new eepromJS.EEPROM();
 	this.response = undefined;
+    this.buffer = [];
 	this.CLA = undefined;
 	this.INS = undefined;
 	this.P1 = undefined;
@@ -16,7 +19,7 @@ function APDUProcessor(RAM, EEPROM){
 	this.selectedAID = undefined;
 	this.appletInstance = undefined;
 	this.installerAID = [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01];//merge into installer
-	this.installer = new installJS.Installer(this);//Should this be moved down? --> YES when select install applet, just realised it messed up probably due to installer boolean down there \/
+	//this.installer = new installJS.Installer(this);//Should this be moved down? --> YES when select install applet, just realised it messed up probably due to installer boolean down there \/
 
 	this.process = function(buffer){
 		this.apdu = new apduJS.APDU();
@@ -26,6 +29,7 @@ function APDUProcessor(RAM, EEPROM){
         this.RAM.asyncState = false;
         this.RAM.transaction_flag = false;
         this.RAM.transaction_buffer = [];
+        this.buffer = buffer; //store buffer for installer
 
         this.CLA = buffer[0];    //@adam class of instruction, category
         this.INS = buffer[1];    //@adam instruction
@@ -45,7 +49,7 @@ function APDUProcessor(RAM, EEPROM){
         }
 
         if((this.EEPROM.selectedApplet.AID.join() === this.installerAID.join()) && (this.CLA == 0x80)){
-            return this.installer.execute(buffer);
+            return installer.process(this);
         } 
         var startcode = this.EEPROM.selectedApplet.CAP.getStartCode(this.EEPROM.selectedApplet.AID, 7);
         var params = [];
@@ -258,11 +262,18 @@ function APDUProcessor(RAM, EEPROM){
      *  RAM Functions  
      */
 
-     this.getTransientData = function(){return this.RAM.transient_data;};
-     this.pushTransientData = function(val){this.RAM.transient_data.push(val);};
-     this.setGRef = function(val){this.RAM.gRef = val;};
-     this.getSelectStatementFlag = function(){return this.RAM.select_statement_flag;};
-     this.setInstallingAppletAID = function(aid){this.RAM.installingAppletAID = aid;};
+    this.getTransientData = function(){return this.RAM.transient_data;};
+    this.pushTransientData = function(val){this.RAM.transient_data.push(val);};
+    this.setGRef = function(val){this.RAM.gRef = val;};
+    this.getSelectStatementFlag = function(){return this.RAM.select_statement_flag;}
+    this.setInstallingAppletAID = function(aid){this.RAM.installingAppletAID = aid;};
+    this.setCurrentComponent = function(val){this.RAM.currentComponent = val;}
+    this.getCurrentComponent = function(){return this.RAM.currentComponent;}
+    this.getTempComponents = function(){return this.RAM.tempComponents;}
+    this.getTempComponent = function(pos){return this.RAM.tempComponents[pos];}
+    this.setTempComponent = function(pos, val){this.RAM.tempComponents[pos] = val;}
+    this.resetTempComponents = function(){this.RAM.tempComponents = [];}
+    this.getCardName = function(){return this.EEPROM.cardName;}
 
      
 }
@@ -281,4 +292,4 @@ function addpad(d) {
 
 function addX(d) { return "0x" + d;}
 
-exports.APDUProcessor = APDUProcessor;
+exports.Processor = Processor;

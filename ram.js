@@ -7,6 +7,9 @@ function RAM(){
 	this.select_statement_flag = 0;
 	this.installation_failed = false;
 	this.installingAppletAID = undefined;
+
+	this.currentComponent = null;
+	this.tempComponents = [];
 }
 
 exports.RAM = RAM;

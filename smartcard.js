@@ -1,15 +1,13 @@
-var eepromJS = require('./eeprom.js');
-var ramJS = require('./ram.js');
-var apduprocessorJS = require('./processor.js');
+
+var Processor = require('./processor.js').Processor;
 var jcsystemJS = require('./java.framework/JCSystem.js')
 
 /*
  * Create a virtual smart card.
  */
 function SmartCard(cardName, cb){
-    this.RAM = new ramJS.RAM();
-    this.EEPROM = new eepromJS.EEPROM(cardName);
-    this.APDUProcessor = new apduprocessorJS.APDUProcessor(this.RAM, this.EEPROM);
+    this.processor = new Processor(this.RAM, this.EEPROM);
+    this.processor.EEPROM.cardName = cardName;
 }
 
 function setupStaticFields(CAPfile,pk) {

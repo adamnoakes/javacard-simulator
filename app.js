@@ -42,15 +42,16 @@ app.use(function(req,res,next){
     next();
 });
 
-/*app.use(session({
+app.use(session({
     secret: 'foo',
     store: new MongoStore({
-        db: db,
-        ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+        url: 'mongodb://localhost:27017/test',
+        ttl: 14 * 24 * 60 * 60, // = 14 days. Default
         autoRemove: 'native' // Default 
-    })
-}));*/
-
+    }),
+    resave: true,
+    saveUninitialized: true
+}));
 
 app.use(require('./routes/site'));
 app.use('/simulator', require('./routes/api')(db));
