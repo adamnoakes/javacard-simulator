@@ -1,8 +1,7 @@
 var capJS = require('./cap.js');
 var jcvm = require('./jcvm.js');
-//later just pass card?
-function Installer(processor) {
 
+function Installer(processor) {
 	this.processor = processor;
 	this.INS = 0;
 	this.P1 = 0;

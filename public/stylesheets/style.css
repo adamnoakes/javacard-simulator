@@ -24,6 +24,10 @@ body, html {
     color: #0b0;
 }
 
+.response-error{
+    color: red;
+}
+
 /* JQCONSOLE MODIFICATIONS */
 .jqconsole{
     background-color: #000;

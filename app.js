@@ -6,9 +6,36 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var tools = require('./code.js');
 var inputMgr = require('./inputmgr.js');
-var appletMgrJS = require('./appletmgr.js');
-var javacard;
+var smartCardJS = require('./smartcard.js');
+var validator = require('validator');
+var session = require('express-session');
+var MongoStore = require('connect-mongo/es5')(session);
 var app = express();
+var javacard;
+var mongo = require('mongodb');
+var monk = require('monk');
+var db = monk('localhost:27017/javacard');
+function isCyclic (obj) {
+  var seenObjects = [];
+
+  function detect (obj) {
+    if (obj && typeof obj === 'object') {
+      if (seenObjects.indexOf(obj) !== -1) {
+        return true;
+      }
+      seenObjects.push(obj);
+      for (var key in obj) {
+        if (obj.hasOwnProperty(key) && detect(obj[key])) {
+          console.log(obj, 'cycle at ' + key);
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  return detect(obj);
+}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -25,13 +52,25 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function(err, req, res, next) {
     res.end();
-            res.status(err.status || 500);
-            console.log(here);
-            console.log(err.message);
-                         });
+    res.status(err.status || 500);
+    console.log(here);
+    console.log(err.message);
+});
 
-//app.use('/', routes);
-//app.use('/users', users);
+app.use(function(req,res,next){
+    req.db = db;
+    next();
+});
+
+/*app.use(session({
+    secret: 'foo',
+    store: new MongoStore({
+        db: db,
+        ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+        autoRemove: 'native' // Default 
+    })
+}));*/
+
 
 app.get('/', function(req, res) {res.render('index')});
 app.get('/about', function(req, res) {res.render('about')});
@@ -47,17 +86,62 @@ app.get('/getcard', function(req, res) {
     data.entries.push({val1: '1', val2: '2', val3: 'F0 F0 DD 0A', val4: '131'});
 
     res.send(JSON.stringify(data));
-
 });
 
-app.get('/ls', function(req, res){
-    tools.sendCards(res);
+app.get('/cards', function(req, res){
+    var db = req.db;
+    var collection = db.get('smartcards');
+    collection.find({},{ cardName: true },function(e,docs){
+        res.send(docs);
+    });
 });
 
 app.get('/newcard', function(req, res){
-    //needs to actually load from file
-    javacard = new appletMgrJS.JavaCard(req.query.cardName);
-    res.send({'result': true, 'cardName': javacard.cardName});
+    //validate name
+    if(!validator.isAlphanumeric(req.query.cardName))
+        res.send({
+        'result': false,
+        'message': "Alphanumeric characters only."
+    });
+    var smartcards = db.get('smartcards');
+    //Check if the cardname already exists
+    /*smartcards.find(
+        {cardName: req.query.cardName},
+        { limit : 1 }, 
+        function(e, docs){
+            //Name already exists
+            if(docs.length > 0){
+                res.send({
+                    'result': false,
+                    'message': "Virtual smart card with name " + req.query.cardName + " already exists."
+                });
+            } else {
+                //create smartcard
+                var newcard = new smartCardJS.SmartCard(req.query.cardName);
+                smartcards.insert(JSON.stringify(newcard), function (err, doc) {
+                    if (err) {
+                        // If it failed, return error
+                        res.send({
+                            'result': false,
+                            'message': "There was a problem adding the information to the database."
+                        });
+                    } else {
+                        //success
+                        res.send({
+                            'result': true,
+                            'cardName': javacard.cardName
+                        });
+                    }
+                });
+            }
+        }
+    );*/
+    javacard = new smartCardJS.SmartCard(req.query.cardName);
+    isCyclic(javacard);
+    res.send({
+        'result': true,
+        'cardName': javacard.cardName
+    });
 });
 
 app.post('/sendapdu', function(req, res){

@@ -3,7 +3,9 @@ function pad(val) {
     var rval;
     if (val.length == 1) {
         rval = "0" + val;
-    } else { rval= val }
+    } else { 
+        rval= val;
+    }
 
     return rval;
 }
@@ -77,7 +79,7 @@ function CAPfile(textArray) {
              }
         }
         return startcode;
-    }
+    };
 
     this.getInstallOfset = function(appletAID){
         for(var i=0; i < this.COMPONENT_Applet.applets.length; i++){//TODO --> change from 0
@@ -85,23 +87,54 @@ function CAPfile(textArray) {
                 return this.COMPONENT_Applet.applets[0].install_method_offset;
             }
         }
-    }
-};
+    };
+}
 
 function COMPONENT(inputData) {
-    
+    var Tag, AID, i, j, name, component_sizes, nj, applets, pointer, count, packages, constant_pool,
+        signature_pool, arcount, type, interface_info, b, k;
+
+    function AppletComponent() {
+        var AID = [];
+        this.AID_length = Data[pointer + 1];
+        for (j = 0; j < this.AID_length; j++) { AID[j] = Data[pointer + 2 + j];}
+        this.AID = AID;
+        this.install_method_offset =
+            (Data[pointer + this.AID_length + 2] << 8) + Data[pointer + this.AID_length + 3];
+        pointer = pointer + this.AID_length + 3;
+    }
+
+    function ImportComponent() {
+        this.minor_version = Data[1 + pointer];
+        this.major_version = Data[2 + pointer];
+        this.AID_length = Data[3 + pointer];
+        AID = [];
+        for (j = 0; j < this.AID_length; j++) {
+            AID[j] = Data[4 + j + pointer];
+        }
+        this.AID = AID;
+        pointer = pointer + this.AID_length + 3;
+    }
+
+    function ConstantPoolComponent() {
+        this.tag = Data[pointer];
+        this.info = [Data[pointer + 1], Data[pointer + 2], Data[pointer + 3]];
+        pointer = pointer + 4;
+    }
+
+
     if (inputData.length > 0) {
         
-        var Tag = inputData[0];
+        Tag = inputData[0];
         this.Tag = Tag;
         this.Size = (inputData[1] << 8) + inputData[2];
         Data = inputData.slice(3);
-        console.log("inputData:");
-        console.log(inputData);
+        //console.log("inputData:");
+        //console.log(inputData);
         switch (Tag) {
             case 1:
                 //Header
-                var AID = [];
+                AID = [];
                 this.magic = Data[0].toString(16) + Data[1].toString(16) + Data[2].toString(16) + Data[3].toString(16);
                 this.minor_version = Data[4];
                 
@@ -112,28 +145,29 @@ function COMPONENT(inputData) {
                 this.package_majorversion = Data[8];
                 this.AID_length = Data[9];
 
-                for (var i = 0; i < this.AID_length; i++) { AID[i] = Data[10+i]; };
+                for (i = 0; i < this.AID_length; i++) {
+                    AID[i] = Data[10+i];
+                }
+
                 this.AID = AID;
 
                 if ((10 + this.AID_length) < Data.length) {
                     this.package_namelength = Data[10 + this.AID_length];
-
-                    var name = "";
-                    for (var i = 0; i < this.package_namelength; i++) { name = name + Data[11 + this.AID_length + i].toString(16); }
+                    name = "";
+                    for (i = 0; i < this.package_namelength; i++) { name = name + Data[11 + this.AID_length + i].toString(16); }
                     this.package_name = name;
-                    console.log(this.package_name )
-
+                    console.log(this.package_name);
                 }
 
                 break;
             case 2:
 
                 //Directory
-                var component_sizes = [];
-                var nj = 11;
-                for (var j = 0; j < nj; j++) {
+                component_sizes = [];
+                nj = 11;
+                for (j = 0; j < nj; j++) {
                     component_sizes[j] = (Data[2 * j] << 8) + Data[2 * j + 1];
-                };
+                }
                 nj = 2 * (nj + 1);
                 this.component_sizes = component_sizes;
                 this.sf_image_size = (Data[nj] << 8) + Data[nj + 1];
@@ -148,43 +182,23 @@ function COMPONENT(inputData) {
 
                 //Applet
                 this.count = parseInt(Data[0], 16);
-                var applets = [];
-                var pointer = 0;
+                applets = [];
+                pointer = 0;
                 if (this.count > 0) {
-                    for (var i = 0; i < this.count; i++) {
-                        applets[i] = new function () {
-                            var AID = [];
-                            this.AID_length = Data[pointer + 1];
-                            for (var j = 0; j < this.AID_length; j++) { AID[j] = Data[pointer + 2 + j]};
-                            this.AID = AID;
-
-
-                            this.install_method_offset =
-                                (Data[pointer + this.AID_length + 2] << 8) + Data[pointer + this.AID_length + 3];
-                            pointer = pointer + this.AID_length + 3;
-                        }
+                    for (i = 0; i < this.count; i++) {
+                        applets[i] = new AppletComponent();
                     }
                     this.applets = applets;
                 }
                 break;
             case 4:
                 //Import
-                var count = Data[0];
+                count = Data[0];
                 this.count = count;
-                var packages = []
-                var pointer = 0;
-                for (var i = 0; i < count; i++) {
-                    packages[i] = new function () {
-                        this.minor_version = Data[1 + pointer];
-                        this.major_version = Data[2 + pointer];
-                        this.AID_length = Data[3 + pointer];
-                        var AID = [];
-                        for (var j = 0; j < this.AID_length; j++) {
-                            AID[j] = Data[4 + j + pointer];
-                        }
-                        this.AID = AID;
-                        pointer = pointer + this.AID_length + 3;
-                    }
+                packages = [];
+                pointer = 0;
+                for (i = 0; i < count; i++) {
+                    packages[i] = new ImportComponent();
                 }
                 this.packages = packages;
                 break;
@@ -192,16 +206,12 @@ function COMPONENT(inputData) {
                 //ConstantPool
 
                 this.count = (Data[0] << 8) + Data[1];
-                var constant_pool = [];
-                var pointer = 2;
+                constant_pool = [];
+                pointer = 2;
 
-                for (var i = 0; i < this.count; i++) {
+                for (i = 0; i < this.count; i++) {
 
-                    constant_pool[i] = new function () {
-                        this.tag = Data[pointer];
-                        this.info = [Data[pointer + 1], Data[pointer + 2], Data[pointer + 3]];
-                        pointer = pointer + 4;
-                    }
+                    constant_pool[i] = new ConstantPoolComponent();
                 }
                 this.constant_pool = constant_pool;
 
@@ -210,34 +220,35 @@ function COMPONENT(inputData) {
             case 6:
                 //Class
 
-                var pointer = 0;
-
+                pointer = 0;
                 this.signature_pool_length = (Data[0] << 8) + Data[1];
-                if (this.signature_pool_length >= 128) { this.signature_pool_length = 0; } else { pointer = 2; };
-                var signature_pool = [];
+                if (this.signature_pool_length >= 128) {
+                    this.signature_pool_length = 0;
+                } else {
+                    pointer = 2;
+                }
+                signature_pool = [];
 
 
                 if (this.signature_pool_length > 0) {
-                    for (var i = 0; i < this.signature_pool_length; i++) {
+                    for (i = 0; i < this.signature_pool_length; i++) {
                         signature_pool[i] = new function () {
                             this.nibble_count = Data[pointer];
-                            var arcount = Math.floor((this.nibble_count + 1) / 2);
-                            var type = "";
+                            arcount = Math.floor((this.nibble_count + 1) / 2);
+                            type = "";
                             if (arcount > 0) { Data.slice(pointer + 1, pointer + arcount + 1); }
                             pointer += (arcount + 1);
-                        }
+                        };
                     }
                 }
 
                 this.signature_pool = signature_pool;
-                var interface_info = [];
+                interface_info = [];
 
-                var b = false;
-                var k = 0;
+                b = false;
+                k = 0;
 
                 while (!b) {
-
-
                     interface_info[k] = new function () {
                         this.start = pointer;
                         var flags = ((Data[pointer].toString(16)).slice(0, 1)).toString(2);
@@ -250,7 +261,7 @@ function COMPONENT(inputData) {
                         if (this.flag_interface) {
                             var superinterfaces = [];
                             if (this.interface_count > 0) {
-                                for (var i = 0; i < this.interface_count; i++) {
+                                for (i = 0; i < this.interface_count; i++) {
                                     superinterfaces[i] = Data[pointer] + Data[pointer + 1];
                                     pointer += 2;
                                 }
@@ -285,7 +296,7 @@ function COMPONENT(inputData) {
                             var package_virtual_method_table = [];
 
                             if (this.public_method_table_count > 0) {
-                                for (var i = 0; i < this.public_method_table_count; i++) {
+                                for (i = 0; i < this.public_method_table_count; i++) {
                                     public_virtual_method_table[i] = (Data[pointer] << 8) + Data[pointer+1];
                                     pointer += 2;
 
@@ -293,7 +304,7 @@ function COMPONENT(inputData) {
                             }
 
                             if (this.package_method_table_count > 0) {
-                                for (var i = 0; i < this.package_method_table_count; i++) {
+                                for (i = 0; i < this.package_method_table_count; i++) {
                                     package_virtual_method_table[i] = (Data[pointer] << 8) + Data[pointer + 1];
                                     pointer += 2;
 
@@ -305,7 +316,7 @@ function COMPONENT(inputData) {
 
                             var interfaces = [];
                             if (this.interface_count > 0) {
-                                for (var i = 0; i < this.interface_count; i++) {
+                                for (i = 0; i < this.interface_count; i++) {
 
                                     interfaces[i] = new function () {
                                         this.interface = (Data[pointer] << 8) + Data[pointer + 1];
@@ -318,7 +329,7 @@ function COMPONENT(inputData) {
                                             }
                                         }
                                         this.index = index;
-                                    }
+                                    };
 
                                 }
                             }
@@ -331,13 +342,13 @@ function COMPONENT(inputData) {
                                     var remote_methods = [];
                                     pointer++;
                                     if (this.count > 0) {
-                                        for (var i = 0; i < this.remote_methods_count; i++) {
+                                        for (i = 0; i < this.remote_methods_count; i++) {
                                             remote_methods[i] = new function () {
                                                 this.remote_method_hash = Data[pointer].toString(16) + Data[pointer + 1].toString(16);
                                                 this.signature_offset = (Data[pointer + 2] << 8) + Data[pointer + 3];
                                                 this.virtual_method_token = Data[pointer + 4].toString(16);
                                                 pointer += 5;
-                                            }
+                                            };
                                         }
                                     }
 
@@ -351,20 +362,20 @@ function COMPONENT(inputData) {
 
                                     var r_interfaces = [];
                                     this.remote_interfaces_count = Data[pointer];
-                                    for (var i = 0; i < this.remote_interfaces_count; i++) {
+                                    for (i = 0; i < this.remote_interfaces_count; i++) {
                                         r_interfaces[i] = Data[pointer + 1].toString(16) + Data[pointer + 2].toString(16);
                                         pointer += 2;
                                     }
                                     this.r_interfaces = r_interfaces;
                                 }
-                            }
+                            };
                             this.remote_interfaces = remote_interfaces;
 
                         }
 
-                        if (pointer >= Data.length) { b = true };
+                        if (pointer >= Data.length) { b = true; }
 
-                    }
+                    };
                     k++;
                 }
                 this.interface_info = interface_info;
@@ -379,14 +390,14 @@ function COMPONENT(inputData) {
 
                 var exception_handlers = [];
                 var method_info = [];
-                var pointer = 1;
-                var b = false;
+                pointer = 1;
+                b = false;
 
                 
                 this.method_info = Data.slice(pointer);
                 var bitfield;
 
-                for (var i = 0; i < hc; i++) {
+                for (i = 0; i < hc; i++) {
                     exception_handlers[i] = new function () {
                         this.start_offset = (Data[pointer] << 8) + Data[1 + pointer];
                         bitfield = (Data[pointer+2] << 8) + Data[3 + pointer];
@@ -394,7 +405,7 @@ function COMPONENT(inputData) {
                         this.active_length = bitfield - 128 * this.stop_bit;
                         this.handler_offset = (Data[pointer + 4] << 8) + Data[pointer+5];
                         this.catch_type_index = (Data[pointer + 6] << 8) + Data[pointer + 7];
-                    }
+                    };
                     pointer = pointer + 8;
                 }
                 
@@ -409,11 +420,11 @@ function COMPONENT(inputData) {
                 this.image_size = (Data[0] << 8) + Data[1];
                 this.reference_count = (Data[2] << 8) + Data[3];
                 this.array_init_count = (Data[4] << 8) + Data[5];
-                var pointer = 5;
+                pointer = 5;
 
                 if (this.array_init_count > 0) {
 
-                    for (var i = 0; i < this.array_init_count; i++) {
+                    for (i = 0; i < this.array_init_count; i++) {
                         array_init[i] = new function () {
                             this.type = Data[1 + pointer];
                             this.count = (Data[pointer + 2] << 8) + Data[pointer + 3];
@@ -425,7 +436,7 @@ function COMPONENT(inputData) {
 
                             this.values = values;
                             pointer = pointer + 3 + this.count;
-                        }
+                        };
 
                     }
                 }
@@ -434,7 +445,7 @@ function COMPONENT(inputData) {
                 this.non_default_value_count = (Data[3 + pointer] << 8) + Data[4 + pointer];
                 var non_default_values = [];
                 if (this.non_default_value_count > 0) {
-                    for (var j = 0; j < this.non_default_value_count; j++) { non_default_values[j] = Data[5 + pointer + j]; }
+                    for (j = 0; j < this.non_default_value_count; j++) { non_default_values[j] = Data[5 + pointer + j]; }
                 }
                 this.non_default_values = non_default_values;
 
@@ -444,16 +455,16 @@ function COMPONENT(inputData) {
                 this.byte_index_count = (Data[0] << 8) + Data[1];
                 var offsets_to_byte_indices = [];
                 var offsets_to_byte2_indices = [];
-                var pointer = 2;
+                pointer = 2;
                 if (this.byte_index_count > 0) {
-                    for (var j = 0; j < this.byte_index_count; j++) { offsets_to_byte_indices[j] = Data[pointer + j]; }
+                    for (j = 0; j < this.byte_index_count; j++) { offsets_to_byte_indices[j] = Data[pointer + j]; }
                 }
                 this.offsets_to_byte_indices = offsets_to_byte_indices;
 
                 pointer = pointer + this.byte_index_count;
                 this.byte2_index_count = (Data[pointer] << 8) + Data[pointer + 1];
                 if (this.byte2_index_count > 0) {
-                    for (var j = 0; j < this.byte2_index_count; j++) { offsets_to_byte2_indices[j] = Data[pointer + j + 2]; }
+                    for (j = 0; j < this.byte2_index_count; j++) { offsets_to_byte2_indices[j] = Data[pointer + j + 2]; }
                 }
                 this.offsets_to_byte2_indices = offsets_to_byte2_indices;
 
@@ -461,9 +472,9 @@ function COMPONENT(inputData) {
             case 10:
                 //Export
                 var class_exports = [];
-                var pointer = 1;
+                pointer = 1;
                 this.class_count = Data[0];
-                for (var i = 0; i < this.class_count; i++) {
+                for (i = 0; i < this.class_count; i++) {
                     class_exports[i] = new function () {
                         var static_field_offsets = [];
                         var static_method_offsets = [];
@@ -472,18 +483,18 @@ function COMPONENT(inputData) {
                         this.static_method_count = Data[3 + pointer];
                         pointer = pointer + 4;
                         if (this.static_field_count > 0) {
-                            for (var j = 0; j < this.static_field_count; j++) { static_field_offsets[j] = Data[pointer + j]; }
+                            for (j = 0; j < this.static_field_count; j++) { static_field_offsets[j] = Data[pointer + j]; }
                             pointer = pointer + this.static_field_count;
                         }
                         if (this.static_method_count > 0) {
-                            for (var j = 0; j < this.static_method_count; j++) { static_method_offsets[j] = Data[pointer + j]; }
+                            for (j = 0; j < this.static_method_count; j++) { static_method_offsets[j] = Data[pointer + j]; }
                             pointer = pointer + static_method_count;
                         }
 
                         this.static_field_offsets = static_field_offsets;
                         this.static_method_offsets = static_method_offsets;
 
-                    }
+                    };
 
                 }
                 this.class_exports = class_exports;
@@ -492,11 +503,11 @@ function COMPONENT(inputData) {
                 //Descriptor
 
                 var classes = [];
-                var pointer = 1;
+                pointer = 1;
                 var static_fields = [];
                 this.class_count = Data[0];
                 if (this.class_count > 0) {
-                    for (var i = 0; i < this.class_count; i++) {
+                    for (i = 0; i < this.class_count; i++) {
                         classes[i] = new function () {
                             this.token = Data[pointer];
                             this.access_flags = Data[pointer + 1];
@@ -510,7 +521,7 @@ function COMPONENT(inputData) {
                             var fields = [];
                             var methods = [];
                             if (this.interface_count > 0) {
-                                for (var j = 0; j < this.interface_count; j++) {
+                                for (j = 0; j < this.interface_count; j++) {
                                     interfaces[j] = (Data[pointer]<< 8) + Data[pointer + 1];
                                     pointer += 2;
                                 }
@@ -518,7 +529,7 @@ function COMPONENT(inputData) {
                             }
 
                             if (this.field_count > 0) {
-                                for (var j = 0; j < this.field_count; j++) {
+                                for (j = 0; j < this.field_count; j++) {
                                     fields[j] = new function () {
                                         this.token = Data[pointer];
                                         this.access_flags = Data[pointer + 1].toString(16);
@@ -526,7 +537,7 @@ function COMPONENT(inputData) {
                                         this.type = Data[pointer + 5].toString(16) + Data[pointer + 6].toString(16);
                                         this.value = 0;
                                         pointer += 7;
-                                    }
+                                    };
                                     if (parseInt(fields[j].access_flags.slice(1), 16) >= 8) {
                                         static_fields[static_fields.length] = fields[j];
                                     }
@@ -535,7 +546,7 @@ function COMPONENT(inputData) {
                             }
 
                             if (this.method_count > 0) {
-                                for (var j = 0; j < this.method_count; j++) {
+                                for (j = 0; j < this.method_count; j++) {
                                     methods[j] = new function () {
                                         this.token = Data[pointer];
                                         this.access_flags = Data[pointer + 1];
@@ -545,13 +556,13 @@ function COMPONENT(inputData) {
                                         this.exception_handler_count = (Data[pointer + 8] << 8)+ Data[pointer + 9];
                                         this.exception_handler_index = (Data[pointer + 10] << 8)+ Data[pointer + 11];
                                         pointer += 12;
-                                    }
+                                    };
                                 }
                             }
                             this.interfaces = interfaces;
                             this.fields = fields;
                             this.methods = methods;
-                        }
+                        };
                     }
                 }
                 this.classes = classes;
@@ -584,13 +595,13 @@ function COMPONENT(inputData) {
                                 }
                             }
                             this.type = type;
-                        }
+                        };
                         k++;
                     }
                     this.type_count = k + 1;
                     this.type_desc = type_desc;
 
-                }
+                };
 
 
 
@@ -712,7 +723,7 @@ function COMPONENT(inputData) {
                  //       }
                  //   }
                 //}
-
+                break;
             default:
         }
         
@@ -721,8 +732,8 @@ function COMPONENT(inputData) {
 
 function formatData(Data) {
     for (i = 0; i < Data.length; i++) {
-        if (Data[i].length == 1) { Data[i] = "0" + Data[i] };
-    };
+        if (Data[i].length == 1) { Data[i] = "0" + Data[i];}
+    }
     return Data;
 }
 
@@ -730,7 +741,7 @@ function HEXarrayToDEC(arg) {
 
     var totalStr = "";
     for (i = 0; i < arg.length; i++) {
-        if (arg[i].length == 1) { arg[i] = "0" + arg[i] };
+        if (arg[i].length == 1) { arg[i] = "0" + arg[i];}
         totalStr = totalStr + arg[i];
     }
 
