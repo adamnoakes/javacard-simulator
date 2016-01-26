@@ -81,7 +81,7 @@ function sendCommand(input, handler){
 function getCards(handler){
     $.ajax({
         type: "GET",
-        url: "/cards",
+        url: "/simulator/smartcards",
         success: function(cards){
             $.each(cards, function(i, card) {
                 jqconsole.Write(card.cardName + " ", "response-ok");
@@ -94,9 +94,9 @@ function getCards(handler){
 
 function newCard(handler, cardName){
     $.ajax({
-        type: "GET",
+        type: "POST",
         data: {'cardName' : cardName},
-        url: "/newcard" ,
+        url: "/simulator/smartcards" ,
         success: function(data){
             console.log(data);
             if(data.result){
@@ -134,7 +134,7 @@ function sendAPDU(APDU, handler){
     }
     $.ajax({
         type: "POST",
-        url: "/sendAPDU",
+        url: "/simulator/apdu",
         dataType: 'json',
         contentType: 'application/json',
         data: JSON.stringify({"APDU": APDU}),

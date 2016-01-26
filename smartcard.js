@@ -1,4 +1,4 @@
-var eepromJS = require('./eeprom2.js');
+var eepromJS = require('./eeprom.js');
 var ramJS = require('./ram.js');
 var apduprocessorJS = require('./processor.js');
 var jcsystemJS = require('./java.framework/JCSystem.js')
