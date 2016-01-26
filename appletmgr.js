@@ -4,20 +4,9 @@ var apduprocessorJS = require('./processor.js');
 var jcsystemJS = require('./java.framework/JCSystem.js')
 
 function JavaCard(cardName){
-    this.cardName = cardName;
     this.RAM = new ramJS.RAM();
-    this.EEPROM = new eepromJS.EEPROM(this.RAM);//TODO --> should not have access to RAM, functions should be called through javacard/ processor
-    this.APDUProcessor = new apduprocessorJS.APDUProcessor(this);
-    this.JCSystem = new jcsystemJS.JCSystem(this.EEPROM, this.RAM);
-    //this.JCVM = new jcvmJS.JCVM();
-    //this.EEPROM.heap = "A10,0,128,128,184,0,0,8,6,221,2,3,4,5,0,0,127,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,undefined,0,T0#2#1,T2#1#1,T3#1#1,0,A3,1".split(",");
-    //.packages = [];
-    //this.packages[1] = "DD 02 03 04 05";
-    //this.appletInstances = []; this.appletInstances[0] = new eepromJS.appletInstance(1,"DD 02 03 04 05 00 ",131);
-    //this.packageApplets = []; this.packageApplets[1] = new eepromJS.appletInstance(1, "DD 02 03 04 05 00 ", 40);
-    
-    
-
+    this.EEPROM = new eepromJS.EEPROM(cardName);
+    this.APDUProcessor = new apduprocessorJS.APDUProcessor(this.RAM, this.EEPROM);
 }
 
 function setupStaticFields(CAPfile,pk) {
@@ -92,18 +81,6 @@ function setupStaticFields(CAPfile,pk) {
 
 
 }
-
-//padding should be moved somewhere else used by applet.js
-function addpad(d) {
-    var hex = Number(d).toString(16).toUpperCase();
-
-    while (hex.length < 2) {
-        hex = "0" + hex;
-    }
-
-    return hex; //"0x" +
-}
-
 exports.JavaCard = JavaCard;
 
 
