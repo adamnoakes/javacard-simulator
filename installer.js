@@ -1,6 +1,6 @@
 var capJS = require('./cap.js');
 var jcvm = require('./jcvm.js');
-
+//needs fixing today
 function process(processor) {
 	this[0xB0] = function(){
 		processor.setCurrentComponent(null);

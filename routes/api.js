@@ -2,6 +2,8 @@ var express = require('express');
 var validator = require('validator');
 var router = express.Router();
 var smartCardJS = require('../smartcard.js');
+var processorJS = require('../processor.js');
+var eepromJS = require('../eeprom.js');
 var javacard;
 
 function isCyclic (obj) {
@@ -47,7 +49,7 @@ module.exports = function (db) {
 	    });
 	    
 	    //Check if the cardname already exists
-	    /*smartcardsCollection.find(
+	    smartcardsCollection.find(
 	        {cardName: req.body.cardName},
 	        { limit : 1 }, 
 	        function(e, docs){
@@ -60,7 +62,7 @@ module.exports = function (db) {
 	            } else {
 	                //create smartcard
 	                var newcard = new smartCardJS.SmartCard(req.body.cardName);
-	                smartcardsCollection.insert(newcard.EEPROM, function (err, doc) {
+	                smartcardsCollection.insert(newcard, function (err, doc) {
 	                    if (err) {
 	                    	console.log(err)
 	                        // If it failed, return error
@@ -71,41 +73,54 @@ module.exports = function (db) {
 	                    } else {
 	                        //success
 	                        console.log(doc);
-	                        req.session.smartcard = newcard;
+	                        req.session.smartcard = doc["_id"];
 	                        res.send({
 	                            'result': true,
-	                            'cardName': newcard.EEPROM.cardName
+	                            'cardName': newcard.processor.getCardName()
 	                        });
 	                    }
 	                });
 	            }
 	        }
-	    );*/
-		console.log(req.body.cardName);
+	    );
+		/*console.log(req.body.cardName);
 	    javacard = new smartCardJS.SmartCard(req.body.cardName);
 	    res.send({
 	        'result': true,
 	        'cardName': javacard.processor.getCardName()
-	    });
+	    });*/
 	});
 	
 	/* POST apdu -> Send APDU to card's processor for execution. */
 	router.post('/apdu', function(req, res){
-	    if(javacard == null){
+	    if(req.session.smartcard == null){
 	        res.send({'APDU': "0x6A82"});
 	    } else {
 	        var response = undefined;
 	        console.log(req.body.APDU);
-	        for(i=0; i<req.body.APDU.length; i++){
-	            if(req.body.APDU[i][0] != null){
-	                response = javacard.processor.process(req.body.APDU[i]);
-	                console.log("response: " + response);
-	                if(response == ""){
-	                    break;
-	                }
-	            }
-	        }
-	        res.send({'APDU': response});
+	        console.log(req.session.smartcard);
+	        smartcardsCollection.findOne( { _id: req.session.smartcard }, function(err,doc){ 
+          		for(i=0; i<req.body.APDU.length; i++){
+		            if(req.body.APDU[i][0] != null){
+		            	console.log(doc);
+
+		            	//this is not good --> fix this
+		            	doc.processor.__proto__ = processorJS.Processor.prototype;
+		            	
+		                response = doc.processor.process(req.body.APDU[i]);
+		                smartcardsCollection.update(
+		                	{ _id: req.session.smartcard },
+		                	doc, { upsert: true }
+		                	);
+		                console.log("response: " + response);
+		                if(response == ""){
+		                    break;
+		                }
+		            }
+		        }
+		        res.send({'APDU': response});
+        	});
+	        
 	    }
 	});
 

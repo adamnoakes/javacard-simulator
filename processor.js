@@ -20,131 +20,16 @@ function Processor(RAM, EEPROM){
 	this.appletInstance = undefined;
 	this.installerAID = [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01];//merge into installer
 	//this.installer = new installJS.Installer(this);//Should this be moved down? --> YES when select install applet, just realised it messed up probably due to installer boolean down there \/
+}
+	
 
-	this.process = function(buffer){
-		this.apdu = new apduJS.APDU();
-        this.apdu.constr(buffer);
-        this.EEPROM.objectheap[0] = this.apdu;
-        this.response = ""; //gSW
-        this.RAM.asyncState = false;
-        this.RAM.transaction_flag = false;
-        this.RAM.transaction_buffer = [];
-        this.buffer = buffer; //store buffer for installer
-
-        this.CLA = buffer[0];    //@adam class of instruction, category
-        this.INS = buffer[1];    //@adam instruction
-        this.P1 = buffer[2];     //@adam parameter 1
-        this.P2 = buffer[3];     //@adam parameter 2
-        this.LC = buffer[4];     //@adam length of command data
-
-        var found = false;
-
-
-
-        //@adam if select applet command
-        if ((this.CLA == 0) && (this.INS == 0xA4) && (this.P1 == 0x04) && (this.P2 == 0x00)) {
-            return this.selectApplet(buffer.slice(5,5+this.LC)); //TODO --> should probably return here
-        } else {
-            this.RAM.select_statement_flag = 0;
-        }
-
-        if((this.EEPROM.selectedApplet.AID.join() === this.installerAID.join()) && (this.CLA == 0x80)){
-            return installer.process(this);
-        } 
-        var startcode = this.EEPROM.selectedApplet.CAP.getStartCode(this.EEPROM.selectedApplet.AID, 7);
-        var params = [];
-        params[0] = 0;
-        jcvm.executeBytecode(this.EEPROM.selectedApplet.CAP, startcode, params, 0,
-            this.EEPROM.selectedApplet.appletRef, this);
-
-        var output = ""
-            if (this.apdu.getCurrentState() >= 3) {
-                for (var k = 0; k < this.apdu.getBuffer().length; k++) {
-                    output += addX(addpad(this.apdu.getBuffer()[k])) + " ";
-                    //output += this.apdu.getBuffer()[k] + "";
-                }
-            }
-        //return strout + " " + response; << haven't implemented code that uses strout yet
-        return output + this.response;
-	}
-
-	this.selectApplet = function(appletAID){
-        this.RAM.transient_data = []; //reset transient data --> instead create new ram?
-        this.RAM.select_statement_flag = 1;
-
-        //delect curent applet
-        this.selectedAID = []; //not the way to deselect, see code below
-        //set applet aid and cap file in eeprom
-        if(this.EEPROM.setSelectedApplet(appletAID)){
-            if(this.EEPROM.selectedApplet.AID.join() === this.installerAID.join()){
-                return "0x9000"//if installer then the rest is not necessary
-            }
-
-            for(var j = 0; j < this.EEPROM.selectedApplet.CAP.COMPONENT_Import.count; j++) { 
-                if(this.EEPROM.selectedApplet.CAP.COMPONENT_Import.packages[j].AID.join() === opcodes.jframework.join()) {
-                    this.EEPROM.setHeapValue(0, 160 + (j*256) + 10);
-                    break;
-                }
-            }
-            
-            var startcode = this.EEPROM.selectedApplet.CAP.getStartCode(appletAID, 6);
-            var params = [];
-
-            //if the applet has an install method, run it.
-            if (startcode > 0) {
-                jcvm.executeBytecode(this.EEPROM.selectedApplet.CAP, startcode, params, 2,
-                    this.EEPROM.selectedApplet.appletRef, this);
-            }
-
-            //if install method (above) executed sucessfully, start process method
-            if(true){
-                startcode = this.EEPROM.selectedApplet.CAP.getStartCode(appletAID, 7);
-                params[0] = 0;
-                jcvm.executeBytecode(this.EEPROM.selectedApplet.CAP, startcode, params, 0, this.EEPROM.selectedApplet.appletRef,
-                    this);
-            }
-
-            if(true){//if the method above fails reset selectapplet
-                return "0x9000";
-            } else {
-                this.EEPROM.selectedApplet = null;
-            }
-            
-        } else {
-            return "0x6A82";
-        }
-
-        if (appletAID.join() === this.installerAID.join()) {
-            this.selectedAID = this.installerAID;
-            console.log("installerAID " + this.installerAID + "selectedAID: " + this.selectedAID + ".");
-            //create installer applet and send it reference to the EEPROM so that it can program the card :-) <-- didn't work moving that code up to the top
-            console.log("E@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-            console.log(this.EEPROM);
-
-
-            //could add help message to return (e.g. selected AID is ...)
-
-            found = true;//TODO --> should probably return here too? instead of keep using response variable.
-        } else {
-            //TODO convert to integer storage
-
-
-        }
-
-        if (!found) {
-            this.response = "0x6A82"; //@adam no applet found code
-        } else {
-            if (this.response == "") { this.response = "0x9000"; }; //@adam succesful execution
-        }
-
-        return this.response;
-    }
+	
 
     /* 
      *  JCVM Functions  
      */
 
-     this.storeArray = function(arref, index, value) {
+     Processor.prototype.storeArray = function(arref, index, value) {
         if (arref == null) { jcvm.executeBytecode.exception_handler(jlang, 7, ""); }
         if (arref.toString().slice(0, 1) == "H") {
             var ref = arref.slice(1).split("#");
@@ -172,7 +57,8 @@ function Processor(RAM, EEPROM){
         }
      }
 
-     this.loadArray = function(arref, index) {
+     Processor.prototype.loadArray = function(arref, index) {
+        var out;
         if (arref == null) { jcvm.executeBytecode.exception_handler(jlang, 7, ""); }
         if (arref.toString().slice(0, 1) == "H") {
             var ref = arref.slice(1).split("#");
@@ -180,12 +66,12 @@ function Processor(RAM, EEPROM){
             else {
 
                 var obj = this.getObjectHeap()[Number(ref[0])];
-                var out = obj.getArray(Number(ref[1]), index);
+                out = obj.getArray(Number(ref[1]), index);
      
             }
         } else if (arref.toString().slice(0, 1) == "T") {
             var ref = arref.slice(1).split("#");
-            var tpsn = Number(ref[0])
+            var tpsn = Number(ref[0]);
             if ((index >= Number(ref[1])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
             else {
                 out = this.RAM.transient_data[tpsn + index];
@@ -194,15 +80,15 @@ function Processor(RAM, EEPROM){
             arref = Number(arref);
             index = Number(index);
             if ((index >= this.getHeapValue(arref)) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
-            else { out = this.getHeapValue(arref + index + 1); };
+            else { out = this.getHeapValue(arref + index + 1); }
         }
         return out;
-    }
+    };
 
     /* 
      *  JCSystem Functions  
      */
-     this.abortTransaction = function () {
+     Processor.prototype.abortTransaction = function () {
 
         if (!this.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
         else {
@@ -212,13 +98,13 @@ function Processor(RAM, EEPROM){
         
         return;
     };//00
-    this.beginTransaction = function () {
+    Processor.prototype.beginTransaction = function () {
         if (this.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 1); }
         else { this.RAM.transaction_flag = true; }
 
         return;
     };//01
-    this.commitTransaction = function () {//TODO --> Execution handler convert to hex array for jframework
+    Processor.prototype.commitTransaction = function () {//TODO --> Execution handler convert to hex array for jframework
         if (!this.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
         else {
             this.RAM.transaction_flag = false;
@@ -241,42 +127,39 @@ function Processor(RAM, EEPROM){
     /* 
      *  EEPROM Functions  
      */
-    this.addInstalledApplet = function(){
+    Processor.prototype.addInstalledApplet = function(){
         this.EEPROM.installedApplets.push({'AID': this.RAM.installingAppletAID, 'appletRef': this.RAM.gRef});
-    }
+    };
 
-    this.getObjectHeap = function(){ return this.EEPROM.objectheap;};
+    Processor.prototype.getObjectHeap = function(){ return this.EEPROM.objectheap;};
 
-    this.appendHeap = function(arr){this.EEPROM.appendHeap(arr);};
-    this.appendObjectHeap = function(arr){this.EEPROM.appendObjectHeap(arr);};
-    this.setHeapValue = function(pos, value){this.EEPROM.setHeapValue(pos, value);};
-    this.setSelectedApplet = function(appletAID){this.EEPROM.setSelectedApplet(appletAID);};
-    this.getAppletCAP = function(appletAID){return this.EEPROM.getAppletCAP(appletAID);};
-    this.getHeapValue = function(value){return this.EEPROM.getHeapValue(value);};
-    this.getHeapSize = function(){return this.EEPROM.getHeapSize();};
-    this.writePackage = function(capfile){this.EEPROM.writePackage(capfile);};
-    this.getPackageByIndex = function(index){return this.EEPROM.getPackageByIndex(index);};
-    this.getPackage = function(AID){return this.EEPROM.getPackage(AID);};
+    Processor.prototype.appendHeap = function(arr){this.EEPROM.appendHeap(arr);};
+    Processor.prototype.appendObjectHeap = function(arr){this.EEPROM.appendObjectHeap(arr);};
+    Processor.prototype.setHeapValue = function(pos, value){this.EEPROM.setHeapValue(pos, value);};
+    Processor.prototype.setSelectedApplet = function(appletAID){this.EEPROM.setSelectedApplet(appletAID);};
+    Processor.prototype.getAppletCAP = function(appletAID){return this.EEPROM.getAppletCAP(appletAID);};
+    Processor.prototype.getHeapValue = function(value){return this.EEPROM.getHeapValue(value);};
+    Processor.prototype.getHeapSize = function(){return this.EEPROM.getHeapSize();};
+    Processor.prototype.writePackage = function(capfile){this.EEPROM.writePackage(capfile);};
+    Processor.prototype.getPackageByIndex = function(index){return this.EEPROM.getPackageByIndex(index);};
+    Processor.prototype.getPackage = function(AID){return this.EEPROM.getPackage(AID);};
 
     /* 
      *  RAM Functions  
      */
+    Processor.prototype.getTransientData = function(){return this.RAM.transient_data;};
+    Processor.prototype.pushTransientData = function(val){this.RAM.transient_data.push(val);};
+    Processor.prototype.setGRef = function(val){this.RAM.gRef = val;};
+    Processor.prototype.getSelectStatementFlag = function(){return this.RAM.select_statement_flag;};
+    Processor.prototype.setInstallingAppletAID = function(aid){this.RAM.installingAppletAID = aid;};
+    Processor.prototype.setCurrentComponent = function(val){this.RAM.currentComponent = val;};
+    Processor.prototype.getCurrentComponent = function(){return this.RAM.currentComponent;};
+    Processor.prototype.getTempComponents = function(){return this.RAM.tempComponents;};
+    Processor.prototype.getTempComponent = function(pos){return this.RAM.tempComponents[pos];};
+    Processor.prototype.setTempComponent = function(pos, val){this.RAM.tempComponents[pos] = val;};
+    Processor.prototype.resetTempComponents = function(){this.RAM.tempComponents = [];};
+    Processor.prototype.getCardName = function(){return this.EEPROM.cardName;};
 
-    this.getTransientData = function(){return this.RAM.transient_data;};
-    this.pushTransientData = function(val){this.RAM.transient_data.push(val);};
-    this.setGRef = function(val){this.RAM.gRef = val;};
-    this.getSelectStatementFlag = function(){return this.RAM.select_statement_flag;}
-    this.setInstallingAppletAID = function(aid){this.RAM.installingAppletAID = aid;};
-    this.setCurrentComponent = function(val){this.RAM.currentComponent = val;}
-    this.getCurrentComponent = function(){return this.RAM.currentComponent;}
-    this.getTempComponents = function(){return this.RAM.tempComponents;}
-    this.getTempComponent = function(pos){return this.RAM.tempComponents[pos];}
-    this.setTempComponent = function(pos, val){this.RAM.tempComponents[pos] = val;}
-    this.resetTempComponents = function(){this.RAM.tempComponents = [];}
-    this.getCardName = function(){return this.EEPROM.cardName;}
-
-     
-}
 
     
 
