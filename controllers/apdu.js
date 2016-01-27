@@ -1,7 +1,5 @@
 modules.exports = {
 
-	
-
 	//STATIC METHODS
     //APDU.getInBlockSize() //00 short
     getInBlockSize: function (APDU) { return APDU.IN_BLOCKSIZE; },
@@ -188,17 +186,17 @@ modules.exports = {
     },
 
     //apdu.setOutgoingNoChaining(); //0A short
-    setOutgoingNoChaining = function () { return 0; },
+    setOutgoingNoChaining: function () { return 0; },
 
     //apdu.getCurrentState(); //0B byte
-    getCurrentState = function (APDU) { return APDU.state; },
+    getCurrentState: function (APDU) { return APDU.state; },
 
     //apdu.isCommandChainingCLA(); //0C boolean
-    isCommandChainingCLA = function (APDU) {
+    isCommandChainingCLA: function (APDU) {
         if ((APDU.buffer[0] & 0x10) === 0x00) { return 1; } else { return 0; }
     },
 
-    isSecureMessagingCLA = function (APDU) {
+    isSecureMessagingCLA: function (APDU) {
         //apdu.isSecureMessagingCLA(); //0D boolean
         var isType16CLA = (APDU.buffer[0] & 0x40) == 64;
         var smf;
@@ -216,18 +214,18 @@ modules.exports = {
     },
 
 
-    getIncomingLength: function () {
+    getIncomingLength: function (APDU) {
         //apdu.getIncomingLength(); //0F short
         return APDU.Nc;
-    };
+    },
     //APDU.getIncomingLength = getIncomingLength();
 
-    APDU.getOffsetCdata = function () {
+    getOffsetCdata: function (APDU) {
         //apdu.getOffsetCdata(); //10
         var s; 
         if (APDU.cdataoffs) { s = 7; } else { s = 5; }
         return s;
-    };
+    },
     //APDU.getOffsetCdata = getOffsetCdata();
 
 
@@ -249,9 +247,9 @@ modules.exports = {
 
     }*/
 
-    APDU.getArrayLength = function (fieldno) { 
+    getArrayLength: function (APDU, fieldno) { 
         if (fieldno == 1) { return APDU.buffer.length; } else { return 0;}
-    };
+    },
 
     //remove by adam
     /*APDU.save = function () {
@@ -272,6 +270,6 @@ modules.exports = {
         return str;
     }*/
 
-    APDU.setArray = function (arr, index, value) { if (arr == 1) { APDU.buffer[index] = value; } };
-    APDU.getArray = function (arr, index) { if (arr == 1) { return APDU.buffer[index]; } };
+    setArray: function (APDU, arr, index, value) { if (arr == 1) { APDU.buffer[index] = value; } },
+    getArray: function (APDU, arr, index) { if (arr == 1) { return APDU.buffer[index]; } }
 }

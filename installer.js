@@ -40,7 +40,7 @@ function process(processor) {
     this[0xBA] = function(){
     	//End Package (write package)
         //gcardname = cardname;
-        processor.writePackage(new capJS.CAPfile(processor.getTempComponents()));
+        EEPROMFunctions.writePackage(smartcard.EEPROM, new capJS.CAPfile(processor.getTempComponents()));
         //PageMethods.endPackage(gcardname; Result_Method);
         //gpID = Number(Result);
         //clear tempcomponents
@@ -54,7 +54,7 @@ function process(processor) {
         var createAID = processor.buffer.slice(6, 6+AIDLength);
         var params;
         //get the cap 
-        var packageToCreate = processor.getPackage(createAID);
+        var packageToCreate = EEPROMFunctions.getPackage(smartcard.EEPROM, createAID);
         //if the package does not exists the we can't create an instance --> fail.
         if(!packageToCreate){
             return "0x6443";

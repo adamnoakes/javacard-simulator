@@ -140,7 +140,7 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
 
                             //obj.reg();
                             //EEPROM.registerApplet();
-                            processor.addInstalledApplet();//ISSUE
+                            EEPROMFunctions.addInstalledApplet(smartcard.EEPROM);//ISSUE
                             rettype = 0;
                             retval = "";
                             break;
@@ -223,17 +223,17 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
 
                     switch (method) {
                         case 0:
-                            processor.abortTransaction();
+                            CPUFunctions.abortTransaction(smartcard);
                             retval = "";
                             rettype = 0;
                             break;
                         case 1:
-                            processor.beginTransaction();
+                            CPUFunctions.beginTransaction(smartcard);
                             retval = "";
                             rettype = 0;
                             break;
                         case 2:
-                            processor.commitTransaction();
+                            CPUFunctions.commitTransaction(smartcard);
                             retval = "";
                             rettype = 0;
                             break;

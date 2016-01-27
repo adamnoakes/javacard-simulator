@@ -81,5 +81,27 @@ module.exports = {
                 return EEPROM.packages[0];
             }
         }
-    }
+    },
+
+
+
+    /* 
+     *  EEPROM Functions  
+     */
+    addInstalledApplet: function(){
+        this.EEPROM.installedApplets.push({'AID': this.RAM.installingAppletAID, 'appletRef': this.RAM.gRef});
+    },
+
+    getObjectHeap: function(){ return this.EEPROM.objectheap;};
+
+    //appendHeap = function(arr){this.EEPROM.appendHeap(arr);};
+    //appendObjectHeap = function(arr){this.EEPROM.appendObjectHeap(arr);};
+    //setHeapValue = function(pos, value){this.EEPROM.setHeapValue(pos, value);};
+    //setSelectedApplet = function(appletAID){this.EEPROM.setSelectedApplet(appletAID);};
+    //getAppletCAP = function(appletAID){return this.EEPROM.getAppletCAP(appletAID);};
+    //getHeapValue = function(value){return this.EEPROM.getHeapValue(value);};
+    //getHeapSize = function(){return this.EEPROM.getHeapSize();};
+    //writePackage = function(capfile){this.EEPROM.writePackage(capfile);};
+    //getPackageByIndex = function(index){return this.EEPROM.getPackageByIndex(index);};
+    //getPackage = function(AID){return this.EEPROM.getPackage(AID);};
 }

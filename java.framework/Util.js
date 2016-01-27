@@ -10,9 +10,9 @@ module.exports = {
 
             for (var j = 0; j < length; j++) {
 
-                if (processor.loadArray(src, srcOff + j) > processor.loadArray(dest, destOff + j)) {
+                if (CPUFunctions.loadArray(smartcard, src, srcOff + j) > CPUFunctions.loadArray(smartcard, dest, destOff + j)) {
                     return 1;
-                } else if (processor.loadArray(src, srcOff + j) > processor.loadArray(dest, destOff + j)) {
+                } else if (CPUFunctions.loadArray(smartcard, src, srcOff + j) > CPUFunctions.loadArray(smartcard, dest, destOff + j)) {
                     return -1;
                 }
             }
@@ -27,7 +27,7 @@ module.exports = {
         JCSystem.beginTransaction();
         try {
             for (var j = 0; j < length; j++) {
-                processor.storeArray(dest, destOff + j, processor.loadArray(src, srcOff + j));
+                CPUFunctions.storeArray(smartcard, dest, destOff + j, CPUFunctions.loadArray(smartcard, src, srcOff + j));
             }
         } catch (err) {
             JCSystem.abortTransaction();
@@ -42,7 +42,7 @@ module.exports = {
 
         try {
             for (var j = 0; j < length; j++) {
-                processor.storeArray(dest, destOff + j, processor.loadArray(src, srcOff + j));
+                CPUFunctions.storeArray(smartcard, dest, destOff + j, CPUFunctions.loadArray(smartcard, src, srcOff + j));
                 //alert(arrload(src, srcOff + j));
             }
         } catch (err) {
@@ -54,7 +54,7 @@ module.exports = {
     arrayFillNonAtomic: function(bArray, bOff, bLen, bValue, processor) {
         try {
             for (var j = 0; j < length; j++) {
-                processor.storeArray(bArray, bOff + j, bValue);
+                CPUFunctions.storeArray(smartcard, bArray, bOff + j, bValue);
             }
         } catch (err) {
             return 0;
@@ -64,7 +64,7 @@ module.exports = {
 
     }, //03 short
     getShort: function(bArray, bOff, processor) {
-        makeShort(processor.loadArray(bArray, bOff), processor.loadArray(bArray, bOff + 1));
+        makeShort(CPUFunctions.loadArray(smartcard, bArray, bOff), CPUFunctions.loadArray(smartcard, bArray, bOff + 1));
         return 1;
     }, //04 short
     makeShort: function(b1, b2) {
@@ -75,8 +75,8 @@ module.exports = {
         var b2 = (sValue & 0xFF);
         try {
             //alert(bArray + " " + bOff + " " + sValue);
-            processor.storeArray(bArray, bOff, b1);
-            processor.storeArray(bArray, bOff + 1, b2)
+            CPUFunctions.storeArray(smartcard, bArray, bOff, b1);
+            CPUFunctions.storeArray(smartcard, bArray, bOff + 1, b2)
         } catch (err) {
             return 0;
             //throw "ArrayOutofBoundsException";

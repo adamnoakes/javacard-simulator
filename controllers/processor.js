@@ -116,5 +116,102 @@ module.exports = {
             }
         //return strout + " " + response; << haven't implemented code that uses strout yet
         return output + this.response;
+    },
+
+    /* 
+     *  JCVM Functions  
+     */
+    storeArray: function(smartcard, arref, index, value) {
+        if (arref == null) { jcvm.executeBytecode.exception_handler(jlang, 7, ""); }
+        if (arref.toString().slice(0, 1) == "H") {
+            var ref = arref.slice(1).split("#");
+            var obj = smartcard.EEPROM.objectheap[Number(ref[0])];
+            if ((index >= Number(ref[2])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+            else {
+                APDUFunctions.setArray(obj, Number(ref[1]), index, value);
+                //APISave(ref[0], obj.save());
+            }
+        } else if (arref.toString().slice(0, 1) == "T") {
+            var ref = arref.slice(1).split("#");
+            var tpsn = Number(ref[0])
+            if ((index >= Number(ref[1]))|| (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+            else {
+                smartcard.RAM.transient_data[tpsn + index] = value;
+            }
+          } else {
+            arref = Number(arref);
+            index = Number(index);
+            if ((index >= EEPROMFunctions.getHeapValue(smartcard.EEPROM, arref)) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+            else {
+                EEPROMFunctions.setHeapValue(smartcard.EEPROM, arref + index + 1, value);
+            };
+        }
+     },
+     loadArray: function(smartcard, arref, index) {
+        var out;
+        if (arref == null) { jcvm.executeBytecode.exception_handler(jlang, 7, ""); }
+        if (arref.toString().slice(0, 1) == "H") {
+            var ref = arref.slice(1).split("#");
+            if ((index >= Number(ref[2])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+            else {
+
+                var obj = EEPROMFunctions.getObjectHeap(smartcard.EEPROM)[Number(ref[0])];
+                out = APDUFunctions.getArray(obj, Number(ref[1]), index);
+     
+            }
+        } else if (arref.toString().slice(0, 1) == "T") {
+            var ref = arref.slice(1).split("#");
+            var tpsn = Number(ref[0]);
+            if ((index >= Number(ref[1])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+            else {
+                out = smartcard.RAM.transient_data[tpsn + index];
+            } 
+        } else {
+            arref = Number(arref);
+            index = Number(index);
+            if ((index >= EEPROMFunctions.getHeapValue(smartcard.EEPROM, arref)) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+            else { out = EEPROMFunctions.getHeapValue(smartcard.EEPROM, arref + index + 1); }
+        }
+        return out;
+    },
+
+    /* 
+     *  JCSystem Functions  
+     */
+    abortTransaction: function (smartcard) {
+
+        if (!smartcard.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
+        else {
+            smartcard.RAM.transaction_flag = false;
+            smartcard.RAM.transaction_buffer = [];
+        }
+        
+        return;
+    },//00
+
+    beginTransaction: function (smartcard) {
+        if (smartcard.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 1); }
+        else { smartcard.RAM.transaction_flag = true; }
+
+        return;
+    },//01
+    commitTransaction: function (smartcard) {//TODO --> Execution handler convert to hex array for jframework
+        if (!smartcard.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
+        else {
+            smartcard.RAM.transaction_flag = false;
+            var len = smartcard.RAM.transaction_buffer.length;
+            for (var j = 0; j < len; j++) {
+                var spl = smartcard.RAM.transaction_buffer[j].split(";");//why split on ;
+                if (spl.length == 1) {
+                    EEPROMFunctions.newHeap(smartcard.EEPROM, spl[0]);
+                } else {
+                    EEPROMFunctions.setHeap(smartcard.EEPROM, Number(spl[0]), Number(spl[1]));
+                }
+                
+            }
+            smartcard.RAM.transaction_buffer = [];
+        }
+        return;
     }
+    //02
 }
