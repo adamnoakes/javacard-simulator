@@ -30,7 +30,6 @@ module.exports = {
         this.STATE_ERROR_NO_T0_GETRESPONSE = -2;
         this.STATE_ERROR_NO_T0_REISSUE = -3;
         this.STATE_ERROR_T1_IFD_ABORT = -4;
-        this.theAPDU = this;//needs to be removed -> maybe not?
 
     },
 
@@ -48,7 +47,7 @@ module.exports = {
     waitExtension: function (APDU) { return; },
 
     //APDU.getCurrentAPDU(); //04 APDU
-    getCurrentAPDU: function (APDU) { return APDU.theAPDU; },
+    getCurrentAPDU: function (APDU) { return this; },//@adam, should not return static properties 
 
     //APDU.getCurrentAPDUBuffer(); //05 byte array
     // adam APDU.getCurrentAPDUBuffer = function () { return APDU.theAPDU.getBuffer(); };
