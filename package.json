@@ -14,7 +14,7 @@
     "express-session": "~1.12.0",
     "jade": "~1.11.0",
     "mongodb": "^1.4.40",
-    "monk": "^1.0.1",
+    "monk": "^1.0.0",
     "morgan": "~1.6.1",
     "rimraf": "^2.4.3",
     "serve-favicon": "~2.3.0",
