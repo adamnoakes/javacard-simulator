@@ -3,7 +3,6 @@ var opcodes = require('../utilities/opcodes.js');
 var eeprom = require('../smartcard/eeprom.js');
 var ram = require('../smartcard/ram.js');
 var smartcard = require('../smartcard/smartcard.js');
-var apdu = require('../framework/apdu.js');
 
 //JCVM
 function frame() {
