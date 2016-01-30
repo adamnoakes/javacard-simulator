@@ -1,9 +1,9 @@
 var express = require('express');
 var validator = require('validator');
 var router = express.Router();
-var smartCardJS = require('../smartcard.js');
-var processorJS = require('../processor.js');
-var eepromJS = require('../eeprom.js');
+var smartCardJS = require('../javacard/smartcard/smartcard.js');
+var eeprom = require('../javacard/smartcard/eeprom.js');
+var processor = require('../javacard/smartcard/processor.js');
 var javacard;
 
 function isCyclic (obj) {
@@ -61,7 +61,7 @@ module.exports = function (db) {
 	                });
 	            } else {
 	                //create smartcard
-	                var newcard = new smartCardJS.SmartCard(req.body.cardName);
+	                /*var newcard = new smartCardJS.SmartCard(req.body.cardName);
 	                smartcardsCollection.insert(newcard, function (err, doc) {
 	                    if (err) {
 	                    	console.log(err)
@@ -79,39 +79,29 @@ module.exports = function (db) {
 	                            'cardName': newcard.processor.getCardName()
 	                        });
 	                    }
-	                });
+	                });*/
 	            }
 	        }
 	    );
-		/*console.log(req.body.cardName);
+		console.log(req.body.cardName);
 	    javacard = new smartCardJS.SmartCard(req.body.cardName);
 	    res.send({
 	        'result': true,
-	        'cardName': javacard.processor.getCardName()
-	    });*/
+	        'cardName': eeprom.getCardName(javacard)
+	    });
 	});
 	
 	/* POST apdu -> Send APDU to card's processor for execution. */
 	router.post('/apdu', function(req, res){
-	    if(req.session.smartcard == null){
+	    if(javacard == null){
 	        res.send({'APDU': "0x6A82"});
 	    } else {
 	        var response = undefined;
 	        console.log(req.body.APDU);
-	        console.log(req.session.smartcard);
-	        smartcardsCollection.findOne( { _id: req.session.smartcard }, function(err,doc){ 
           		for(i=0; i<req.body.APDU.length; i++){
 		            if(req.body.APDU[i][0] != null){
-		            	console.log(doc);
-
-		            	//this is not good --> fix this
-		            	doc.processor.__proto__ = processorJS.Processor.prototype;
-		            	
-		                response = doc.processor.process(req.body.APDU[i]);
-		                smartcardsCollection.update(
-		                	{ _id: req.session.smartcard },
-		                	doc, { upsert: true }
-		                	);
+		                response = processor.process(javacard, req.body.APDU[i]);
+		                
 		                console.log("response: " + response);
 		                if(response == ""){
 		                    break;
@@ -119,7 +109,6 @@ module.exports = function (db) {
 		            }
 		        }
 		        res.send({'APDU': response});
-        	});
 	        
 	    }
 	});

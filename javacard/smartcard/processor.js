@@ -1,4 +1,26 @@
+var apdu = require('../framework/APDU.js');
+var eeprom = require('./eeprom.js');
+var installer = require('./installer.js');
+var opcodes = require('../utilities/opcodes.js');
+var jcvm = require('../jcvm/jcvm.js');
+var cap = require('./cap.js');
+var util = require('../utilities/util.js');
+
 module.exports = {
+    Processor: function(){
+        this.response = undefined;
+        this.buffer = [];
+        this.CLA = undefined;
+        this.INS = undefined;
+        this.P1 = undefined;
+        this.P2 = undefined;
+        this.LC = undefined;
+        this.apdu = undefined;
+        this.selectedAID = undefined;
+        this.appletInstance = undefined;
+        this.installerAID = [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01];//merge into installer
+        //this.installer = new installJS.Installer(this);//Should this be moved down? --> YES when select install applet, just realised it messed up probably due to installer boolean down there \/
+    },
     selectApplet: function (smartcard, appletAID){
         smartcard.RAM.transient_data = []; //reset transient data --> instead create new ram?
         smartcard.RAM.select_statement_flag = 1;
@@ -6,19 +28,19 @@ module.exports = {
         //delect curent applet
         smartcard.processor.selectedAID = []; //not the way to deselect, see code below
         //set applet aid and cap file in eeprom
-        if(EEPROMFunctions.setSelectedApplet(smartcard.EEPROM, appletAID)){
+        if(eeprom.setSelectedApplet(smartcard.EEPROM, appletAID)){
             if(smartcard.EEPROM.selectedApplet.AID.join() === smartcard.processor.installerAID.join()){
                 return "0x9000"//if installer then the rest is not necessary
             }
 
             for(var j = 0; j < smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.count; j++) { 
                 if(smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.packages[j].AID.join() === opcodes.jframework.join()) {
-                    EEPROMFunctions.setHeapValue(smartcard.EEPROM, 0, 160 + (j*256) + 10);
+                    eeprom.setHeapValue(smartcard.EEPROM, 0, 160 + (j*256) + 10);
                     break;
                 }
             }
             
-            var startcode = CAPFunctions.getStartCode(smartcard.EEPROM.selectedApplet.CAP, appletAID, 6);
+            var startcode = cap.getStartCode(smartcard.EEPROM.selectedApplet.CAP, appletAID, 6);
             var params = [];
 
             //if the applet has an install method, run it.
@@ -29,7 +51,7 @@ module.exports = {
 
             //if install method (above) executed sucessfully, start process method
             if(true){
-                startcode = CAPFunctions.getStartCode(smartcard.EEPROM.selectedApplet.CAP, appletAID, 7);
+                startcode = cap.getStartCode(smartcard.EEPROM.selectedApplet.CAP, appletAID, 7);
                 params[0] = 0;
                 jcvm.executeBytecode(smartcard.EEPROM.selectedApplet.CAP, startcode, params, 0, smartcard.EEPROM.selectedApplet.appletRef,
                     smartcard);
@@ -72,8 +94,10 @@ module.exports = {
         //return this.response;
     },
     process: function(smartcard, buffer){
-        smartcard.processor.apdu = new apduJS.APDU();
-        smartcard.processor.apdu.constr(buffer);
+        smartcard.processor.apdu = new apdu.APDU();
+        apdu.constr(smartcard.processor.apdu, buffer);
+        console.log("here");
+        console.log(smartcard);
         smartcard.EEPROM.objectheap[0] = smartcard.processor.apdu;
         smartcard.processor.response = ""; //gSW
         smartcard.RAM.asyncState = false;
@@ -93,7 +117,7 @@ module.exports = {
 
         //@adam if select applet command
         if ((smartcard.processor.CLA == 0) && (smartcard.processor.INS == 0xA4) && (smartcard.processor.P1 == 0x04) && (smartcard.processor.P2 == 0x00)) {
-            return selectApplet(buffer.slice(5,5+smartcard.processor.LC)); //TODO --> should probably return here
+            return this.selectApplet(smartcard, buffer.slice(5,5+smartcard.processor.LC)); //TODO --> should probably return here
         } else {
             smartcard.RAM.select_statement_flag = 0;
         }
@@ -101,78 +125,24 @@ module.exports = {
         if((smartcard.EEPROM.selectedApplet.AID.join() === smartcard.processor.installerAID.join()) && (smartcard.processor.CLA == 0x80)){
             return installer.process(smartcard);//check this -> TODAY
         } 
-        var startcode = CAPFunctions.getStartCode(smartcard.EEPROM.selectedApplet.CAP, smartcard.EEPROM.selectedApplet.AID, 7);
+        var startcode = cap.getStartCode(smartcard.EEPROM.selectedApplet.CAP, smartcard.EEPROM.selectedApplet.AID, 7);
         var params = [];
         params[0] = 0;
         jcvm.executeBytecode(smartcard.EEPROM.selectedApplet.CAP, startcode, params, 0,
             smartcard.EEPROM.selectedApplet.appletRef, smartcard);
 
         var output = "";
-            if (smartcard.apdu.getCurrentState() >= 3) {
-                for (var k = 0; k < smartcard.apdu.getBuffer().length; k++) {
-                    output += addX(addpad(smartcard.apdu.getBuffer()[k])) + " ";
+            if (apdu.getCurrentState(smartcard.processor.apdu) >= 3) {
+                //@adam -1 has been added as a quick fix, why the expected length is being outputtted
+                //      should be looked into.
+                for (var k = 0; k < apdu.getBuffer(smartcard.processor.apdu).length - 1; k++) {
+                    output += util.addX(util.addpad(apdu.getBuffer(smartcard.processor.apdu)[k])) + " ";
                     //output += this.apdu.getBuffer()[k] + "";
                 }
             }
         //return strout + " " + response; << haven't implemented code that uses strout yet
-        return output + this.response;
-    },
 
-    /* 
-     *  JCVM Functions  
-     */
-    storeArray: function(smartcard, arref, index, value) {
-        if (arref == null) { jcvm.executeBytecode.exception_handler(jlang, 7, ""); }
-        if (arref.toString().slice(0, 1) == "H") {
-            var ref = arref.slice(1).split("#");
-            var obj = smartcard.EEPROM.objectheap[Number(ref[0])];
-            if ((index >= Number(ref[2])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
-            else {
-                APDUFunctions.setArray(obj, Number(ref[1]), index, value);
-                //APISave(ref[0], obj.save());
-            }
-        } else if (arref.toString().slice(0, 1) == "T") {
-            var ref = arref.slice(1).split("#");
-            var tpsn = Number(ref[0])
-            if ((index >= Number(ref[1]))|| (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
-            else {
-                smartcard.RAM.transient_data[tpsn + index] = value;
-            }
-          } else {
-            arref = Number(arref);
-            index = Number(index);
-            if ((index >= EEPROMFunctions.getHeapValue(smartcard.EEPROM, arref)) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
-            else {
-                EEPROMFunctions.setHeapValue(smartcard.EEPROM, arref + index + 1, value);
-            };
-        }
-     },
-     loadArray: function(smartcard, arref, index) {
-        var out;
-        if (arref == null) { jcvm.executeBytecode.exception_handler(jlang, 7, ""); }
-        if (arref.toString().slice(0, 1) == "H") {
-            var ref = arref.slice(1).split("#");
-            if ((index >= Number(ref[2])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
-            else {
-
-                var obj = EEPROMFunctions.getObjectHeap(smartcard.EEPROM)[Number(ref[0])];
-                out = APDUFunctions.getArray(obj, Number(ref[1]), index);
-     
-            }
-        } else if (arref.toString().slice(0, 1) == "T") {
-            var ref = arref.slice(1).split("#");
-            var tpsn = Number(ref[0]);
-            if ((index >= Number(ref[1])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
-            else {
-                out = smartcard.RAM.transient_data[tpsn + index];
-            } 
-        } else {
-            arref = Number(arref);
-            index = Number(index);
-            if ((index >= EEPROMFunctions.getHeapValue(smartcard.EEPROM, arref)) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
-            else { out = EEPROMFunctions.getHeapValue(smartcard.EEPROM, arref + index + 1); }
-        }
-        return out;
+        return output + (!smartcard.processor.response ? "0x9000" : smartcard.processor.response);
     },
 
     /* 
@@ -203,9 +173,9 @@ module.exports = {
             for (var j = 0; j < len; j++) {
                 var spl = smartcard.RAM.transaction_buffer[j].split(";");//why split on ;
                 if (spl.length == 1) {
-                    EEPROMFunctions.newHeap(smartcard.EEPROM, spl[0]);
+                    eeprom.newHeap(smartcard.EEPROM, spl[0]);
                 } else {
-                    EEPROMFunctions.setHeap(smartcard.EEPROM, Number(spl[0]), Number(spl[1]));
+                    eeprom.setHeap(smartcard.EEPROM, Number(spl[0]), Number(spl[1]));
                 }
                 
             }

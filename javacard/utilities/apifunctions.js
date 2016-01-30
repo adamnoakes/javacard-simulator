@@ -1,9 +1,13 @@
 var opcodes = require('./opcodes.js');
-var AID = require('./java.framework/AID.js').AID;
-var Applet = require('./java.framework/Applet.js').Applet;//TODO --> Finish all imports
-var APDU = require('./java.framework/APDU.js').APDU;
-var Util = require('./java.framework/Util.js');
-var JCSystem = require('./java.framework/JCSystem.js');
+var AID = require('../framework/AID.js').AID;
+var Applet = require('../framework/Applet.js').Applet;//TODO --> Finish all imports
+var apdu = require('../framework/APDU.js');
+var Util = require('../framework/Util.js');
+var aid = require('../framework/AID.js');
+var JCSystem = require('../framework/JCSystem.js');
+var eeprom = require('../smartcard/eeprom.js');
+var ram = require('../smartcard/ram.js');
+var processor = require('../smartcard/processor.js');
 
 function newAPIObject(lib,cls) {
    
@@ -22,7 +26,7 @@ function newAPIObject(lib,cls) {
                     obj = new OwnerPIN();
                     break;
                 case 10:
-                    obj = new APDU();
+                    obj = new apdu.APDU();
                     break;
                 default:
                     break;
@@ -86,7 +90,7 @@ function newAPIObject(lib,cls) {
 
 exports.newAPIObject = newAPIObject; //TODO --> replace with module.exports for one below too //TODO --> replace processor with processor and add processor functions
 
-function runMethod (id, clas, method, type, param, objectheap, objref, processor) {
+function runMethod (id, clas, method, type, param, objectheap, objref, smartcard) {
     var bbb = "";
     var pm = "";
     var retval;
@@ -140,7 +144,7 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
 
                             //obj.reg();
                             //EEPROM.registerApplet();
-                            EEPROMFunctions.addInstalledApplet(smartcard.EEPROM);//ISSUE
+                            eeprom.addInstalledApplet(smartcard.EEPROM, smartcard.RAM.installingAppletAID, smartcard.RAM.gRef);//ISSUE
                             rettype = 0;
                             retval = "";
                             break;
@@ -150,7 +154,7 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
                             retval = "";
                             break;
                         case 3:
-                            retval = processor.getSelectStatementFlag();//obj.selectingApplet();
+                            retval = ram.getSelectStatementFlag(smartcard.RAM);//obj.selectingApplet();
                             rettype = 1;
                             break;
                         case 4:
@@ -183,32 +187,31 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
                     obj = objectheap[objref];
                     switch (method) {
                         case 0:
-                            AID.constr(param[0],param[1],param[2]);
+                            aid.constr(obj, param[0],param[1],param[2]);
                             retval = "";
                             rettype = 0;
                             break;
                         case 1:
-                            retval = obj.RIDEquals(param[0]);
+                            retval = aid.RIDEquals(obj, param[0]);
                             rettype = 1;
                             break;
                         case 2:
-                            retval = obj.equals(param[0],param[1],param[2]);
+                            retval = aid.equals(obj, param[0],param[1],param[2]);
                             rettype = 1;
                             break;
                         case 3:
-                            retval = obj.getBytes(param[0], param[1]);
+                            retval = aid.getBytes(obj, param[0], param[1]);
                             rettype = 1;
                             break;
                         case 4:
-                            retval = obj.PartialEquals(param[0], param[1], param[2]);
+                            retval = aid.PartialEquals(obj, param[0], param[1], param[2]);
                             rettype = 1;
                             break;
                         case 5:
-                            retval = obj.getPartialEquals(param[0],param[1],param[2],param[3]);
+                            retval = aid.getPartialEquals(obj, param[0],param[1],param[2],param[3]);
                             rettype = 1;
                             break;
                     }
-
                     objectheap[objref] = obj;
                     break;
                 case 7:  //ISOException
@@ -223,17 +226,17 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
 
                     switch (method) {
                         case 0:
-                            CPUFunctions.abortTransaction(smartcard);
+                            processor.abortTransaction(smartcard);
                             retval = "";
                             rettype = 0;
                             break;
                         case 1:
-                            CPUFunctions.beginTransaction(smartcard);
+                            processor.beginTransaction(smartcard);
                             retval = "";
                             rettype = 0;
                             break;
                         case 2:
-                            CPUFunctions.commitTransaction(smartcard);
+                            processor.commitTransaction(smartcard);
                             retval = "";
                             rettype = 0;
                             break;
@@ -308,79 +311,79 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
                                 case 0:
                                     retval = "";//objectheap.length;
                                     rettype = 0;
-                                    obj.constr(param[0]);
+                                    apdu.constr(obj, param[0]);
                                     //objectheap.push(new APDU(param[0]));
                                     break;
                                 case 1:
                                     //retval = obj.getBuffer();
 
-                                    retval = "H" + objref + "#" + 1 + "#" + obj.getArrayLength(1);
+                                    retval = "H" + objref + "#" + 1 + "#" + apdu.getArrayLength(obj, 1);
 
                                     bbb = retval;
                                     rettype = 1;
                                     break;
                                 case 2:
-                                    retval = obj.getNAD();
+                                    retval = apdu.getNAD();
                                     rettype = 1;
                                     break;
                                 case 3:
-                                    retval = obj.receiveBytes(param[0]);
+                                    retval = apdu.receiveBytes(obj, param[0]);
                                     rettype = 1;
                                     break;
                                 case 4:
-                                    obj.sendBytes(param[0], param[1]);
+                                    apdu.sendBytes(obj, param[0], param[1]);
                                     retval = "";
                                     rettype = 0;
                                     break;
                                 case 5:
-                                    obj.sendBytesLong(param[0], param[1], param[2]);
+                                    apdu.sendBytesLong(obj, param[0], param[1], param[2]);
                                     retval = "";
                                     rettype = 0;
                                     break;
                                 case 6:
-                                    retval = obj.setIncomingAndReceive();
+                                    retval = apdu.setIncomingAndReceive(obj);
                                     rettype = 1;
                                     break;
                                 case 7:
-                                    retval = obj.setOutgoing();
+                                    retval = apdu.setOutgoing(obj);
                                     rettype = 1;
                                     break;
                                 case 8:
-                                    obj.setOutgoingAndSend(param[0], param[1]);
+                                    apdu.setOutgoingAndSend(obj, param[0], param[1]);
                                     retval = "";
                                     rettype = 0;
                                     break;
                                 case 9:
-                                    obj.setOutgoingLength(param[0]);
+                                    apdu.setOutgoingLength(obj, param[0]);
                                     retval = "";
                                     rettype = 0;
                                     break;
                                 case 10:
-                                    retval = obj.setOutgoingNoChaining();
+                                    retval = apdu.setOutgoingNoChaining();
                                     rettype = 1;
                                     break;
                                 case 11:
-                                    retval = obj.getCurrentState();
+                                    retval = apdu.getCurrentState(obj);
                                     rettype = 1;
                                     break;
                                 case 12:
-                                    retval = obj.isCommandChainingCLA();
+                                    retval = apdu.isCommandChainingCLA(obj);
                                     rettype = 1;
                                     break;
                                 case 13:
-                                    retval = obj.isSecureMessagingCLA();
+                                    retval = apdu.isSecureMessagingCLA(obj);
                                     rettype = 1;
                                     break;
                                 case 14:
-                                    retval = obj.isISOInterindustryCLA();
+                                    retval = apdu.isISOInterindustryCLA(obj);
                                     rettype = 1;
                                     break;
                                 case 15:
-                                    retval = obj.getIncomingLength();
+                                    retval = apdu.getIncomingLength(obj);
                                     rettype = 1;
                                     break;
                                 case 16:
-                                    retval = obj.getOffsetCdata();
+                                    retval = apdu.getOffsetCdata(obj);
                                     rettype = 1;
                                     break;
                             }
@@ -390,19 +393,19 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
                         case 6:
                             switch (method) {
                                 case 0:
-                                    retval = APDU.getInBlockSize();
+                                    retval = apdu.getInBlockSize(obj);
                                     rettype = 1;
                                     break;
                                 case 1:
-                                    retval = APDU.getOutBlockSize();
+                                    retval = apdu.getOutBlockSize(obj);
                                     rettype = 1;
                                     break;
                                 case 2:
-                                    retval = APDU.getProtocol();
+                                    retval = apdu.getProtocol(obj);
                                     rettype = 1;
                                     break;
                                 case 3:
-                                    retval = APDU.waitExtension();
+                                    retval = apdu.waitExtension(obj);
                                     rettype = 1;
                                     break;
                                 case 4:
@@ -410,11 +413,11 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
                                     rettype = 1;
                                     break;
                                 case 3:
-                                    retval = obj.getBuffer();// adam maybe need to be stored in ram APDU.getCurrentAPDUBuffer();
+                                    retval = apdu.getBuffer(obj);// adam maybe need to be stored in ram APDU.getCurrentAPDUBuffer();
                                     rettype = 3;
                                     break;
                                 case 5:
-                                    retval = obj.getCLAChannel();
+                                    retval = apdu.getCLAChannel(obj);
                                     rettype = 1;
                                     break;
                             }
@@ -467,25 +470,25 @@ function runMethod (id, clas, method, type, param, objectheap, objref, processor
                     rettype = 1;
                     switch (method) {
                         case 0:
-                            retval = Util.arrayCompare(param[0], param[1], param[2], param[3], param[4], processor);
+                            retval = Util.arrayCompare(param[0], param[1], param[2], param[3], param[4], smartcard);
                             break;
                         case 1:
-                            retval = Util.arrayCopy(param[0], param[1], param[2], param[3], param[4], processor);
+                            retval = Util.arrayCopy(param[0], param[1], param[2], param[3], param[4], smartcard);
                             break;
                         case 2:
-                            retval = Util.arrayCopyNonAtomic(param[0], param[1], param[2], param[3], param[4], processor);
+                            retval = Util.arrayCopyNonAtomic(param[0], param[1], param[2], param[3], param[4], smartcard);
                             break;
                         case 3:
-                            retval = Util.arrayFillNonAtomic(param[0], param[1], param[2], param[3], processor);
+                            retval = Util.arrayFillNonAtomic(param[0], param[1], param[2], param[3], smartcard);
                             break;
                         case 4:
-                            retval = Util.getShort(param[0], param[1], processor);
+                            retval = Util.getShort(param[0], param[1], smartcard);
                             break;
                         case 5:
                             retval = Util.makeShort(param[0], param[1]);
                             break;
                         case 6:
-                            retval = Util.setShort(param[0], param[1], param[2], processor);
+                            retval = Util.setShort(param[0], param[1], param[2], smartcard);
                             break;
                     }
 

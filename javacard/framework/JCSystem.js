@@ -3,8 +3,8 @@
  * atomic transaction management, object deletion mechanism and inter-applet object sharing in the Java Card 
  * environment.
  */
-var jcvm = require('../jcvm.js');
-var opcodes = require('../opcodes.js');
+var jcvm = require('../jcvm/jcvm.js');
+var opcodes = require('../utilities/opcodes.js');
 
 //A0 00 00 00 62 01 01 Framework
 module.exports = {

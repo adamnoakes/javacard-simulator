@@ -1,6 +1,17 @@
 module.exports = {
+    EEPROM: function(cardName) {
+        this.cardName = cardName;
+        this.heap = [0xA0,0x00];
+        this.packages = [];
+        this.installedApplets = [{'AID': [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01], 'appletRef': -1}];
+        this.selectedApplet = {'AID': undefined, 'appletRef': undefined, 'CAP': undefined};
+        this.objectheap = [];
+    },
 	//if (!transaction_flag) {//need to fix this later, add transaction flag and asyncState etc.
 		    //asyncState = false;
+    getCardName: function(EEPROM){
+        return EEPROM.cardName;
+    },
 	appendHeap: function(EEPROM, arr) {
         if (arr.constructor === Array) {//aprox 3 times quicker than instance of array
             EEPROM.heap.push.apply(EEPROM.heap, arr);
@@ -27,7 +38,7 @@ module.exports = {
 	    //    transaction_buffer.push(value);
 	    //}
     },
-    setHeapValue = function(EEPROM, pos, value){
+    setHeapValue: function(EEPROM, pos, value){
         if(pos > EEPROM.heap.length){
             EEPROM.heap[EEPROM.heap.length] = value;
         } else{
@@ -49,7 +60,7 @@ module.exports = {
             if(EEPROM.installedApplets[i].AID.join() === appletAID.join()) {
                 EEPROM.selectedApplet.AID =  EEPROM.installedApplets[i].AID;
                 EEPROM.selectedApplet.appletRef = EEPROM.installedApplets[i].appletRef;
-                EEPROM.selectedApplet.CAP = getAppletCAP(EEPROM, appletAID);
+                EEPROM.selectedApplet.CAP = this.getAppletCAP(EEPROM, appletAID);
                 return true;
             }
         }
@@ -83,16 +94,15 @@ module.exports = {
         }
     },
 
-
-
     /* 
      *  EEPROM Functions  
      */
-    addInstalledApplet: function(){
-        this.EEPROM.installedApplets.push({'AID': this.RAM.installingAppletAID, 'appletRef': this.RAM.gRef});
+     //change to a smart card function
+    addInstalledApplet: function(EEPROM, appletAID, gRef){
+        EEPROM.installedApplets.push({'AID': appletAID, 'appletRef': gRef});
     },
 
-    getObjectHeap: function(){ return this.EEPROM.objectheap;};
+    getObjectHeap: function(EEPROM){ return EEPROM.objectheap;}
 
     //appendHeap = function(arr){this.EEPROM.appendHeap(arr);};
     //appendObjectHeap = function(arr){this.EEPROM.appendObjectHeap(arr);};
