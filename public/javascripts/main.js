@@ -63,7 +63,7 @@ function sendCommand(input, handler){
             getCards(handler);
             break;            
         case "load":
-            loadCard(handler);
+            loadCard(handler, words[1]);
             break;
         case "newcard":
             newCard(handler,  words[1]);
@@ -110,16 +110,17 @@ function newCard(handler, cardName){
     });
 }
 
-function loadCard(handler){
+function loadCard(handler, cardName){
     $.ajax({
         type: "GET",
-        url: "/load",
+        url: "/simulator/smartcards/" + cardName,
         success: function(data){
             console.log(data);
             if(data.result){
-
+                jqconsole.Write("Successfully loaded: " + data.cardName, "response-ok");
+            } else {
+                jqconsole.Write(data.message, "response-error");
             }
-            jqconsole.Write("Successfully loaded: " + data.cardName, "response-ok");
             jqconsole.Write('\n'); 
             jqconsole.Prompt(true, handler);
         }

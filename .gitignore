@@ -8,3 +8,8 @@ data/*
 node_modules/**
 npm-debug.log
 .DS_Store
+.idea/**
+
+.idea/inspectionProfiles/profiles_settings.xml
+
+.idea/inspectionProfiles/Project_Default.xml

@@ -1,5 +1,10 @@
-﻿var API = require('./apifunctions.js');
-var opcodes = require('./opcodes.js');
+﻿var API = require('../utilities/apifunctions.js');
+var opcodes = require('../utilities/opcodes.js');
+var eeprom = require('../smartcard/eeprom.js');
+var ram = require('../smartcard/ram.js');
+var smartcard = require('../smartcard/smartcard.js');
+var apdu = require('../framework/apdu.js');
+
 //JCVM
 function frame() {
     this.local_vars = [];
@@ -7,7 +12,7 @@ function frame() {
     this.invoker = -1;
     this.return_pointer = 0;
 }
-function executeBytecode(CAPfile, startbytecode, parameters, method, appref, processor) {
+function executeBytecode(CAPfile, startbytecode, parameters, method, appref, smartcard) {
     console.log("executing byte code");
     var frames = [];
     var heap = [];
@@ -45,7 +50,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
             break;
         case 1:
             //install method
-            var address = processor.getHeapSize();
+            var address = eeprom.getHeapSize(smartcard.EEPROM);
             var bArr = parameters[0];
             var ghs;
             console.log("install method");
@@ -59,8 +64,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                 }
             }*/
             //@anoakes
-            processor.appendHeap(bArr.length);
-            processor.appendHeap(bArr);
+            eeprom.appendHeap(smartcard.EEPROM, bArr.length);
+            eeprom.appendHeap(smartcard.EEPROM, bArr);
 
             frames[current_frame].local_vars.push(address);
             frames[current_frame].local_vars.push(parameters[1]);
@@ -257,7 +262,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
             case opcodes.aaload: //0x24
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                var value = processor.loadArray(arref, index);
+                var value = loadArray(smartcard, arref, index);
 
                 frames[current_frame].operand_stack.push(value);
                 i++;
@@ -265,7 +270,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
             case opcodes.baload: //0x25
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                var value = opcodes.ByteToShort(processor.loadArray(arref, index));
+                var value = opcodes.ByteToShort(loadArray(smartcard, arref, index));
 
                 frames[current_frame].operand_stack.push(value);
                 i++;
@@ -273,7 +278,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
             case opcodes.saload: //0x26
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                var value = processor.loadArray(arref, index);
+                var value = loadArray(smartcard, arref, index);
 
                 frames[current_frame].operand_stack.push(value);
                 i++;
@@ -281,7 +286,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
             case opcodes.iaload: //0x27
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                var value = processor.loadArray(arref, index);
+                var value = loadArray(smartcard, arref, index);
                 var val = opcodes.convertIntegerToWords(value);
                 frames[current_frame].operand_stack.push(val[0]);
                 frames[current_frame].operand_stack.push(val[1]);
@@ -367,21 +372,22 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                 var value = frames[current_frame].operand_stack.pop();
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                processor.storeArray(arref, index, value);
+                storeArray(smartcard, arref, index, value);
                 i++;
                 break;
             case opcodes.bastore: //0x38 update byte array index
                 var value = frames[current_frame].operand_stack.pop();
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                processor.storeArray(arref, index, value);
+                storeArray(smartcard, arref, index, value);
                 i++;
                 break;
             case opcodes.sastore: //0x39
                 var value = frames[current_frame].operand_stack.pop();
                 var index = frames[current_frame].operand_stack.pop();
                 var arref = frames[current_frame].operand_stack.pop();
-                processor.storeArray(arref, index, value);
+                console.log(ram);
+                storeArray(smartcard, arref, index, value);
                 i++;
                 break;
             case opcodes.iastore: //0x3A
@@ -390,7 +396,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                 var v2 = frames[current_frame].operand_stack.pop();
                 var v1 = frames[current_frame].operand_stack.pop();
                 var value = (v1 << 8) + v2;
-                processor.storeArray(arref, index, value);
+                storeArray(smartcard, arref, index, value);
                 i++;
                 break;
             case opcodes.pop: //0x3B
@@ -1167,7 +1173,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                     
                     oref = frames[current_frame].operand_stack.pop();
                     
-                    var ocls = processor.getHeapValue(oref);
+                    var ocls = eeprom.getHeapValue(smartcard.EEPROM, oref);
                     
                     oheap = oref;
                     var clssig = ((i0 << 8) + info[1]);
@@ -1180,7 +1186,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                             for (var j = 0; j < CAPfile.COMPONENT_Class.i_count; j++) {
                                 if (CAPfile.COMPONENT_Class.interface_info[j].start == ocls) {
                                     oheap += CAPfile.COMPONENT_Class.interface_info[j].declared_instance_size + 1;
-                                    ocls = processor.getHeapValue(oheap);
+                                    ocls = eeprom.getHeapValue(smartcard.EEPROM, oheap);
                                     break;
                                 }
                             }
@@ -1188,7 +1194,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
 
                     }
                     
-                    var apiresult = API.runMethod(mAID, info[1], info[2], 3, par, processor.getObjectHeap(), processor.getHeapValue(oheap), processor);
+                    var apiresult = API.runMethod(mAID, info[1], info[2], 3, par, eeprom.getObjectHeap(smartcard.EEPROM), eeprom.getHeapValue(smartcard.EEPROM, oheap), smartcard);
 
 
                     //var rval = API.getVal();
@@ -1202,13 +1208,13 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                         case 3:
                             //@anoakes
                             //var hv = [rval.length.toString];
-                            var hl = processor.getHeapSize();
+                            var hl = eeprom.getHeapSize(smartcard.EEPROM);
                             /*if (rval.length > 0) {
                                 for (var j = 0; j < rval.length; j++) { hv += "," + rval[j]; }
                             }
                             newHeap(hv);*/
-                            processor.appendHeap(apiresult.val.length);
-                            processor.appendHeap(apiresult.val);
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult.val.length);
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult.val);
                             frames[current_frame].operand_stack.push(hl);
                         default:
                             break;
@@ -1300,7 +1306,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
 
                     oref = frames[current_frame].operand_stack.pop();
  
-                    var ocls = processor.getHeapValue(oref);
+                    var ocls = eeprom.getHeapValue(smartcard.EEPROM, oref);
                     oheap = oref;
                     var clssig = ((i0 << 8) + info[1]);
                     while (!found) {
@@ -1311,7 +1317,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                             for (var j = 0; j < CAPfile.COMPONENT_Class.i_count; j++) {
                                 if (CAPfile.COMPONENT_Class.interface_info[j].start === ocls) {
                                     oheap += CAPfile.COMPONENT_Class.interface_info[j].declared_instance_size + 1;
-                                    ocls = processor.getHeapValue(oheap);
+                                    ocls = eeprom.getHeapValue(smartcard.EEPROM, oheap);
                                     break;
                                 }
                             }
@@ -1320,12 +1326,12 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                     }
                     
                     //execute method
-                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, processor.getObjectHeap(), processor.getHeapValue(oheap), processor);
+                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, eeprom.getObjectHeap(smartcard.EEPROM), eeprom.getHeapValue(smartcard.EEPROM, oheap), smartcard);
 
                     //process results
                     //var rval = API.getVal();
                     //var rtype = API.getType();
-                    var hl = processor.getHeapSize();
+                    var hl = eeprom.getHeapSize(smartcard.EEPROM);
                     switch (apiresult.typ) {
                         case 1: //Normal return value
                             frames[current_frame].operand_stack.push(apiresult.val);
@@ -1342,8 +1348,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                                 }
                             }*/
                             frames[current_frame].operand_stack.push(hl);
-                            processor.appendHeap(apiresult.val.length);
-                            processor.appendHeap(apiresult.val);
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult.val.length);
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult.val);
                             //newHeap(hv);
                             break;
                         
@@ -1409,10 +1415,10 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                     var na = API.nargAPI(mAID, info[1], info[2], 6);
                     for (var j = 0; j < na; j++) { args.push(frames[current_frame].operand_stack.pop()); };
                     for (var j = 0; j < na; j++) { par.push(args.pop()); };
-                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, processor.getObjectHeap(), null, processor);
+                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, eeprom.getObjectHeap(smartcard.EEPROM), null, smartcard);
 
 
-                    var hl = processor.getHeapSize();
+                    var hl = eeprom.getHeapSize(smartcard.EEPROM);
 
                     switch (apiresult.typ) {
                         case 1:
@@ -1420,8 +1426,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                             break;
                         case 2:
                             //New Transient Array
-                            frames[current_frame].operand_stack.push("T" + processor.getTransientData().length + "#" + apiresult.val.length + "#" + par[1]);
-                            for (var j = 0; j < apiresult.val.length; j++) { processor.pushTransientData(apiresult.val[j]); }
+                            frames[current_frame].operand_stack.push("T" + ram.getTransientData(smartcard.RAM).length + "#" + apiresult.val.length + "#" + par[1]);
+                            for (var j = 0; j < apiresult.val.length; j++) { ram.pushTransientData(smartcard.RAM, apiresult.val[j]); }
                             break;
                         case 3:
                             //New Persistent Array
@@ -1429,8 +1435,8 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                             for (var j = 0; j < rval.length; j++) { hv += "," + rval[j]; }
                             newHeap(hv);*/
 
-                            processor.appendHeap(apiresult.val.length);
-                            processor.appendHeap(apiresult.val);
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult.val.length);
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult.val);
                             frames[current_frame].operand_stack.push(hl);
                             break;
                         default:
@@ -1519,7 +1525,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
             case opcodes.new_v: //0x8F
 
                 //new, ind1, ind2
-                var ref = processor.getHeapSize();
+                var ref = eeprom.getHeapSize(smartcard.EEPROM);
                 
 
                 var done = false;
@@ -1538,10 +1544,10 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                                 clsno = j;
                                 var dis = CAPfile.COMPONENT_Class.interface_info[j].declared_instance_size;
                                 //hv += ","+offset;
-                                processor.appendHeap(offset);
+                                eeprom.appendHeap(smartcard.EEPROM, offset);
                                 
                                 //for (var k = 0; k < dis; k++) { hv += ",0"; }
-                                for (var k = 0; k < dis; k++) { processor.appendHeap(0); }
+                                for (var k = 0; k < dis; k++) { eeprom.appendHeap(smartcard.EEPROM, 0); }
                                 
                                 info[0] = CAPfile.COMPONENT_Class.interface_info[j].super_class_ref1;
                                 info[1] = CAPfile.COMPONENT_Class.interface_info[j].super_class_ref2;
@@ -1553,11 +1559,11 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                     } else {
                         var clsno = ((info[0] - 128) << 8) + info[1];
                         //hv += ",A"+clsno+","+objectheap.length;
-                        processor.appendHeap(160+clsno);
-                        processor.appendHeap(processor.getObjectHeap().length);
-                        if ((info[1] == 3) && (CAPfile.COMPONENT_Import.packages[info[0] - 128].AID.join() === opcodes.jframework.join())) { processor.setGRef(ref); };
+                        eeprom.appendHeap(smartcard.EEPROM, 160+clsno);
+                        eeprom.appendHeap(smartcard.EEPROM, eeprom.getObjectHeap(smartcard.EEPROM).length);
+                        if ((info[1] == 3) && (CAPfile.COMPONENT_Import.packages[info[0] - 128].AID.join() === opcodes.jframework.join())) { ram.setGRef(smartcard.RAM, ref); };
 
-                        processor.appendObjectHeap(API.newAPIObject(CAPfile.COMPONENT_Import.packages[info[0] - 128].AID, info[1]));
+                        eeprom.appendObjectHeap(smartcard.EEPROM, API.newAPIObject(CAPfile.COMPONENT_Import.packages[info[0] - 128].AID, info[1]));
                         done = true;
                     }
                 }
@@ -1570,14 +1576,14 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                 //newarray, atype
                 var count = frames[current_frame].operand_stack.pop();
                 var atype = opcode[i + 1];
-                var ref = processor.getHeapSize();
+                var ref = eeprom.getHeapSize(smartcard.EEPROM);
                 if (count < 0) { executeBytecode.exception_handler(jlang,6,"");}
 
                 //allocate space on heap
                // var heapspace = [];
-                processor.appendHeap(count);
+                eeprom.appendHeap(smartcard.EEPROM, count);
                 for (var j = 0; j < count; j++) {
-                   processor.appendHeap(0);
+                   eeprom.appendHeap(smartcard.EEPROM, 0);
                 };
                 //newHeap(hv);
                 //push ref onto operand stack
@@ -1625,29 +1631,29 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                         var clsno = ((info[0] - 128) << 8) + info[1];
                         //tv += ",A" + clsno + "," + objectheap.length;
                         tv.push(160+clsno);
-                        tv.push(processor.getObjectHeap().length);
-                        if ((info[1] == 3) && (CAPfile.COMPONENT_Import.packages[info[0] - 128].AID.join() === jframework.join())) { processor.setGRef(ref); };
+                        tv.push(eeprom.getObjectHeap(smartcard.EEPROM).length);
+                        if ((info[1] == 3) && (CAPfile.COMPONENT_Import.packages[info[0] - 128].AID.join() === jframework.join())) { ram.setGRef(smartcard.RAM, ref); };
 
-                        processor.appendObjectHeap(API.newAPIObject(CAPfile.COMPONENT_Import.packages[info[0] - 128].AID, info[1]));
+                        eeprom.appendObjectHeap(smartcard.EEPROM, API.newAPIObject(CAPfile.COMPONENT_Import.packages[info[0] - 128].AID, info[1]));
                         done = true;
                     }
                 }
 
-                var ref = processor.getHeapSize();
+                var ref = eeprom.getHeapSize(smartcard.EEPROM);
 
                 //var hv = "," + count;
-                processor.appendHeap(count);
+                eeprom.appendHeap(smartcard.EEPROM, count);
                 var ival = 0;
                 for (var j = 0; j < count; j++) {
                     ival = ref + dis * (j + 1) + 1;
-                    processor.appendHeap(ival);
+                    eeprom.appendHeap(smartcard.EEPROM, ival);
                     //hv += "," + ival;
                 }
 
                 for (var j = 0; j < count; j++) {
                     //hv += ","+ dis;
                     //hv += tv;
-                    processor.appendHeap(tv);
+                    eeprom.appendHeap(smartcard.EEPROM, tv);
                 }
                 //newHeap(hv);
                 frames[current_frame].operand_stack.push(ref);
@@ -1656,7 +1662,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
             case opcodes.arraylength: //0x92
                 var arref = frames[current_frame].operand_stack.pop();
                 if (arref == null) { executeBytecode.exception_handler(jlang,6,""); }
-                var ar = processor.getHeapValue(arref);
+                var ar = eeprom.getHeapValue(smartcard.EEPROM, arref);
                 if (ar.slice(0, 1) == "H") {
                     ar = ar.split("#")[2];
                     ar = parseInt(ar.slice(1));
@@ -1668,7 +1674,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
                 break;
             case opcodes.athrow: //0x93
                 var objref = frames[current_frame].operand_stack.pop();
-                var oheap = processor.getHeapValue(objref);
+                var oheap = eeprom.getHeapValue(smartcard.EEPROM, objref);
                 //search for catch clause
                 if(oheap.slice(0,1) == "A") {
                     var ncls = Number(oheap.slice(1));
@@ -2072,12 +2078,12 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
             var jf;
             
             //assume internal
-            var refclass = processor.getHeapValue(objref);
+            var refclass = eeprom.getHeapValue(smartcard.EEPROM, objref);
             while (!bfound) {
                 //get object field size
                 if (refclass == infoclass) {
                     bfound = true;
-                    retval = processor.getHeapValue(oheap + info[2] + 1);
+                    retval = eeprom.getHeapValue(smartcard.EEPROM, oheap + info[2] + 1);
                 } else {
 
                     for (var j = 0; j < CAPfile.COMPONENT_Class.i_count; j++) {
@@ -2107,12 +2113,12 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
             var jf;
 
             //assume internal
-            var refclass = processor.getHeapValue(objref);
+            var refclass = eeprom.getHeapValue(smartcard.EEPROM, objref);
             while (!bfound) {
                 //get object field size
                 if (refclass === infoclass) {
                     bfound = true;
-                    processor.setHeapValue(oheap + info[2] + 1, val);
+                    eeprom.setHeapValue(smartcard.EEPROM, oheap + info[2] + 1, val);
                 } else {
                     for (var j = 0; j < CAPfile.COMPONENT_Class.i_count; j++) {
                         if (CAPfile.COMPONENT_Class.interface_info[j].start == refclass) {
@@ -2225,4 +2231,66 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, pro
         }
         
 }
+
+ //TODO: IMPROTANT -> this cannot have references to JCVM, as this will result in 
+ //module require cycles: http://stackoverflow.com/questions/23341883/can-node-modules-require-each-other
+ //the functions must return if there is an exception and then the function that called either storeArray
+ //or loadArray must handle the exception and call the jcvm.
+ //Instead, consider moving these to JCVM -> DONE
+function storeArray(smartcard, arref, index, value) {
+    if (arref == null) { jcvm.executeBytecode.exception_handler(jlang, 7, ""); }
+    if (arref.toString().slice(0, 1) == "H") {
+        var ref = arref.slice(1).split("#");
+        var obj = smartcard.EEPROM.objectheap[Number(ref[0])];
+        if ((index >= Number(ref[2])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+        else {
+            apdu.setArray(obj, Number(ref[1]), index, value);
+            //APISave(ref[0], obj.save());
+        }
+    } else if (arref.toString().slice(0, 1) == "T") {
+        var ref = arref.slice(1).split("#");
+        var tpsn = Number(ref[0])
+        if ((index >= Number(ref[1]))|| (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+        else {
+            smartcard.RAM.transient_data[tpsn + index] = value;
+        }
+      } else {
+        arref = Number(arref);
+        index = Number(index);
+        if ((index >= eeprom.getHeapValue(smartcard.EEPROM, arref)) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+        else {
+            eeprom.setHeapValue(smartcard.EEPROM, arref + index + 1, value);
+        };
+    }
+ }
+ //not used anywhere?
+function loadArray(smartcard, arref, index) {
+    var out;
+    if (arref == null) { jcvm.executeBytecode.exception_handler(jlang, 7, ""); }
+    if (arref.toString().slice(0, 1) == "H") {
+        var ref = arref.slice(1).split("#");
+        if ((index >= Number(ref[2])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+        else {
+
+            var obj = eeprom.getObjectHeap(smartcard.EEPROM)[Number(ref[0])];
+            out = apdu.getArray(obj, Number(ref[1]), index);
+ 
+        }
+    } else if (arref.toString().slice(0, 1) == "T") {
+        var ref = arref.slice(1).split("#");
+        var tpsn = Number(ref[0]);
+        if ((index >= Number(ref[1])) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+        else {
+            out = smartcard.RAM.transient_data[tpsn + index];
+        } 
+    } else {
+        arref = Number(arref);
+        index = Number(index);
+        if ((index >= eeprom.getHeapValue(smartcard.EEPROM, arref)) || (index < 0)) { jcvm.executeBytecode.exception_handler(jlang, 5, ""); }
+        else { out = eeprom.getHeapValue(smartcard.EEPROM, arref + index + 1); }
+    }
+    return out;
+}
 exports.executeBytecode = executeBytecode;
+exports.storeArray = storeArray;
+exports.loadArray = loadArray;
