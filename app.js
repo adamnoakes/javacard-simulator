@@ -11,7 +11,9 @@ var MongoStore = require('connect-mongo/es5')(session);
 var app = express();
 var mongo = require('mongodb');
 var monk = require('monk');
-var dbURI = 'heroku_6d9rsdxk:o86slgfdch3dag65fu4phh5d5u@ds043972.mongolab.com:43972/heroku_6d9rsdxk';
+var dbURI = (process.env.MONGOLAB_URI ?
+    process.env.MONGOLAB_URI.replace('mongodb://', '') : 
+    'localhost:27017/javacard');
 var db = monk(dbURI);
 
 
