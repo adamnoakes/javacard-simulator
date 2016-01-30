@@ -9,10 +9,12 @@ var validator = require('validator');
 var session = require('express-session');
 var MongoStore = require('connect-mongo/es5')(session);
 var app = express();
-var javacard;
 var mongo = require('mongodb');
 var monk = require('monk');
-var db = monk('localhost:27017/javacard');
+var dbURI = (process.env.MONGOLAB_URI ?
+    'admin:AWE-GA6-T2d-eKp@' + process.env.MONGOLAB_URI : 
+    'localhost:27017/javacard');
+var db = monk(dbURI);
 
 
 // view engine setup
@@ -41,9 +43,9 @@ app.use(function(req,res,next){
 });
 
 app.use(session({
-    secret: 'foo',
+    secret: '8Rw6jqB4ld0mHQ0RCZ3FT28BsbKA1Qgs',
     store: new MongoStore({
-        url: 'mongodb://localhost:27017/test',
+        url: 'mongodb://' + dbURI,
         ttl: 14 * 24 * 60 * 60, // = 14 days. Default
         autoRemove: 'native' // Default 
     }),
