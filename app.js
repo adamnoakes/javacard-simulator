@@ -11,7 +11,7 @@ var MongoStore = require('connect-mongo/es5')(session);
 var app = express();
 var monk = require('monk');
 var dbURI = (process.env.MONGOLAB_URI ?
-    process.env.MONGOLAB_URI.replace("mongodb://", "") : 
+    process.env.MONGOLAB_URI.replace('mongodb://', '') : 
     'localhost:27017/javacard');
 var db = monk(dbURI);
 
@@ -44,7 +44,7 @@ app.use(function(req,res,next){
 app.use(session({
     secret: '8Rw6jqB4ld0mHQ0RCZ3FT28BsbKA1Qgs',
     store: new MongoStore({
-        url: dbURI,
+        url: 'mongodb://' + dbURI,
         ttl: 14 * 24 * 60 * 60, // = 14 days. Default
         autoRemove: 'native' // Default 
     }),
