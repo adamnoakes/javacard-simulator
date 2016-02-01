@@ -1,10 +1,6 @@
 var handler;
 
-function updateScroll(){
-    var element = document.getElementById("console");
-    element.scrollTop = element.scrollHeight + 1000;
-}
-
+/* Setup the console */
 $(function() {
     // Creating the console.
     var header =    'Welcome to the Java Card online simulator!\n' +
@@ -48,6 +44,7 @@ $(function() {
     handler();
 });
 
+/* Handle Execute button presses */
 function executeButton(command)
 {
     jqconsole.Write("Java Card> " + command, "jqconsole-old-prompt");
@@ -55,6 +52,10 @@ function executeButton(command)
     handler(command);
 }
 
+/* 
+ * Identifies commanded entered by the user and calls
+ * the correct ajax function.
+ */
 function sendCommand(input, handler){
     
     var words = input.split(" ");
@@ -62,7 +63,7 @@ function sendCommand(input, handler){
         case "cards":
             getCards(handler);
             break;            
-        case "load":
+        case "loadcard":
             loadCard(handler, words[1]);
             break;
         case "newcard":
@@ -81,6 +82,7 @@ function sendCommand(input, handler){
     };
 }
 
+/* Gets and prints the list of smart cards, stored on the server */
 function getCards(handler){
     $.ajax({
         type: "GET",
@@ -95,6 +97,7 @@ function getCards(handler){
     });
 }
 
+/* Sends request to create a new smart card on the server */
 function newCard(handler, cardName){
     $.ajax({
         type: "POST",
@@ -112,6 +115,7 @@ function newCard(handler, cardName){
     });
 }
 
+/* Sends request to delete a smart card from the server */
 function deleteCard(handler, cardName){
     $.ajax({
         type: "DELETE",
@@ -128,6 +132,7 @@ function deleteCard(handler, cardName){
     });
 }
 
+/* Loads a smart card into a user's session */
 function loadCard(handler, cardName){
     $.ajax({
         type: "GET",
@@ -145,6 +150,7 @@ function loadCard(handler, cardName){
     });
 }
 
+/* Sends an array of APDU commands to the server and prints the result. */
 function sendAPDU(APDU, handler){
     for(i=0; i<APDU.length; i++){
         for(j=0; j<APDU[i].length; j++){
@@ -163,11 +169,11 @@ function sendAPDU(APDU, handler){
             jqconsole.Prompt(true, handler);
         },
         error: function(xhr, error){
-                jqconsole.Write(error);
-                jqconsole.Write(xhr);
-                console.debug(xhr);
-                jqconsole.Write('\n'); 
-                jqconsole.Prompt(true, handler);
-        }
+            jqconsole.Write(error);
+            jqconsole.Write(xhr);
+            console.debug(xhr);
+            jqconsole.Write('\n'); 
+            jqconsole.Prompt(true, handler);
+    }
     });
 }

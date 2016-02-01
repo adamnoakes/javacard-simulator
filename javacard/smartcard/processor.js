@@ -7,6 +7,7 @@ var cap = require('./cap.js');
 var util = require('../utilities/util.js');
 
 module.exports = {
+    /* Processor object contructor */
     Processor: function(){
         this.response = undefined;
         this.buffer = [];
@@ -18,11 +19,68 @@ module.exports = {
         this.apdu = undefined;
         this.selectedAID = undefined;
         this.appletInstance = undefined;
-        this.installerAID = [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01];//merge into installer
+        this.installerAID = [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01];//merge into installer module
         //this.installer = new installJS.Installer(this);//Should this be moved down? --> YES when select install applet, just realised it messed up probably due to installer boolean down there \/
     },
+    /* Process a single APDU command with smartcard */
+    process: function(smartcard, buffer){
+        //contruct an APDU objects
+        smartcard.processor.apdu = new apdu.APDU();
+        apdu.constr(smartcard.processor.apdu, buffer);
+
+        //Set the APDU object on the first position of the object heap
+        smartcard.EEPROM.objectheap[0] = smartcard.processor.apdu; //maybe object heap should be stored in RAM?
+        //Reset the processor response message
+        smartcard.processor.response = ""; //consider moving to RAM.
+        //Reset variables
+        smartcard.RAM.asyncState = false;
+        smartcard.RAM.transaction_flag = false; //probably should be stored in the processor?
+        smartcard.RAM.transaction_buffer = [];
+        smartcard.processor.buffer = buffer; //store buffer for installer
+        //Assign APDU values
+        smartcard.processor.CLA = buffer[0];    //@adam class of instruction, category
+        smartcard.processor.INS = buffer[1];    //@adam instruction
+        smartcard.processor.P1 = buffer[2];     //@adam parameter 1
+        smartcard.processor.P2 = buffer[3];     //@adam parameter 2
+        smartcard.processor.LC = buffer[4];     //@adam length of command data
+
+        var found = false;
+
+
+        //If select applet command
+        if ((smartcard.processor.CLA === 0x00) && (smartcard.processor.INS == 0xA4) && (smartcard.processor.P1 == 0x04) && (smartcard.processor.P2 === 0x00)) {
+            //Attempt to select the specified applet
+            return this.selectApplet(smartcard, buffer.slice(5,5+smartcard.processor.LC));
+        } else {
+            smartcard.RAM.select_statement_flag = 0;
+        }
+
+        //If the selected applet is the installer and an install command has been sent, process by installer module
+        if((smartcard.EEPROM.selectedApplet.AID.join() === smartcard.processor.installerAID.join()) && (smartcard.processor.CLA == 0x80)){
+            return installer.process(smartcard);
+        } 
+        var startcode = cap.getStartCode(smartcard.EEPROM.selectedApplet.CAP, smartcard.EEPROM.selectedApplet.AID, 7);
+        var params = [];
+        params[0] = 0;
+        jcvm.executeBytecode(smartcard.EEPROM.selectedApplet.CAP, startcode, params, 0,
+            smartcard.EEPROM.selectedApplet.appletRef, smartcard);
+
+        var output = "";
+            if (apdu.getCurrentState(smartcard.processor.apdu) >= 3) {
+                //@adam -1 has been added as a quick fix, why the expected length is being outputtted
+                //      should be looked into.
+                for (var k = 0; k < apdu.getBuffer(smartcard.processor.apdu).length - 1; k++) {
+                    output += util.addX(util.addpad(apdu.getBuffer(smartcard.processor.apdu)[k])) + " ";
+                    //output += this.apdu.getBuffer()[k] + "";
+                }
+            }
+        //return strout + " " + response; << haven't implemented code that uses strout yet
+
+        return output + (!smartcard.processor.response ? "0x9000" : smartcard.processor.response);
+    },
+    /* Called by process, to select an applet */
     selectApplet: function (smartcard, appletAID){
-        smartcard.RAM.transient_data = []; //reset transient data --> instead create new ram?
+        smartcard.RAM.transient_data = [];
         smartcard.RAM.select_statement_flag = 1;
 
         //delect curent applet
@@ -30,7 +88,7 @@ module.exports = {
         //set applet aid and cap file in eeprom
         if(eeprom.setSelectedApplet(smartcard.EEPROM, appletAID)){
             if(smartcard.EEPROM.selectedApplet.AID.join() === smartcard.processor.installerAID.join()){
-                return "0x9000"//if installer then the rest is not necessary
+                return "0x9000";//if installer then the rest is not necessary
             }
 
             for(var j = 0; j < smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.count; j++) { 
@@ -64,87 +122,10 @@ module.exports = {
             }
             
         } else {
+            //@adam no applet found
             return "0x6A82";
         }
-
-        if (appletAID.join() === smartcard.processor.installerAID.join()) {
-            smartcard.processor.selectedAID = smartcard.processor.installerAID;
-            console.log("installerAID " + smartcard.processor.installerAID + "selectedAID: " + smartcard.processor.selectedAID + ".");
-            //create installer applet and send it reference to the EEPROM so that it can program the card :-) <-- didn't work moving that code up to the top
-            console.log("E@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-            console.log(smartcard.EEPROM);
-
-
-            //could add help message to return (e.g. selected AID is ...)
-
-            found = true;//TODO --> should probably return here too? instead of keep using response variable.
-        } else {
-            //TODO convert to integer storage
-
-
-        }
-
-        if (!found) {
-            return "0x6A82"; //@adam no applet found code
-        } else {
-            return "0x9000"; //@adam 27/01/2016 -> fix this to below 
-            //if (this.response == "") { this.response = "0x9000"; }; //@adam succesful execution
-        }
-
-        //return this.response;
     },
-    process: function(smartcard, buffer){
-        smartcard.processor.apdu = new apdu.APDU();
-        apdu.constr(smartcard.processor.apdu, buffer);
-        console.log("here");
-        console.log(smartcard);
-        smartcard.EEPROM.objectheap[0] = smartcard.processor.apdu;
-        smartcard.processor.response = ""; //gSW
-        smartcard.RAM.asyncState = false;
-        smartcard.RAM.transaction_flag = false;
-        smartcard.RAM.transaction_buffer = [];
-        smartcard.processor.buffer = buffer; //store buffer for installer
-
-        smartcard.processor.CLA = buffer[0];    //@adam class of instruction, category
-        smartcard.processor.INS = buffer[1];    //@adam instruction
-        smartcard.processor.P1 = buffer[2];     //@adam parameter 1
-        smartcard.processor.P2 = buffer[3];     //@adam parameter 2
-        smartcard.processor.LC = buffer[4];     //@adam length of command data
-
-        var found = false;
-
-
-
-        //@adam if select applet command
-        if ((smartcard.processor.CLA == 0) && (smartcard.processor.INS == 0xA4) && (smartcard.processor.P1 == 0x04) && (smartcard.processor.P2 == 0x00)) {
-            return this.selectApplet(smartcard, buffer.slice(5,5+smartcard.processor.LC)); //TODO --> should probably return here
-        } else {
-            smartcard.RAM.select_statement_flag = 0;
-        }
-
-        if((smartcard.EEPROM.selectedApplet.AID.join() === smartcard.processor.installerAID.join()) && (smartcard.processor.CLA == 0x80)){
-            return installer.process(smartcard);//check this -> TODAY
-        } 
-        var startcode = cap.getStartCode(smartcard.EEPROM.selectedApplet.CAP, smartcard.EEPROM.selectedApplet.AID, 7);
-        var params = [];
-        params[0] = 0;
-        jcvm.executeBytecode(smartcard.EEPROM.selectedApplet.CAP, startcode, params, 0,
-            smartcard.EEPROM.selectedApplet.appletRef, smartcard);
-
-        var output = "";
-            if (apdu.getCurrentState(smartcard.processor.apdu) >= 3) {
-                //@adam -1 has been added as a quick fix, why the expected length is being outputtted
-                //      should be looked into.
-                for (var k = 0; k < apdu.getBuffer(smartcard.processor.apdu).length - 1; k++) {
-                    output += util.addX(util.addpad(apdu.getBuffer(smartcard.processor.apdu)[k])) + " ";
-                    //output += this.apdu.getBuffer()[k] + "";
-                }
-            }
-        //return strout + " " + response; << haven't implemented code that uses strout yet
-
-        return output + (!smartcard.processor.response ? "0x9000" : smartcard.processor.response);
-    },
-
     /* 
      *  JCSystem Functions  
      */
@@ -184,4 +165,4 @@ module.exports = {
         return;
     }
     //02
-}
+};

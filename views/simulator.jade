@@ -48,27 +48,32 @@ block content
                 th Function
                 th Link
             tbody
-              tr.incomplete
+              tr
                 td cards
                 td Prints out the list of virtual smart cards that are available to the user.
                 td
-                  a.btn.btn-danger(onclick='executeButton("cards")') Execute
+                  a.btn.btn-success(onclick='executeButton("cards")') Execute
               tr
                 td newcard &lt;name&gt;
                 td Creates a new virtual smart card with the specified &lt;name&gt;.
                 td
                   a.btn.btn-success(onclick='executeButton("newcard card1")') Execute
-              tr.incomplete
-                td loadcard &lt;name&gt;
-                td Loads the virutal smart car with the specified &lt;name&gt;.
+              tr
+                td deletecard &lt;name&gt;
+                td Deletes the virutal smart card with the specified &lt;name&gt;.
                 td
-                  a.btn.btn-danger(onclick='executeButton("loadcard card1")') Execute
+                  a.btn.btn-success(onclick='executeButton("deletecard card1")') Execute
+              tr
+                td loadcard &lt;name&gt;
+                td Loads the virutal smart card with the specified &lt;name&gt;.
+                td
+                  a.btn.btn-success(onclick='executeButton("loadcard card1")') Execute
 
         section#SupportedAPDUs
           h3 Supported APDUs
           #Commands
             h4 Commands
-            table.table.table-bordered.table-striped
+            table.table.table-bordered.table-striped.incomplete
               thead
                 tr
                   th Command

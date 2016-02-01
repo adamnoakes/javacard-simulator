@@ -47,7 +47,7 @@ module.exports = {
     },
     getAppletCAP: function(EEPROM, appletAID){
         for(var i = 0; i<EEPROM.packages.length; i++){
-            for(var j = 0; j<EEPROM.packages[i].COMPONENT_Applet.applets.length; i++){
+            for(var j = 0; j<EEPROM.packages[i].COMPONENT_Applet.applets.length; j++){
                 if(EEPROM.packages[i].COMPONENT_Applet.applets[j].AID.join() === appletAID.join()){
                     return EEPROM.packages[i];
                 }

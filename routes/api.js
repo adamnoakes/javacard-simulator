@@ -1,3 +1,8 @@
+
+/* 
+ * Handles the requests for the simulator application
+ */ 
+
 var express = require('express');
 var validator = require('validator');
 var router = express.Router();
@@ -110,37 +115,44 @@ module.exports = function () {
 	    	//no card selected apdu
 	        res.send({'APDU': "0x6A82"});
 	    } else {
+	    	//APDU response
 	        var response = undefined;
-	        console.log(req.session.smartcard);
+
+	        //Load the smartcard from the user's session
 	        req.db.collection('smartcards').findOne(
-	        	{ _id: require('mongodb').ObjectID(req.session.smartcard) }, function(err,smartcard){
-	        	if(err || !smartcard){
-	        		console.log(err);
-	        		res.end();
-	        	} else {
-	        		//@this must be replaced with an ascynronous function to allow the app to scale 
-	          		for(i=0; i<req.body.APDU.length; i++){
-			            if(req.body.APDU[i][0] != null){
-			                response = processor.process(smartcard, req.body.APDU[i]);
-			                if(response == ""){
-			                	//TODO -> send error
-			                    break;
-			                }
-			            }
-			        }
-					req.db.collection('smartcards').update(
-						{ _id: require('mongodb').ObjectID(req.session.smartcard) },
-						smartcard,
-						{ upsert: true }, function(err, reuslt){
-							if (err) {
-								//TODO -> send error
-		                   		console.log(err);
-		                	}
-		                	res.send({'APDU': response});
-						}
-					);
-	        	}
-	        	
+	        	{ _id: require('mongodb').ObjectID(req.session.smartcard) },
+	        	function(err,smartcard){
+	        		//Check smartcard was loaded successfully
+		        	if(err || !smartcard){
+		        		console.log(err);
+		        		res.end();
+		        	} else {
+		        		//@this must be replaced with an ascynronous function to allow the app to scale 
+		        		//Loop through the APDU commands and processes them one by one
+		          		for(i=0; i<req.body.APDU.length; i++){
+				            if(req.body.APDU[i][0] != null){
+				            	//This is when simulation starts
+				                response = processor.process(smartcard, req.body.APDU[i]);
+				                if(response == ""){
+				                	//TODO -> send error
+				                    break;
+				                }
+				            }
+				        }
+
+				        //Update the smartcard object
+						req.db.collection('smartcards').update(
+							{ _id: require('mongodb').ObjectID(req.session.smartcard) },
+							smartcard,
+							{ upsert: true }, function(err, result){
+								if (err) {
+									//TODO -> send error
+			                   		console.log(err);
+			                	}
+			                	res.send({'APDU': response});
+							}
+						);
+		        	}
         	});
 	    }
 	});
