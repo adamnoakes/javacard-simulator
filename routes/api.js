@@ -11,7 +11,7 @@ module.exports = function (db) {
     
     /* GET smartcards -> Return available smart cards. */
 	router.get('/smartcards', function(req, res){
-	    smartcardsCollection.find({},{ cardName: true },function(e,docs){
+	    smartcardsCollection.find({}, { fields : { 'EEPROM.cardName':1, _id:0} }, function(e,docs){
 	        res.send(docs);
 	    });
 	});

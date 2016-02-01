@@ -84,7 +84,7 @@ function getCards(handler){
         url: "/simulator/smartcards",
         success: function(cards){
             $.each(cards, function(i, card) {
-                jqconsole.Write(card.cardName + " ", "response-ok");
+                jqconsole.Write(card.EEPROM.cardName + " ", "response-ok");
             });
             jqconsole.Write('\n'); 
             jqconsole.Prompt(true, handler);
