@@ -8,7 +8,7 @@ var bodyParser = require('body-parser');
 var validator = require('validator');
 var session = require('express-session');
 var MongoStore = require('connect-mongo/es5')(session);
-var dbURI = process.env.MONGOLAB_URI || 'mongodb://localhost:27017/javacard';
+var dbURI = (process.env.MONGOLAB_URI || 'mongodb://localhost:27017/javacard');
 var app = express();
 var expressMongoDb = require('express-mongo-db');
 app.use(expressMongoDb(dbURI));
