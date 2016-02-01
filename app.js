@@ -37,7 +37,7 @@ app.use(function(err, req, res, next) {
 app.use(session({
     secret: '8Rw6jqB4ld0mHQ0RCZ3FT28BsbKA1Qgs',
     store: new MongoStore({
-        url: 'mongodb://localhost:27017/javacard',
+        url: dbURI,
         ttl: 14 * 24 * 60 * 60, // = 14 days. Default
         autoRemove: 'native' // Default 
     }),
