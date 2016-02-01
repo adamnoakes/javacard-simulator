@@ -68,6 +68,9 @@ function sendCommand(input, handler){
         case "newcard":
             newCard(handler,  words[1]);
             break;
+        case "deletecard":
+            deleteCard(handler,  words[1]);
+            break;
         default:
             var lines = input.split(";");
             for(i=0; i<lines.length; i++){
@@ -98,9 +101,24 @@ function newCard(handler, cardName){
         data: {'cardName' : cardName},
         url: "/simulator/smartcards" ,
         success: function(data){
-            console.log(data);
             if(data.result){
                 jqconsole.Write("Successfully created virtual smart card: " + data.cardName, "response-ok");
+            } else {
+                jqconsole.Write(data.message, "response-error");
+            }
+            jqconsole.Write('\n');
+            jqconsole.Prompt(true, handler);
+        }
+    });
+}
+
+function deleteCard(handler, cardName){
+    $.ajax({
+        type: "DELETE",
+        url: "/simulator/smartcards/" + cardName ,
+        success: function(data){
+            if(data.result){
+                jqconsole.Write("Successfully deleted virtual smart card: " + data.cardName, "response-ok");
             } else {
                 jqconsole.Write(data.message, "response-error");
             }

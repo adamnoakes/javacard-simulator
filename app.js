@@ -8,12 +8,10 @@ var bodyParser = require('body-parser');
 var validator = require('validator');
 var session = require('express-session');
 var MongoStore = require('connect-mongo/es5')(session);
+var dbURI = process.env.MONGOLAB_URI || 'mongodb://localhost:27017/javacard';
 var app = express();
-var monk = require('monk');
-var dbURI = (process.env.MONGOLAB_URI ?
-    process.env.MONGOLAB_URI.replace('mongodb://', '') : 
-    'localhost:27017/javacard');
-var db = monk(dbURI);
+var expressMongoDb = require('express-mongo-db');
+app.use(expressMongoDb(dbURI));
 
 
 // view engine setup
@@ -36,15 +34,10 @@ app.use(function(err, req, res, next) {
     console.log(err.message);
 });
 
-app.use(function(req,res,next){
-    req.db = db;
-    next();
-});
-
 app.use(session({
     secret: '8Rw6jqB4ld0mHQ0RCZ3FT28BsbKA1Qgs',
     store: new MongoStore({
-        url: 'mongodb://' + dbURI,
+        url: 'mongodb://localhost:27017/javacard',
         ttl: 14 * 24 * 60 * 60, // = 14 days. Default
         autoRemove: 'native' // Default 
     }),
@@ -53,7 +46,7 @@ app.use(session({
 }));
 
 app.use(require('./routes/site'));
-app.use('/simulator', require('./routes/api')(db));
+app.use('/simulator', require('./routes/api')());
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
