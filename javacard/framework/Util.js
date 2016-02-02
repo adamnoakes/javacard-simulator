@@ -1,5 +1,6 @@
 ﻿var jcvm = require('../jcvm/jcvm.js');
 //should be part of processor or ram, used for storing and loading from array
+//-> No this should not have reference to jcvm, the arrays should be passed directly
 module.exports = {
     //Class Token - 10
     //Token = 0x10;

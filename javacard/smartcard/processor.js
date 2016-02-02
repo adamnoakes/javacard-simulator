@@ -7,7 +7,10 @@ var cap = require('./cap.js');
 var util = require('../utilities/util.js');
 
 module.exports = {
-    /* Processor object contructor */
+    /**
+     * Processor object contructor
+     * @constructor
+     */
     Processor: function(){
         this.response = undefined;
         this.buffer = [];
@@ -22,7 +25,13 @@ module.exports = {
         this.installerAID = [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01];//merge into installer module
         //this.installer = new installJS.Installer(this);//Should this be moved down? --> YES when select install applet, just realised it messed up probably due to installer boolean down there \/
     },
-    /* Process a single APDU command with smartcard */
+
+    /**
+     * Process a single APDU command with smartcard
+     * @param  {smartcard} smartcard
+     * @param  {array} buffer
+     * @return {string}
+     */
     process: function(smartcard, buffer){
         //contruct an APDU objects
         smartcard.processor.apdu = new apdu.APDU();
@@ -78,7 +87,13 @@ module.exports = {
 
         return output + (!smartcard.processor.response ? "0x9000" : smartcard.processor.response);
     },
-    /* Called by process, to select an applet */
+
+    /**
+     * Called by process, to select an applet
+     * @param  {smartcard} smartcard 
+     * @param  {array} appletAID 
+     * @return {string}          
+     */
     selectApplet: function (smartcard, appletAID){
         smartcard.RAM.transient_data = [];
         smartcard.RAM.select_statement_flag = 1;

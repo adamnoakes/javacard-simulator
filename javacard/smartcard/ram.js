@@ -2,6 +2,10 @@
  *  RAM Functions  
  */
 module.exports = {
+    /**
+     * RAM object contructor
+     * @constructor
+     */
     RAM: function(){
         this.transient_data = [];
         this.gRef = undefined;

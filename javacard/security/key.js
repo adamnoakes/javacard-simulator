@@ -1,14 +1,15 @@
 /*should import s1*/
 
 modules.exports = {
-	"""
-    Used to transform long to Array
-    >>> longToArray(25)
-    [25]
-    >>> longToArray(4867)
-    [3, 19]
-    """
-	_longToArray: function(long){
+	
+    /* 
+     * Used to transform long to Array
+     * >>> longToArray(25)
+     * [25]
+     * >>> longToArray(4867)
+     * [3, 19]
+     */
+	longToArray: function(long){
 		var s = long.toString(16);
 		if ((s.length % 2) !== 0){
 		    s = '0' + s;
@@ -18,14 +19,14 @@ modules.exports = {
 		    out.push(parseInt(s.substr(i-2, 2), 16));
 		}
 	},
-	"""
-    make a long from an Array
-    >>> arrayTolong([25])
-    25
-    >>> arrayTolong([3, 19])
-    4867
-    """
-	_arrayToLong: function(bytes){
+	/*
+     * make a long from an Array
+     * >>> arrayTolong([25])
+     * 25
+     * >>> arrayTolong([3, 19])
+     * 4867
+     */
+	arrayToLong: function(bytes){
 		var l;
 		for(var i = bytes.length-1; i > -1; i--){
 			l = l << 8;
@@ -34,13 +35,37 @@ modules.exports = {
 		return l;
 	},
 
-	_binaryToarray: function(bytes){
+	binaryToarray: function(bytes){
 		//incomplete
 	},
 
-	_arrayTobinary: function(array){
+	arrayTobinary: function(array){
 		//incomplete
 	},
 
-	Key: function()
-}
+	key: function(key, typ, size){
+		key.initialized = false;
+		key.size = size;
+		key.type = type;
+	},
+
+	isInitialized: function(key){
+		return key.initialized
+	},
+
+	setInitialized: function(key){
+		key.initialized = true
+	},
+
+	clearKey: function(key){
+		return;
+	},
+
+	getType: function(key){
+		return key.type
+	},
+
+	getSize: function(key){
+		return key.size;
+	}
+};

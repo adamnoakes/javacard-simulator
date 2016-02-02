@@ -1,4 +1,6 @@
-
+/**
+ * Mostly untouched
+ */
 function COMPONENT(inputData) {
     var Tag, AID, i, j, name, component_sizes, nj, applets, pointer, count, packages, constant_pool,
         signature_pool, arcount, type, interface_info, b, k;

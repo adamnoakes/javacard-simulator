@@ -1,50 +1,50 @@
 var component = require('./component.js');
 
 module.exports = {
+    /**
+     * CAPfile constructor
+     * @constructor
+     * @param {array} textArray 
+     */
     CAPfile: function(textArray) {
-        console.log("text array:");
-        console.log(textArray);
-        var currentData = [];
         var static_fields = [];
-        for(var j = 1; j<textArray.length; j++) {
-            currentData = textArray[j];
-            
+        for(var j = 1; j<textArray.length; j++) {            
             switch (j) {
                 case 1:
-                    this.COMPONENT_Header = new component.COMPONENT(currentData);
+                    this.COMPONENT_Header = new component.COMPONENT(textArray[j]);
                     break;
                 case 2:
-                    this.COMPONENT_Directory = new component.COMPONENT(currentData);
+                    this.COMPONENT_Directory = new component.COMPONENT(textArray[j]);
                     break;
                 case 3:
-                    this.COMPONENT_Applet = new component.COMPONENT(currentData);
+                    this.COMPONENT_Applet = new component.COMPONENT(textArray[j]);
                     break;
                 case 4:
-                    this.COMPONENT_Import = new component.COMPONENT(currentData);
+                    this.COMPONENT_Import = new component.COMPONENT(textArray[j]);
                     break;
                 case 5:
-                    this.COMPONENT_ConstantPool = new component.COMPONENT(currentData);
+                    this.COMPONENT_ConstantPool = new component.COMPONENT(textArray[j]);
                     break;
                 case 6:
-                    this.COMPONENT_Class = new component.COMPONENT(currentData);
+                    this.COMPONENT_Class = new component.COMPONENT(textArray[j]);
                     break;
                 case 7:
-                    this.COMPONENT_Method = new component.COMPONENT(currentData);
+                    this.COMPONENT_Method = new component.COMPONENT(textArray[j]);
                     break;
                 case 8:
-                    this.COMPONENT_StaticField = new component.COMPONENT(currentData);
+                    this.COMPONENT_StaticField = new component.COMPONENT(textArray[j]);
                     break;
                 case 9:
-                    this.COMPONENT_ReferenceLocation = new component.COMPONENT(currentData);
+                    this.COMPONENT_ReferenceLocation = new component.COMPONENT(textArray[j]);
                     break;
                 case 10:
-                    this.COMPONENT_Export = new component.COMPONENT(currentData);
+                    this.COMPONENT_Export = new component.COMPONENT(textArray[j]);
                     break;
                 case 11:
-                    this.COMPONENT_Descriptor = new component.COMPONENT(currentData);
+                    this.COMPONENT_Descriptor = new component.COMPONENT(textArray[j]);
                     break;
                 case 12:
-                    this.COMPONENT_Debug = new component.COMPONENT(currentData);
+                    this.COMPONENT_Debug = new component.COMPONENT(textArray[j]);
                     break;
                 default:
                     break;
@@ -52,13 +52,25 @@ module.exports = {
         }
     },
 
+    /**
+     * Returns the install offset for the specified applet
+     * @param  {CAPfile}    CAP
+     * @param  {array}      appletAID
+     * @return {[type]}
+     */
     getInstallOfset: function(CAP, appletAID){
         for(var i=0; i < CAP.COMPONENT_Applet.applets.length; i++){//TODO --> change from 0
             if(CAP.COMPONENT_Applet.applets[i].AID.join() === appletAID.join()){
-                return CAP.COMPONENT_Applet.applets[0].install_method_offset;
+                return CAP.COMPONENT_Applet.applets[i].install_method_offset;
             }
         }
     },
+    /**
+     * @param  {CAPfile}    CAP       [description]
+     * @param  {array}      appletAID [description]
+     * @param  {[type]}     token     [description]
+     * @return {[type]}
+     */
     getStartCode: function(CAP, appletAID, token){
         var methdiff = 10000;
         var startcode = 0;
