@@ -90,19 +90,12 @@ function newAPIObject(lib,cls) {
 
 exports.newAPIObject = newAPIObject; //TODO --> replace with module.exports for one below too //TODO --> replace processor with processor and add processor functions
 
-function runMethod (id, clas, method, type, param, objectheap, objref, smartcard) {
-    var bbb = "";
-    var pm = "";
-    var retval;
-    var rettype;
+function runMethod (id, clas, method, type, param, obj, objref, smartcard) {
     switch (id.join()) {
         case opcodes.jlang.join(): //lang
             switch (clas) {
                 case 0:  //Object
-                    obj = objectheap[objref];
-                    retval = "";
-                    rettype = 0;
-                    break;
+                    return obj;
                 case 1:  //Throwable
                 case 2:  //Exception
                 case 3:  //RuntimeException
@@ -115,14 +108,10 @@ function runMethod (id, clas, method, type, param, objectheap, objref, smartcard
                 case 10:  //SecurityException
                 case 11:  //ArrayStoreException
 
-                    if (method == 0) {
-                        obj = objectheap[objref];
-                        obj.constr();
-                        retval = "";
-                        rettype = 0;
+                    if (method === 0) {
+                        return obj.constr();
                     }
-
-                    break;
+                    throw "ArrayStoreException";
                 default:
                     alert("unsupported class");
             }
@@ -131,382 +120,236 @@ function runMethod (id, clas, method, type, param, objectheap, objref, smartcard
         case opcodes.jframework.join(): //Framework
 
             switch (clas) {
-                case 3:  //Applet
-
-                    obj = objectheap[objref];
+                case 3:  //Applet abstract class
                     switch(method) {
-                        case 0:
-                            Applet.constr();
-                            retval = "";
-                            rettype = 0;
-                            break;
-                        case 1:
+                        case 0://protected Applet()
+                            return Applet.constr();
+                        case 1://public static install()
+                                //protected final register() 
 
                             //obj.reg();
                             //EEPROM.registerApplet();
-                            eeprom.addInstalledApplet(smartcard.EEPROM, smartcard.RAM.installingAppletAID, smartcard.RAM.gRef);//ISSUE
-                            rettype = 0;
-                            retval = "";
-                            break;
-                        case 2:
+                            return eeprom.addInstalledApplet(smartcard.EEPROM, smartcard.RAM.installingAppletAID, smartcard.RAM.gRef);//ISSUE
+                        case 2://protected final register(BSB) 
                             //obj.register(param[0], param[1], param[2]);
-                            rettype = 0;
-                            retval = "";
+                            return;
+                        case 3://protected final selectingApplet() -> boolean
+                            return ram.getSelectStatementFlag(smartcard.RAM);//obj.selectingApplet();
+                        case 4://public deselect()
+                        case 5://public getShareableInterfaceObject(clientAID, parameter) -> Shareable
+                        case 6://public select() -> boolean
+                        case 7://public abstract process(APDU) -> void
                             break;
-                        case 3:
-                            retval = ram.getSelectStatementFlag(smartcard.RAM);//obj.selectingApplet();
-                            rettype = 1;
-                            break;
-                        case 4:
-                        case 5:
-                        case 6:
-                        case 7:
                         default:
-                            retval = "";
+                            throw "Method not defined";
                     }
-
-                    objectheap[objref] = obj;
                     break;
                 case 4:  //CardException
-                    if (method == 0) {
-                        obj = objectheap[objref];
-                        obj.constr(param[0]);
+                    if (method === 0) {
+                        return obj.constr(param[0]); //void
                     } else { CardException.throwIt(param[0]); }
-                    retval = "";
-                    rettype = 0;
                     break;
                 case 5:  //CardRuntimeException
-                    if (method == 0) {
-                        obj = objectheap[objref];
-                        obj.constr(param[0]);
+                    if (method === 0) {
+                        return obj.constr(param[0]);//void 
                     } else { CardRuntimeException.throwIt(param[0]); }
-                    retval = "";
-                    rettype = 0;
                     break;
                 case 6:  //AID
-                    obj = objectheap[objref];
                     switch (method) {
-                        case 0:
-                            aid.constr(obj, param[0],param[1],param[2]);
-                            retval = "";
-                            rettype = 0;
-                            break;
-                        case 1:
-                            retval = aid.RIDEquals(obj, param[0]);
-                            rettype = 1;
-                            break;
+                        case 0://void
+                            return aid.constr(obj, param[0],param[1],param[2]);
+                        case 1://normal
+                            return aid.RIDEquals(obj, param[0]);
                         case 2:
-                            retval = aid.equals(obj, param[0],param[1],param[2]);
-                            rettype = 1;
-                            break;
+                            return aid.equals(obj, param[0],param[1],param[2]);
                         case 3:
-                            retval = aid.getBytes(obj, param[0], param[1]);
-                            rettype = 1;
-                            break;
+                            return aid.getBytes(obj, param[0], param[1]);
                         case 4:
-                            retval = aid.PartialEquals(obj, param[0], param[1], param[2]);
-                            rettype = 1;
-                            break;
+                            return aid.PartialEquals(obj, param[0], param[1], param[2]);
                         case 5:
-                            retval = aid.getPartialEquals(obj, param[0],param[1],param[2],param[3]);
-                            rettype = 1;
-                            break;
+                            return aid.getPartialEquals(obj, param[0],param[1],param[2],param[3]);
+                        default:
+                            throw "Method not defined";
                     }
-                    objectheap[objref] = obj;
                     break;
                 case 7:  //ISOException
-                    if (method == 0) {
-                        obj = objectheap[objref];
-                        obj.constr(param[0]);
-                    } else { ISOException.throwIt(param[0]);}
-                    retval = "";
-                    rettype = 0;
+                    if (method === 0) {
+                        return obj.constr(param[0]);//void
+                    } else { 
+                        ISOException.throwIt(param[0]);
+                    }
                     break;
                 case 8:  //JCSystem
-
                     switch (method) {
-                        case 0:
-                            processor.abortTransaction(smartcard);
-                            retval = "";
-                            rettype = 0;
-                            break;
-                        case 1:
-                            processor.beginTransaction(smartcard);
-                            retval = "";
-                            rettype = 0;
-                            break;
-                        case 2:
-                            processor.commitTransaction(smartcard);
-                            retval = "";
-                            rettype = 0;
-                            break;
-                        case 12:
-                            rettype = 2;
-                            retval = JCSystem.makeTransientBooleanArray(param[0], param[1]);
-                            break;
-                        case 13:
-                            rettype = 2;
-                            retval = JCSystem.makeTransientByteArray(param[0], param[1]);
-                            break;
-                        case 14:
-                            rettype = 2;
-                            retval = JCSystem.makeTransientObjectArray(param[0], param[1]);
-                            break;
+                        case 0://void
+                            return processor.abortTransaction(smartcard);
+                        case 1://void
+                            return processor.beginTransaction(smartcard);
+                        case 2://void
+                            return processor.commitTransaction(smartcard);
+                        case 12://transient array
+                            return {type: 2, array: JCSystem.makeTransientBooleanArray(param[0], param[1])};
+                        case 13://transient array
+                            return {type: 2, array: JCSystem.makeTransientByteArray(param[0], param[1])};
+                        case 14://transient array
+                            return {type: 2, array: JCSystem.makeTransientObjectArray(param[0], param[1])};
                         case 15:
-                            rettype = 2;
-                            retval = JCSystem.makeTransientShortArray(param[0], param[1]);
-
-                            break;
+                            return {type: 2, array: JCSystem.makeTransientShortArray(param[0], param[1])};
                         default:
-                            retval = "";
+                            throw "Method not defined";
                     }
                     break;
                 case 9:  //OwnerPIN
-
-                    obj = objectheap[objref];
                     switch (method) {
-                        case 0:
-                            obj.constr(param[0], param[1]);
-                            rettype = 0;
-                            retval = "";
-                            break;
-                        case 1:
-                            retval = obj.check(param[0], param[1], param[2]);
-                            rettype = 1;
-                            break;
-                        case 2:
-                            retval = obj.getTriesRemaining();
-                            rettype = 1;
-                            break;
-                        case 4:
-                            retval = obj.isValidated();
-                            rettype = 1;
-                            break;
-                        case 5:
-                            obj.reset();
-                            rettype = 0;
-                            retval = "";
-                            break;
-                        case 6:
-                            obj.resetAndUnblock();
-                            rettype = 0;
-                            retval = "";
-                            break;
-                        case 8:
-                            obj.update(param[0], param[1], param[2]);
-                            rettype = 0;
-                            retval = "";
-                            break;
+                        case 0://void
+                            return obj.constr(param[0], param[1]);
+                        case 1://normal
+                            return obj.check(param[0], param[1], param[2]);
+                        case 2://normal
+                            return obj.getTriesRemaining();
+                        case 4://normal
+                            return obj.isValidated();
+                        case 5://void
+                            return obj.reset();
+                        case 6://void
+                            return obj.resetAndUnblock();
+                        case 8://void
+                            return obj.update(param[0], param[1], param[2]);
+                        default:
+                            throw "Method not defined";
                     }
-
-                    objectheap[objref] = obj;
                     break;
                 case 10:  //APDU
-
-                    obj = objectheap[objref];
-
                     switch (type) {
                         case 3:
                             switch (method) {
-                                case 0:
-                                    retval = "";//objectheap.length;
-                                    rettype = 0;
-                                    apdu.constr(obj, param[0]);
+                                case 0://void
+                                    return apdu.constr(obj, param[0]);
                                     //objectheap.push(new APDU(param[0]));
                                     break;
-                                case 1:
+                                case 1://normal
                                     //retval = obj.getBuffer();
-
-                                    retval = "H" + objref + "#" + 1 + "#" + apdu.getArrayLength(obj, 1);
-
-                                    bbb = retval;
-                                    rettype = 1;
-                                    break;
+                                    return "H" + objref + "#" + 1 + "#" + apdu.getArrayLength(obj, 1);
                                 case 2:
-                                    retval = apdu.getNAD();
-                                    rettype = 1;
-                                    break;
+                                    return apdu.getNAD();
                                 case 3:
-                                    retval = apdu.receiveBytes(obj, param[0]);
-                                    rettype = 1;
-                                    break;
-                                case 4:
-                                    apdu.sendBytes(obj, param[0], param[1]);
-                                    retval = "";
-                                    rettype = 0;
-                                    break;
-                                case 5:
-                                    apdu.sendBytesLong(obj, param[0], param[1], param[2]);
-                                    retval = "";
-                                    rettype = 0;
-                                    break;
-                                case 6:
-                                    retval = apdu.setIncomingAndReceive(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.receiveBytes(obj, param[0]);
+                                case 4://void
+                                    return apdu.sendBytes(obj, param[0], param[1]);
+                                case 5://void
+                                    return apdu.sendBytesLong(obj, param[0], param[1], param[2]);
+                                case 6://void
+                                    return apdu.setIncomingAndReceive(obj);
                                 case 7:
-                                    retval = apdu.setOutgoing(obj);
-                                    rettype = 1;
-                                    break;
-                                case 8:
-                                    apdu.setOutgoingAndSend(obj, param[0], param[1]);
-                                    retval = "";
-                                    rettype = 0;
-                                    break;
-                                case 9:
-                                    apdu.setOutgoingLength(obj, param[0]);
-                                    retval = "";
-                                    rettype = 0;
-                                    break;
+                                    return apdu.setOutgoing(obj);
+                                case 8://void
+                                    return apdu.setOutgoingAndSend(obj, param[0], param[1]);
+                                case 9://void
+                                    return apdu.setOutgoingLength(obj, param[0]);
                                 case 10:
-                                    retval = apdu.setOutgoingNoChaining();
-                                    rettype = 1;
-                                    break;
+                                    return apdu.setOutgoingNoChaining();
                                 case 11:
-                                    retval = apdu.getCurrentState(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.getCurrentState(obj);
                                 case 12:
-                                    retval = apdu.isCommandChainingCLA(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.isCommandChainingCLA(obj);
                                 case 13:
-                                    retval = apdu.isSecureMessagingCLA(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.isSecureMessagingCLA(obj);
                                 case 14:
-                                    retval = apdu.isISOInterindustryCLA(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.isISOInterindustryCLA(obj);
                                 case 15:
-                                    retval = apdu.getIncomingLength(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.getIncomingLength(obj);
                                 case 16:
-                                    retval = apdu.getOffsetCdata(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.getOffsetCdata(obj);
+                                default:
+                                    throw "Method not defined";
                             }
-
-                            objectheap[objref] = obj;
                             //intentional break missing? :/
                         case 6:
                             switch (method) {
                                 case 0:
-                                    retval = apdu.getInBlockSize(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.getInBlockSize(obj);
                                 case 1:
-                                    retval = apdu.getOutBlockSize(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.getOutBlockSize(obj);
                                 case 2:
-                                    retval = apdu.getProtocol(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.getProtocol(obj);
                                 case 3:
-                                    retval = apdu.waitExtension(obj);
-                                    rettype = 1;
-                                    break;
+                                    return apdu.waitExtension(obj);
                                 case 4:
-                                    retval = 0;//APDU.getCurrentAPDU();
-                                    rettype = 1;
-                                    break;
-                                case 3:
-                                    retval = apdu.getBuffer(obj);// adam maybe need to be stored in ram APDU.getCurrentAPDUBuffer();
-                                    rettype = 3;
-                                    break;
-                                case 5:
-                                    retval = apdu.getCLAChannel(obj);
-                                    rettype = 1;
-                                    break;
+                                    return 0;//APDU.getCurrentAPDU();
+                                case 3://array
+                                    return apdu.getBuffer(obj);// adam maybe need to be stored in ram APDU.getCurrentAPDUBuffer();
+                                case 5://normal
+                                    return apdu.getCLAChannel(obj);
+                                default:
+                                    throw "Method not defined";
                             }
                     }
-
-                    if (bbb.length > 0) { retval = bbb;}
                     break;
                 case 11:  //PINException
-                    if (method == 0) {
-                        obj = objectheap[objref];
-                        obj.constr(param[0]);
-                    } else { PINException.throwIt(param[0]); }
-                    retval = "";
-                    rettype = 0;
-                    break;
+                    if (method === 0) {
+                        return obj.constr(param[0]);//void
+                    } else {
+                        PINException.throwIt(param[0]);
+                    }
+                    throw "Exception";
                 case 12:  //APDUException
-                    if (method == 0) {
-                        obj = objectheap[objref];
-                        obj.constr(param[0]);
-                    } else { APDUException.throwIt(param[0]); }
-                    retval = "";
-                    rettype = 0;
-                    break;
+                    if (method === 0) {
+                        return obj.constr(param[0]);//void
+                    } else {
+                        APDUException.throwIt(param[0]);
+                    }
+                    throw "Exception";
                 case 13:  //SystemException
-                    if (method == 0) {
-                        obj = objectheap[objref];
-                        obj.constr(param[0]);
-                    } else { SystemException.throwIt(param[0]); }
-                    retval = "";
-                    rettype = 0;
-                    break;
+                    if (method === 0) {
+                        return obj.constr(param[0]);//void
+                    } else {
+                        SystemException.throwIt(param[0]);
+                    }
+                    throw "Exception";
                 case 14:  //TransactionException
-                    if (method == 0) {
-                        obj = objectheap[objref];
-                        obj.constr(param[0]);
-                    } else { TransactionException.throwIt(param[0]); }
-                    retval = "";
-                    rettype = 0;
-                    break;
+                    if (method === 0) {
+                        return obj.constr(param[0]);//void
+                    } else {
+                        TransactionException.throwIt(param[0]);
+                    }
+                    throw "Exception";
                 case 15:  //UserException
-                    if (method == 0) {
-                        obj = objectheap[objref];
-                        obj.constr(param[0]);
-                    } else { UserException.throwIt(param[0]); }
-                    retval = "";
-                    rettype = 0;
-                    break;
+                    if (method === 0) {
+                        return obj.constr(param[0]);
+                    } else {
+                        UserException.throwIt(param[0]);
+                    }
+                    throw "Exception";
                 case 16:  //Util
-
-                    rettype = 1;
                     switch (method) {
                         case 0:
-                            retval = Util.arrayCompare(param[0], param[1], param[2], param[3], param[4], smartcard);
-                            break;
+                            return Util.arrayCompare(param[0], param[1], param[2], param[3], param[4], smartcard);
                         case 1:
-                            retval = Util.arrayCopy(param[0], param[1], param[2], param[3], param[4], smartcard);
-                            break;
+                            return Util.arrayCopy(param[0], param[1], param[2], param[3], param[4], smartcard);
                         case 2:
-                            retval = Util.arrayCopyNonAtomic(param[0], param[1], param[2], param[3], param[4], smartcard);
-                            break;
+                            return Util.arrayCopyNonAtomic(param[0], param[1], param[2], param[3], param[4], smartcard);
                         case 3:
-                            retval = Util.arrayFillNonAtomic(param[0], param[1], param[2], param[3], smartcard);
-                            break;
+                            return Util.arrayFillNonAtomic(param[0], param[1], param[2], param[3], smartcard);
                         case 4:
-                            retval = Util.getShort(param[0], param[1], smartcard);
-                            break;
+                            return Util.getShort(param[0], param[1], smartcard);
                         case 5:
-                            retval = Util.makeShort(param[0], param[1]);
-                            break;
+                            return Util.makeShort(param[0], param[1]);
                         case 6:
-                            retval = Util.setShort(param[0], param[1], param[2], smartcard);
-                            break;
+                            return Util.setShort(param[0], param[1], param[2], smartcard);
+                        default:
+                            throw "Exception";
                     }
-
                     break;
-
                 default:
-                    alert("unsupported class");
+                    throw "Unsupported class";
             }
-
             break;
         case jsecurity:
         case jxcrypto:
         default:
-            alert("unsupported package (runMethod)");
+            throw "Unsupported package";
             break;
     }
-
-    return {'typ': rettype, 'val': retval};
 }
 
 exports.runMethod = runMethod;

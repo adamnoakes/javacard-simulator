@@ -1193,14 +1193,34 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, sma
                         }
 
                     }
-                    
-                    var apiresult = API.runMethod(mAID, info[1], info[2], 3, par, eeprom.getObjectHeap(smartcard.EEPROM), eeprom.getHeapValue(smartcard.EEPROM, oheap), smartcard);
+                    var heapref = eeprom.getHeapValue(smartcard.EEPROM, oheap);
+                    var obj = eeprom.getObjectHeapValue(smartcard.EEPROM, heapref);
+                    var apiresult = API.runMethod(mAID, info[1], info[2], 3, par, obj, heapref, smartcard);
 
 
                     //var rval = API.getVal();
                     //var rtype = API.getType();
 
-                    switch (apiresult.typ) {
+                    if(apiresult !== undefined){//if not void
+                        if(apiresult.constructor === Array){//if array
+                            //@anoakes
+                            //var hv = [rval.length.toString];
+                            var hl = eeprom.getHeapSize(smartcard.EEPROM);
+                            /*if (rval.length > 0) {
+                                for (var j = 0; j < rval.length; j++) { hv += "," + rval[j]; }
+                            }
+                            newHeap(hv);*/
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult.length);
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult);
+                            frames[current_frame].operand_stack.push(hl);
+                        } else if(!apiresult.type) {//if it doesn't have a type, i.e it's not transient
+                            frames[current_frame].operand_stack.push(apiresult);
+                        } else {
+                            //Transient Array
+                            //do nothing
+                        }
+                    }
+                    /*switch (apiresult.typ) {
                         case 1:
                             frames[current_frame].operand_stack.push(apiresult.val);
                             break;
@@ -1212,13 +1232,13 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, sma
                             /*if (rval.length > 0) {
                                 for (var j = 0; j < rval.length; j++) { hv += "," + rval[j]; }
                             }
-                            newHeap(hv);*/
+                            newHeap(hv);
                             eeprom.appendHeap(smartcard.EEPROM, apiresult.val.length);
                             eeprom.appendHeap(smartcard.EEPROM, apiresult.val);
                             frames[current_frame].operand_stack.push(hl);
                         default:
                             break;
-                    }
+                    }*/
 
                     i += 3;
                 } else {
@@ -1326,13 +1346,38 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, sma
                     }
                     
                     //execute method
-                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, eeprom.getObjectHeap(smartcard.EEPROM), eeprom.getHeapValue(smartcard.EEPROM, oheap), smartcard);
+                    var heapref = eeprom.getHeapValue(smartcard.EEPROM, oheap);
+                    var obj = eeprom.getObjectHeapValue(smartcard.EEPROM, heapref);
+                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, obj, heapref, smartcard);
 
                     //process results
                     //var rval = API.getVal();
                     //var rtype = API.getType();
                     var hl = eeprom.getHeapSize(smartcard.EEPROM);
-                    switch (apiresult.typ) {
+
+                    if(apiresult !== undefined){//if not void
+                        if(apiresult.constructor === Array){//if array
+                            //@anoakes
+                            /*var hv = "," + rval.length.toString;
+                            if (rval.length > 0) {
+                                for (var j = 0; j < rval.length; j++) {
+
+                                    hv += "," + rval[j];
+
+                                }
+                            }*/
+                            frames[current_frame].operand_stack.push(hl);
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult.length);
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult);
+                            //newHeap(hv);
+                        } else if(!apiresult.type) {//if it doesn't have a type, i.e it's not transient
+                            frames[current_frame].operand_stack.push(apiresult);
+                        } else {
+                            //Transient Array
+                            //do nothing
+                        }
+                    }
+                    /*switch (apiresult.typ) {
                         case 1: //Normal return value
                             frames[current_frame].operand_stack.push(apiresult.val);
                             break;
@@ -1346,7 +1391,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, sma
                                     hv += "," + rval[j];
 
                                 }
-                            }*/
+                            }
                             frames[current_frame].operand_stack.push(hl);
                             eeprom.appendHeap(smartcard.EEPROM, apiresult.val.length);
                             eeprom.appendHeap(smartcard.EEPROM, apiresult.val);
@@ -1355,7 +1400,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, sma
                         
                         default:
                             break;
-                    }
+                    }*/
                     i += 3;
                 } else {
                     //internal - 
@@ -1415,12 +1460,31 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, sma
                     var na = API.nargAPI(mAID, info[1], info[2], 6);
                     for (var j = 0; j < na; j++) { args.push(frames[current_frame].operand_stack.pop()); };
                     for (var j = 0; j < na; j++) { par.push(args.pop()); };
-                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, eeprom.getObjectHeap(smartcard.EEPROM), null, smartcard);
 
+                    var apiresult = API.runMethod(mAID, info[1], info[2], 6, par, null, null, smartcard);
 
                     var hl = eeprom.getHeapSize(smartcard.EEPROM);
 
-                    switch (apiresult.typ) {
+                    if(apiresult !== undefined){//if not void
+                        if(apiresult.constructor === Array){//if array
+                            //New Persistent Array
+                            /*var hv = "," + rval.length;
+                            for (var j = 0; j < rval.length; j++) { hv += "," + rval[j]; }
+                            newHeap(hv);*/
+
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult.length);
+                            eeprom.appendHeap(smartcard.EEPROM, apiresult);
+                            frames[current_frame].operand_stack.push(hl);
+                        } else if(!apiresult.type) {//if it doesn't have a typ, i.e it's not transient
+                            frames[current_frame].operand_stack.push(apiresult);
+                        } else {
+                            //New Transient Array
+                            frames[current_frame].operand_stack.push("T" + ram.getTransientData(smartcard.RAM).length + "#" + apiresult.array.length + "#" + par[1]);
+                            for (var j = 0; j < apiresult.array.length; j++) { ram.pushTransientData(smartcard.RAM, apiresult.array[j]); }
+                            //break;
+                        }
+                    }
+                    /*switch (apiresult.typ) {
                         case 1:
                             frames[current_frame].operand_stack.push(apiresult.val);
                             break;
@@ -1433,7 +1497,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, sma
                             //New Persistent Array
                             /*var hv = "," + rval.length;
                             for (var j = 0; j < rval.length; j++) { hv += "," + rval[j]; }
-                            newHeap(hv);*/
+                            newHeap(hv);
 
                             eeprom.appendHeap(smartcard.EEPROM, apiresult.val.length);
                             eeprom.appendHeap(smartcard.EEPROM, apiresult.val);
@@ -1441,7 +1505,7 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, sma
                             break;
                         default:
                             break;
-                    }
+                    }*/
                     i += 3;
                 } else {
                     //internal
