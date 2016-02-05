@@ -31,6 +31,7 @@ app.use(function(err, req, res, next) {
     console.log(err.message);
 });
 
+
 /* Setup sessions */
 app.use(session({
     secret: '8Rw6jqB4ld0mHQ0RCZ3FT28BsbKA1Qgs',

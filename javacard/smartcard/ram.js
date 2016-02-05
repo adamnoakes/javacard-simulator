@@ -10,9 +10,8 @@ module.exports = {
         this.transient_data = [];
         this.gRef = undefined;
         this.asyncstate = false;
-        this.transaction_flag = false;
         this.transaction_buffer = [];
-        this.select_statement_flag = 0;
+        this.select_statement_flag = 0; //should probabl be stored in processor
         this.installation_failed = false;
         this.installingAppletAID = undefined;
 

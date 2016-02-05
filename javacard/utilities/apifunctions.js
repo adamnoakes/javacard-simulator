@@ -130,11 +130,11 @@ function runMethod (id, clas, method, type, param, objectheap, objref, smartcard
             break;
         case opcodes.jframework.join(): //Framework
 
-            switch (clas) {
+            switch (clas) {//token
                 case 3:  //Applet
 
                     obj = objectheap[objref];
-                    switch(method) {
+                    switch(method) {//token
                         case 0:
                             Applet.constr();
                             retval = "";
@@ -157,10 +157,10 @@ function runMethod (id, clas, method, type, param, objectheap, objref, smartcard
                             retval = ram.getSelectStatementFlag(smartcard.RAM);//obj.selectingApplet();
                             rettype = 1;
                             break;
-                        case 4:
-                        case 5:
-                        case 6:
-                        case 7:
+                        case 4://deselect
+                        case 5://getShareableInterfaceObject
+                        case 6://select
+                        case 7://process 
                         default:
                             retval = "";
                     }
@@ -499,8 +499,21 @@ function runMethod (id, clas, method, type, param, objectheap, objref, smartcard
             }
 
             break;
-        case jsecurity:
-        case jxcrypto:
+        case opcodes.jsecurity.join():
+        obj = objectheap[objref];//TODO -> test if we can do this once instead of for each framework
+            //catch error, cannot print cannot perform method method type type on obj obj.
+            switch(clas){
+                case 0://javacard/security/Key
+                    return keys.run(obj, method, type, param);
+                case 1://javacard/security/DSAKey
+                case 2://javacard/security/PrivateKey
+                    return keys.run(obj, method, type, param);
+                case 3://javacard/security/PublicKey
+                    return keys.run(obj, method, type, param);
+                case 4://javacard/security/SecretKey
+                    //not implemented.
+            }
+        case opcodes.jxcrypto.join():
         default:
             alert("unsupported package (runMethod)");
             break;
