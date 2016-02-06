@@ -5,6 +5,7 @@
  */
 var jcvm = require('../jcvm/jcvm.js');
 var opcodes = require('../utilities/opcodes.js');
+var processor = require('../smartcard/processor.js');
 
 //A0 00 00 00 62 01 01 Framework
 module.exports = {
@@ -23,7 +24,7 @@ module.exports = {
     /**
      * Handles javacard.framework Exception api calls.
      */
-    run: function(clas, method, type, param, obj, objref, smartcard){
+    run: function(method, type, param, obj, smartcard){
         switch(method){
             case 0://abortTransaction
                 return processor.abortTransaction(smartcard);
@@ -34,8 +35,8 @@ module.exports = {
             case 12://makeTransientBooleanArray
             case 13://makeTransientByteArray
             case 14://makeTransientObjectArray
-            case 14://makeTransientShortArray
-                return {type: 2, array: new Array(param[0]).fill(0)};
+            case 15://makeTransientShortArray
+                return {transientArray: true, array: Array.apply(null, Array(param[0])).map(Number.prototype.valueOf,0)};
             default:
                 return new Error('Method ' + method + ' not defined for JCSystem');
         }

@@ -4,6 +4,55 @@
  * University of Southamption
  */
 
+/**
+ * Module exports.
+ * @public
+ */
+
+/**
+ * NOTE: possible problem with this code returning objects on method 0 instead
+ * of void, will have to be checked later.
+ */
+module.exports = {
+    /**
+     * Handles javacard.framework Exception api calls.
+     */
+    run: function(clas, method, type, param, obj){
+        switch(method){
+             case 4:  //CardException
+                 return (method === 0 ? new CardException(param[0]) : 
+                    getCardException(obj));
+            case 5:  //CardRuntimeException
+                return (method === 0 ? new CardRuntimeException(param[0]) : 
+                    getCardRuntimeException(obj));
+            case 7:  //ISOException
+               return (method === 0 ? new ISOException(param[0]) : 
+                    getISOException(obj));
+            case 11:  //PINException
+                return (method === 0 ? new PINException(param[0]) : 
+                    getPINException(obj));
+            case 12:  //APDUException
+                return (method === 0 ? new APDUException(param[0]) : 
+                    getAPDUException(obj));
+            case 13:  //SystemException
+                return (method === 0 ? new SystemException(param[0]) : 
+                    getSystemException(obj));
+            case 14:  //TransactionException
+                return (method === 0 ? new TransactionException(param[0]) : 
+                    getTransactionException(obj));
+            case 15:  //UserException
+                return (method === 0 ? new UserException(param[0]) : 
+                    getUserException(obj));
+            default:
+                return new Error('Method ' + method + ' not defined for Exception');
+        }
+    }
+};
+
+/**
+ * ADAM'S CODE ENDS HERE
+ */
+
 function Exception(exception, type, reason){
     exception.type = type;
     exception.reason = reason;
@@ -59,7 +108,6 @@ function getSystemException(SystemException){
     return new Error('SystemException: ' + reasons[SystemException.reason]);
 }
 function getISOException(ISOException){
-    var reasons = [];
     return new Error('0x' + ISOException.reason.toString(16));
 }
 function getAPDUException(APDUException){
@@ -82,58 +130,3 @@ function getTransactionException(TransactionException){
 function getUserException(UserException){
     return new Error('UserException: ' + UserException.reason);
 }
-
-/**
- * Module exports.
- * @public
- */
-
-/**
- * NOTE: possible problem with this code returning objects on method 0 instead
- * of void, will have to be checked later.
- */
-module.exports = {
-    /**
-     * Handles javacard.framework Exception api calls.
-     */
-    run: function(clas, method, type, param, obj, objref, smartcard){
-        switch(method){
-             case 4:  //CardException
-                 return (method === 0 ? new CardException(param[0]) : 
-                    getCardException(obj));
-            case 5:  //CardRuntimeException
-                return (method === 0 ? new CardRuntimeException(param[0]) : 
-                    getCardRuntimeException(obj));
-            case 7:  //ISOException
-               return (method === 0 ? new ISOException(param[0]) : 
-                    getISOException(obj));
-            case 11:  //PINException
-                return (method === 0 ? new PINException(param[0]) : 
-                    getPINException(obj));
-            case 12:  //APDUException
-                return (method === 0 ? new APDUException(param[0]) : 
-                    getAPDUException(obj));
-            case 13:  //SystemException
-                return (method === 0 ? new SystemException(param[0]) : 
-                    getSystemException(obj));
-            case 14:  //TransactionException
-                return (method === 0 ? new TransactionException(param[0]) : 
-                    getTransactionException(obj));
-            case 15:  //UserException
-                return (method === 0 ? new UserException(param[0]) : 
-                    getUserException(obj));
-            default:
-                return new Error('Method ' + method + ' not defined for Exception');
-        }
-    }
-};
-
-/**
- * ADAM'S CODE ENDS HERE
- */
-
-//this code does not do what it should
-
-/**
- * ROBIN WILLIAM'S CODE
- */

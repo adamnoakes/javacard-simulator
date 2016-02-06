@@ -26,21 +26,21 @@ module.exports = {
 	/**
 	 * Handles javacard.framework api calls.
 	 */
-	run: function(clas, method, type, param, obj, objref, smartcard){
-		switch(clas){
+	run: function(classToken, method, type, param, obj, objref, smartcard){
+		switch(classToken){
 			case 3://Applet abstract class
-				return applet.run(method, type, param, obj, objref, smartcard);
+				return applet.run(method, type, param, obj, smartcard);
 			case 4://CardException
 			case 5://CardRuntimeException
-				return exceptions.run(clas, method, type, param, obj, objref, smartcard);
+				return exceptions.run(classToken, method, type, param, obj, smartcard);
 			case 6://AID
-				return aid.run(method, type, param, obj, objref, smartcard);
+				return aid.run(method, type, param, obj, smartcard);
 			case 7://ISOException
-				return exceptions.run(clas, method, type, param, obj, objref, smartcard);
+				return exceptions.run(classToken, method, type, param, obj, smartcard);
 			case 8://JCSystem
-				return jcSystem.run(method, type, param, obj, objref, smartcard);
+				return jcSystem.run(method, type, param, obj, smartcard);
 			case 9://OwnerPIN
-				return ownerPIN.run(method, type, param, obj, objref, smartcard);
+				return ownerPIN.run(method, type, param, obj, smartcard);
 			case 10://APDU
 				return apdu.run(method, type, param, obj, objref, smartcard);
 			case 11://PINException
@@ -48,11 +48,26 @@ module.exports = {
 			case 13://SystemException
 			case 14://TransactionException
 			case 15://UserException
-				return exceptions.run(clas, method, type, param, obj, objref, smartcard);
+				return exceptions.run(classToken, method, type, param, obj, smartcard);
 			case 16://Util
-				return util.run(method, type, param, obj, objref, smartcard);
+				return util.run(method, type, param, obj, smartcard);
 			default:
 				return new Error('Unsupported class');
 		}
+	},
+
+	newObject: function(classToken){
+		switch (classToken) {
+            case 3:
+                return new applet.Applet();
+            case 6:
+                return new aid.AID();
+            case 9:
+                return new ownerPIN.OwnerPIN();
+            case 10:
+                return new apdu.APDU();
+            default:
+                return new Error('Unsupported Object');
+        }
 	}
 };

@@ -19,7 +19,7 @@ module.exports = {
     /**
      * Handles javacard.framework.AID api calls.
      */
-    run: function(method, type, param, obj, objref, smartcard){
+    run: function(method, type, param, obj, smartcard){
         switch (method) {
             case 0://void
                 return this.constr(obj, param[0],param[1],param[2]);

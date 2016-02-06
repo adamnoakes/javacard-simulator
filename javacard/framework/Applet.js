@@ -8,6 +8,8 @@
  * Module dependencies.
  * @private
  */
+var eeprom = require('../smartcard/eeprom.js');
+var ram = require('../smartcard/ram.js');
 
 /**
  * Module exports.
@@ -18,14 +20,14 @@ module.exports = {
     /**
      * Handles javacard.framework.Applet api calls.
      */
-    run: function(method, type, param, obj, objref, smartcard){
+    run: function(method, type, param, obj, smartcard){
         switch(method){
             case 0:
-                if(!param){//protected Applet();
+                if(param.length === 0){//protected Applet();
                     return Applet.constr(); //applet(obj);
                 }
                 //public equals()
-                return new Error('Applet.equals() not implemted.');
+                return new Error('Applet.equals() not implemented.');
             case 1:
                 if(param){//public static install(BSB)
                     return eeprom.addInstalledApplet(smartcard.EEPROM, smartcard.RAM.installingAppletAID, smartcard.RAM.gRef);//ISSUE
@@ -46,7 +48,8 @@ module.exports = {
             default:
                 return new Error('Method not defined');    
         }
-    }
+    },
+    Applet: Applet
 };
 
 /**

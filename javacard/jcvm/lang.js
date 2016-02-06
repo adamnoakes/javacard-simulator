@@ -1,7 +1,16 @@
+/*!
+ * lang
+ * @author Adam Noakes
+ * University of Southamption
+ */
 
+/**
+ * Module exports.
+ * @private
+ */
 module.exports = {
-	run: function(clas, method, type, param, obj, objref, smartcard){
-		switch (clas) {
+	run: function(classToken, method, type, param, obj, smartcard){
+		switch (classToken) {
             case 0:  //Object
                 return obj;
             case 1:  //Throwable
@@ -21,7 +30,37 @@ module.exports = {
                 }
                 return new Error('ArrayStoreException');
             default:
-                alert("unsupported class");
+                return new Error('Unsupported Method');
         }
-	}
-}
+	},
+    newObject: function(classToken){
+        switch (classToken) {
+            case 0:
+                return new Object();
+            case 1:
+                return new Throwable();
+            case 2:
+                return new Exception();
+            case 3:
+                return new RuntimeException();
+            case 4:
+                return new IndexOutOfBoundsException();
+            case 5:
+                return new ArrayIndexOutOfBoundsException();
+            case 6:
+                return new NegativeArraySizeException();
+            case 7:
+                return new NullPointerException();
+            case 8:
+                return new ClassCastException();
+            case 9:
+                return new ArithmeticException();
+            case 10:
+                return new SecurityException();
+            case 11:
+                return new ArrayStoreException();
+            default:
+                return new Error('Unsupported Object');
+        }
+    }
+};
