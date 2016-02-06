@@ -1,4 +1,64 @@
-﻿function Applet() {
+﻿/*!
+ * Applet
+ * @author Adam Noakes
+ * University of Southamption
+ */
+
+/**
+ * Module dependencies.
+ * @private
+ */
+
+/**
+ * Module exports.
+ * @public
+ */
+
+module.exports = {
+    /**
+     * Handles javacard.framework.Applet api calls.
+     */
+    run: function(method, type, param, obj, objref, smartcard){
+        switch(method){
+            case 0:
+                if(!param){//protected Applet();
+                    return Applet.constr(); //applet(obj);
+                }
+                //public equals()
+                return new Error('Applet.equals() not implemted.');
+            case 1:
+                if(param){//public static install(BSB)
+                    return eeprom.addInstalledApplet(smartcard.EEPROM, smartcard.RAM.installingAppletAID, smartcard.RAM.gRef);//ISSUE
+                }
+                //protected final register()
+                //not implmented
+                return;
+            case 2://protected final register(BSB)
+                //obj.register(param[0], param[1], param[2]);
+                return;
+            case 3://protected final selectingApplet() -> boolean
+                return ram.getSelectStatementFlag(smartcard.RAM);//obj.selectingApplet();
+            case 4://public deselect()
+            case 5://public getShareableInterfaceObject(clientAID, parameter) -> Shareable
+            case 6://public select() -> boolean
+            case 7://public abstract process(APDU) -> void
+                return;
+            default:
+                return new Error('Method not defined');    
+        }
+    }
+};
+
+/**
+ * ADAM'S CODE ENDS HERE
+ */
+
+//this code does not do what it should
+
+/**
+ * ROBIN WILLIAM'S CODE
+ */
+function Applet() {
     //Class Token - 03
     this.cls = 3;
     var appAID = "";

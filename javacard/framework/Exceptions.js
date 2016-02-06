@@ -1,199 +1,139 @@
-﻿function CardException() {
-    var res = 0;
-    this.constr = function (reason) { res = reason; }
+﻿/*!
+ * Exceptions
+ * @author Adam Noakes
+ * University of Southamption
+ */
 
-    CardException.throwIt = function (reason) {
+function Exception(exception, type, reason){
+    exception.type = type;
+    exception.reason = reason;
+    exception.sw = '0x6F00';
+}
+function CardException(reason){
+    this.Exception(this, 'CardException', reason);
+}
+function CardRuntimeException(reason){
+    this.Exception(this, 'CardRuntimeException', reason);
+}
+function PINException(reason){
+    this.Exception(this, 'PINException', reason);
+}
+function SystemException(reason){
+    this.Exception(this, 'SystemException', reason);
+}
+function ISOException(reason){
+    this.Exception(this, 'ISOException', reason);
+}
+function APDUException(reason){
+    this.Exception(this, 'APDUException', reason);
+}
+function TransactionException(reason){
+    this.Exception(this, 'TransactionException', reason);
+}
+function UserException(reason){
+    this.Exception(this, 'UserException', reason);
+}
+function setReason(Exception, reason){
+    Exception.reason = reason;
+}
+function getCardException(CardException){
+    return new Error('CardException: ' + CardException.reason);
+}
+function getCardRuntimeException(CardRuntimeException){
+    return new Error('CardRuntimeException: ' + CardRuntimeException.reason);
+}
+function getPINException(PINException){
+    var reasons = [];
+    reasons[1] = 'ILLEGAL_VALUE';
+    return new Error('PINException: ' + reasons[PINException.reason]);
 
-        Recover.RecoverAll();
-        gSW = "0x6F00";
-        alert("CardException " + reason);
-
-    }
-
-
-    this.restore = function (pars) { res = pars[0]; }
-    this.save = function () { return "f04/" + res; }
+}
+function getSystemException(SystemException){
+    var reasons = [];
+    reasons[1] = 'ILLEGAL_VALUE';
+    reasons[2] = 'NO_TRANSIENT_SPACE';
+    reasons[3] = 'ILLEGAL_TRANSIENT';
+    reasons[4] = 'ILLEGAL_AID';
+    reasons[5] = 'NO_RESOURCE';
+    reasons[6] = 'ILLEGAL_USE';
+    return new Error('SystemException: ' + reasons[SystemException.reason]);
+}
+function getISOException(ISOException){
+    var reasons = [];
+    return new Error('0x' + ISOException.reason.toString(16));
+}
+function getAPDUException(APDUException){
+    var reasons = [];
+    reasons[1] = 'ILLEGAL_USE';
+    reasons[2] = 'BUFFER_BOUNDS';
+    reasons[3] = 'BAD_LENGTH';
+    reasons[4] = 'IO_ERROR';
+    reasons[170] = 'NO_T0_GETRESPONSE';
+    reasons[171] = 'T1_IFD_ABORT';
+    reasons[172] = 'NO_T0_REISSUE';
+    return new Error('APDUException: ' + reasons[APDUException.reason]);
+}
+function getTransactionException(TransactionException){
+    var reasons = [];
+    reasons[1] = 'IN_PROGRESS';
+    reasons[2] = 'NOT_IN_PROGRESS';
+    return new Error('TransactionException: ' + reasons[TransactionException.reason]);
+}
+function getUserException(UserException){
+    return new Error('UserException: ' + UserException.reason);
 }
 
-function CardRuntimeException() {
-    var res = 0;
-    this.constr = function(reason) {res = reason;}
+/**
+ * Module exports.
+ * @public
+ */
 
-    CardRuntimeException.throwIt = function (reason) {
-        
-        Recover.RecoverAll();
-        gSW = "0x6F00";
-        alert("CardRuntimeException " + reason);
-
-    }
-
-
-    this.restore = function (pars) { res = pars[0];}
-    this.save = function () { return "f05/" + res; }
-}
-
-function PINException() {
-    var res = 0;
-    this.constr = function(reason) {res = reason;}
-    PINException.ILLEGAL_VALUE = 0;
-
-    PINException.throwIt = function(reason)
-    {
-        var msg;
-        switch (reason) {
-            case 1:
-                msg = "ILLEGAL_VALUE"; break;
+/**
+ * NOTE: possible problem with this code returning objects on method 0 instead
+ * of void, will have to be checked later.
+ */
+module.exports = {
+    /**
+     * Handles javacard.framework Exception api calls.
+     */
+    run: function(clas, method, type, param, obj, objref, smartcard){
+        switch(method){
+             case 4:  //CardException
+                 return (method === 0 ? new CardException(param[0]) : 
+                    getCardException(obj));
+            case 5:  //CardRuntimeException
+                return (method === 0 ? new CardRuntimeException(param[0]) : 
+                    getCardRuntimeException(obj));
+            case 7:  //ISOException
+               return (method === 0 ? new ISOException(param[0]) : 
+                    getISOException(obj));
+            case 11:  //PINException
+                return (method === 0 ? new PINException(param[0]) : 
+                    getPINException(obj));
+            case 12:  //APDUException
+                return (method === 0 ? new APDUException(param[0]) : 
+                    getAPDUException(obj));
+            case 13:  //SystemException
+                return (method === 0 ? new SystemException(param[0]) : 
+                    getSystemException(obj));
+            case 14:  //TransactionException
+                return (method === 0 ? new TransactionException(param[0]) : 
+                    getTransactionException(obj));
+            case 15:  //UserException
+                return (method === 0 ? new UserException(param[0]) : 
+                    getUserException(obj));
+            default:
+                return new Error('Method ' + method + ' not defined for Exception');
         }
-
-        Recover.RecoverAll();
-        gSW = "0x6F00";
-        alert("PINException: " + msg);
-
     }
-    this.restore = function (pars) { res = pars[0]; }
-    this.save = function () { return "f0B/" + res; }
-}
+};
 
-function SystemException() {
-    var res = 0;
-    this.constr = function(reason) {res = reason;}
+/**
+ * ADAM'S CODE ENDS HERE
+ */
 
-    SystemException.ILLEGAL_VALUE = 1;
-    SystemException.NO_TRANSIENT_SPACE = 2;
-    SystemException.ILLEGAL_TRANSIENT = 3;
-    SystemException.ILLEGAL_AID = 4;
-    SystemException.NO_RESOURCE = 5;
-    SystemException.ILLEGAL_USE = 6;
+//this code does not do what it should
 
-    SystemException.throwIt = function (reason)
-    {
-        var msg;
-
-        switch(reason) {
-            case 1:
-                msg = "ILLEGAL_VALUE"; break;
-            case 2:
-                msg = "NO_TRANSIENT_SPACE"; break;
-            case 3:
-                msg = "ILLEGAL_TRANSIENT"; break;
-            case 4:
-                msg = "ILLEGAL_AID"; break;
-            case 5:
-                msg = "NO_RESOURCE"; break;
-            case 6:
-                msg = "ILLEGAL_USE"; break;
-        }
-
-
-        Recover.RecoverAll();
-        gSW = "0x6F00";
-        alert("SystemException: " + msg);
-       
-    }
-    this.restore = function (pars) { res = pars[0]; }
-    this.save = function () { return "f0D/" + res; }
-}
-
-function ISOException() {
-    //07
-    var res = 0;
-    this.constr = function(reason) {res = reason;}
-    ISOException.throwIt = function (reason) {
-
-        gSW = "0x" + reason.toString(16);
-
-        Recover.RecoverAll();
-            //alert("ISOException: " + msg);
-
-    }
-
-    this.restore = function (pars) { res = pars[0]; }
-    this.save = function () { return "f07/" + res; }
-
-}
-
-
-function APDUException() {
-    var res = 0;
-    this.constr = function(reason) {res = reason;}
-    APDUException.ILLEGAL_USE = 1;
-    APDUException.BUFFER_BOUNDS = 2;
-    APDUException.BAD_LENGTH = 3;
-    APDUException.IO_ERROR = 4;
-    APDUException.NO_T0_GETRESPONSE = 170;
-    APDUException.T1_IFD_ABORT = 171;
-    APDUException.NO_T0_REISSUE = 172;
-
-    APDUException.throwIt = function(reason)
-    {
-
-        var msg;
-        switch (reason) {
-            case 1:
-                msg = "ILLEGAL_VALUE"; break;
-            case 2:
-                msg = "BUFFER_BOUNDS"; break;
-            case 3:
-                msg = "BAD_LENGTH"; break;
-            case 4:
-                msg = "IO_ERROR"; break;
-            case 170:
-                msg = "NO_T0_GETRESPONSE"; break;
-            case 171:
-                msg = "T1_IFD_ABORT"; break;
-            case 172:
-                msg = "NO_T0_REISSUE"; break;
-        }
-        if (reason != 3) { Recover.RecoverAll(); };
-        gSW = "0x6F00";
-        alert("APDUException: " + msg);
- 
-
-    }
-
-    this.restore = function (pars) { res = pars[0]; }
-    this.save = function () { return "f0C/" + res; }
-}
-
-
-function TransactionException() {
-    var res = 0;
-    this.constr = function (reason) { res = reason; }
-
-    TransactionException.IN_PROGRESS = 1;
-    TransactionException.NOT_IN_PROGRESS = 2;
-
-    TransactionException.throwIt = function (reason) {
-        var msg;
-
-        switch (reason) {
-            case 1: msg = "IN_PROGRESS"; break;
-            case 2: msg = "NOT_IN_PROGRESS"; break;
-            default: msg = ""; break;
-        }
-
-        Recover.RecoverAll();
-        gSW = "0x6F00";
-        alert("TransactionException " + msg);
-
-    }
-
-    this.restore = function (pars) { res = pars[0]; }
-    this.save = function () { return "f0E/" + res; }
-}
-
-function UserException() {
-    var res = 0;
-    this.constr = function(reason) {res = reason;}
-    UserException.throwIt = function (reason) {
-
-
-        Recover.RecoverAll();
-        gSW = "0x6F00";
-        alert("TransactionException " + reason);
-
-    }
-
-    this.restore = function (pars) { res = pars[0]; }
-    this.save = function () { return "f0F/" + res; }
-}
+/**
+ * ROBIN WILLIAM'S CODE
+ */

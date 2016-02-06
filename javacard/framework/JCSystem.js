@@ -19,15 +19,25 @@ module.exports = {
     MEMORY_TYPE_TRANSIENT_DESELECT: 2,
     MEMORY_TYPE_TRANSIENT_RESET: 1,
     NOT_A_TRANSIENT_OBJECT: 0,
-    makeTransientBooleanArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0 }; return b; },
-                //0C boolArray
-    makeTransientByteArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0 }; return b; },
-    makeTransientShortArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0 }; return b; },
-    //0C boolArray
-    makeTransientByteArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0 }; return b; },
-                //0D byteArray
-    makeTransientObjectArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0 }; return b; },
-                //0E objArray
-    makeTransientShortArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0; }; return b; },
-                //0F shortArray
-}
+
+    /**
+     * Handles javacard.framework Exception api calls.
+     */
+    run: function(clas, method, type, param, obj, objref, smartcard){
+        switch(method){
+            case 0://abortTransaction
+                return processor.abortTransaction(smartcard);
+            case 1://beginTransaction
+                return processor.beginTransaction(smartcard);
+            case 2://commitTransaction
+                return processor.commitTransaction(smartcard);
+            case 12://makeTransientBooleanArray
+            case 13://makeTransientByteArray
+            case 14://makeTransientObjectArray
+            case 14://makeTransientShortArray
+                return {type: 2, array: new Array(param[0]).fill(0)};
+            default:
+                return new Error('Method ' + method + ' not defined for JCSystem');
+        }
+    }
+};

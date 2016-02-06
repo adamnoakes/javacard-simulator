@@ -1,6 +1,43 @@
-﻿var util = require('./Util.js');
-//Class Token - 06
+﻿/*!
+ * AID (Class token: 6)
+ * @author Adam Noakes
+ * University of Southamption
+ */
+
+/**
+ * Module dependencies.
+ * @private
+ */
+var util = require('./Util.js');
+
+/**
+ * Module exports.
+ * @public
+ */
+
 module.exports = {
+    /**
+     * Handles javacard.framework.AID api calls.
+     */
+    run: function(method, type, param, obj, objref, smartcard){
+        switch (method) {
+            case 0://void
+                return this.constr(obj, param[0],param[1],param[2]);
+            case 1://normal
+                return this.RIDEquals(obj, param[0]);
+            case 2:
+                return this.equals(obj, param[0],param[1],param[2]);
+            case 3:
+                return this.getBytes(obj, param[0], param[1]);
+            case 4:
+                return this.PartialEquals(obj, param[0], param[1], param[2]);
+            case 5:
+                return this.getPartialEquals(obj, param[0],param[1],param[2],param[3]);//should be getPartialBytes?
+            default:
+                return new Error('Method ' + method + ' not defined for AID');
+        }
+    },
+
     AID: function(){
         this.AID = [];
         this.cls = 6;
