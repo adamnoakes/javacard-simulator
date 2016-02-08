@@ -32,23 +32,23 @@ module.exports = {
 				return applet.run(method, type, param, obj, smartcard);
 			case 4://CardException
 			case 5://CardRuntimeException
-				return exceptions.run(classToken, method, type, param, obj, smartcard);
+				return exceptions.run(classToken, method, type, param, obj);
 			case 6://AID
-				return aid.run(method, type, param, obj, smartcard);
+				return aid.run(method, type, param, obj);
 			case 7://ISOException
-				return exceptions.run(classToken, method, type, param, obj, smartcard);
+				return exceptions.run(classToken, method, type, param, obj);
 			case 8://JCSystem
 				return jcSystem.run(method, type, param, obj, smartcard);
 			case 9://OwnerPIN
 				return ownerPIN.run(method, type, param, obj, smartcard);
 			case 10://APDU
-				return apdu.run(method, type, param, obj, objref, smartcard);
+				return apdu.run(method, type, param, obj, objref);
 			case 11://PINException
 			case 12://APDUException
 			case 13://SystemException
 			case 14://TransactionException
 			case 15://UserException
-				return exceptions.run(classToken, method, type, param, obj, smartcard);
+				return exceptions.run(classToken, method, type, param, obj);
 			case 16://Util
 				return util.run(method, type, param, obj, smartcard);
 			default:

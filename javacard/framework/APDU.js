@@ -50,12 +50,12 @@ module.exports = {
     APDU: function() {
 
     },
-    run: function(method, type, param, obj, objref, smartcard){
+    run: function(method, type, param, obj, objref){
         switch (type) {
             case 3://object methods
-                return runObjectMethod(method, param, obj, objref, smartcard);
+                return runObjectMethod(method, param, obj, objref);
             case 6://static methods
-                return runStaticMethod(method, param, obj, objref, smartcard);
+                return runStaticMethod(method, param, obj, objref);
             default:
                 return new Error('Method ' + method + ' not defined for AID');
         }
@@ -113,7 +113,7 @@ module.exports = {
  * @private;
  */
 
-function runObjectMethod(method, param, obj, objref, smartcard){
+function runObjectMethod(method, param, obj, objref){
     switch(method){
         case 0://void
             return constr(obj, param[0]);
@@ -157,7 +157,7 @@ function runObjectMethod(method, param, obj, objref, smartcard){
     }
 }
 
-function runStaticMethod(method, param, obj, objref, smartcard){
+function runStaticMethod(method, param, obj, objref){
     switch (method) {
         case 0:
             return getInBlockSize(obj);

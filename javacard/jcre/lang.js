@@ -9,7 +9,7 @@
  * @private
  */
 module.exports = {
-	run: function(classToken, method, type, param, obj, smartcard){
+	run: function(classToken, method, type, param, obj){
 		switch (classToken) {
             case 0:  //Object
                 return obj;

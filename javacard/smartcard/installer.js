@@ -1,5 +1,5 @@
 var capJS = require('./cap.js');
-var jcvm = require('../jcvm/jcvm.js');
+var jcvm = require('../jcre/jcvm.js');
 var ram = require('./ram.js');
 var eeprom = require('./eeprom.js');
 

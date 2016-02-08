@@ -8,7 +8,7 @@
  * Module dependencies.
  * @private
  */
-var jcvm = require('../jcvm/jcvm.js');
+var jcvm = require('../jcre/jcvm.js');
 //-> No this should not have reference to jcvm, the arrays should be passed directly
 
 /**

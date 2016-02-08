@@ -22,7 +22,7 @@ module.exports = {
 	run: function(packageAID, classToken, method, type, param, obj, objref, smartcard){
 		switch (packageAID.join()) {
 			case opcodes.jlang.join():
-				return language.run(classToken, method, type, param, obj, smartcard);
+				return lang.run(classToken, method, type, param, obj);
 			case opcodes.jframework.join():
 				return framework.run(classToken, method, type, param, obj, objref, smartcard);
 			case opcodes.jsecurity.join():
