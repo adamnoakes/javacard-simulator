@@ -21,12 +21,27 @@ module.exports = {
     ALG_EC_F2M: 4,
     ALG_EC_FP: 5,
 
+    run: function(keyPair, method, methodType, param){
+        switch(method){
+            case 0:
+                return new Error('KeyPair.equals() not implemented.');
+            case 1:
+                return this.genKeyPair(keyPair);
+            case 2:
+                return this.getPrivate(keyPair);
+            case 3:
+                return this.getPublic(keyPair);
+            default:
+                return new Error('Method ' + method + ' not defined for KeyPair');
+                //throw error, cannot perform method method, methodType methodType
+        }
+    },
+
     /**
      * [KeyPair description]
      * @param {Number} param1 - Number represents algorithm type
      * @param {Number} param2 - Number represents 
      */
-    
     KeyPair: function(algorithm, keyLength){
     	//to be used by genKeyPair
     	this.algorithm = algorithm;
@@ -64,4 +79,17 @@ module.exports = {
     		}
     	}
     }
+}
+
+/**
+ * Private functions.
+ * @private
+ */
+
+function getPrivate(keyPair){
+    return keyPair.privateKey;
+}
+
+function getPublic(keyPair){
+    return keyPair.publicKey;
 }

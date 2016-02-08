@@ -52,7 +52,9 @@ module.exports = {
 			case 5:
 				return this.getModulus(RSAPrivateKey, param[0], param[1], smartcard);
 			case 6:
-				return this.setExponent(RSAPrivateKey, param[0], param[1]);
+				return this.setExponent(RSAPrivateKey, param[0], param[1], param[2]);
+			case 7:
+				return this.setModulus(RSAPrivateKey, param[0], param[1], param[2]);
 			default:
 				return new Error('Method ' + method + ' not defined for RSAPrivateKey');
 				//throw error, cannot perform method method, methodType methodType

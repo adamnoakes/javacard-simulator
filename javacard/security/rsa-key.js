@@ -39,11 +39,11 @@ module.exports = {
 				offset + length);
 		}
 	},
-	clearKey: setterDecorator(function(RSAKey){
+	clearKey: function(RSAKey){
 		RSAKey.exponent = undefined;
 		RSAKey.modulus = undefined;
 		RSAKey.key = undefined;
-	}),
+	},
 	/**
 	 * [setKey description]
 	 * @param {RSAPublicKey/RSAPrivateKey} RSAKey

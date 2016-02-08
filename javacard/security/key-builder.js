@@ -75,6 +75,19 @@ module.exports = {
 	LENGTH_HMAC_SHA_384_BLOCK_128: 128,
 	LENGTH_HMAC_SHA_512_BLOCK_128: 128,
 
+	run: function(keyBuilder, method, methodType, param){
+		switch(method){
+			case 0:
+				if(param.length === 1){//public equals()
+					return new Error('KeyBuilder.equals() not implemented.');
+                }
+				return this.buildKey(param[0], param[1], param[2]);
+			default:
+				return new Error('Method ' + method + ' not defined for RSAPrivateKey');
+				//throw error, cannot perform method method, methodType methodType
+		}
+	},
+
 	/**
 	 * @param  {Number} keyType
 	 * @param  {Number} keyLength
