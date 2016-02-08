@@ -34,36 +34,37 @@ function Key(key, type, size){
  */
 
 modules.exports = {
+	run: function(key, method, methodType, param){
+		switch(method){
+			case 0://void
+				return this.clearKey(key);
+			case 1://short
+				return this.getSize(key);
+			case 2://
+				return this.getType(key);
+			case 3:
+				return this.isInitialized(key);
+			default:
+				return new Error('Method ' + method + ' not defined for Key');
+				//throw error, cannot perform method method, methodType methodType
+		}
+	},
 	PublicKey: function(publicKey, typ, size){
 		if (this.constructor === PublicKey) {
-      		throw new Error("Can't instantiate abstract class!");
+      		return new Error("Can't instantiate abstract class: PublicKey");
     	}
 		//public key extends key
 		key.key(publicKey, typ, size);
 	},
 	PrivateKey: function(privateKey, typ, size){
 		if (this.constructor === PrivateKey) {
-      		throw new Error("Can't instantiate abstract class!");
+      		throw new Error("Can't instantiate abstract class: PrivateKey");
     	}
 		//public key extends key
 		key.key(privateKey, typ, size);
 		key.private = true;
 	},
-	run: function(key, method, methodType, param){
-		switch(method){
-			case 0://void
-				return {typ: 0, val: this.clearKey(key)};
-			case 1://short
-				return {typ: 1, val: this.getSize(key)};
-			case 2://
-				return {typ: 1, val: this.getType(key)};
-			case 3:
-				return {typ: 1, val: this.isInitialized(key)};
-			case default:
-				//throw error, cannot perform method method, methodType methodType
-
-		}
-	}
+	
     /* 
      * Used to transform long to Array
      * >>> longToArray(25)

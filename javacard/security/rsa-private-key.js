@@ -37,6 +37,27 @@ function setterDecorator(f){
  */
 
 module.exports = {
+	run: function(RSAPrivateKey, method, methodType, param, smartcard){
+		switch(method){
+			case 0:
+				return keys.clearKey(RSAPrivateKey);
+			case 1:
+				return keys.getSize(RSAPrivateKey);
+			case 2:
+				return keys.getType(RSAPrivateKey);
+			case 3:
+				return keys.isInitialized(RSAPrivateKey);
+			case 4:
+				return this.getExponent(RSAPrivateKey, param[0], param[1], smartcard);
+			case 5:
+				return this.getModulus(RSAPrivateKey, param[0], param[1], smartcard);
+			case 6:
+				return this.setExponent(RSAPrivateKey, param[0], param[1]);
+			default:
+				return new Error('Method ' + method + ' not defined for RSAPrivateKey');
+				//throw error, cannot perform method method, methodType methodType
+		}
+	},
 
 	/**
 	 * [RSAPrivateKey description]
@@ -52,6 +73,12 @@ module.exports = {
 		this.key = null;
 	},
 
+	/**
+	 * @param {RSAKey} 	RSAKey
+	 * @param {Array} 	buffer
+	 * @param {Number} 	offset
+	 * @type {[type]}
+	 */
 	getExponent: getterDecorator(rsaKey.getExponent),
 	getModulus: getterDecorator(rsaKey.getModulus),
 	setExponent: setterDecorator(rsaKey.setExponent),

@@ -2,7 +2,7 @@ var apdu = require('../framework/APDU.js');
 var eeprom = require('./eeprom.js');
 var installer = require('./installer.js');
 var opcodes = require('../utilities/opcodes.js');
-var jcvm = require('../jcvm/jcvm.js');
+var jcvm = require('../jcre/jcvm.js');
 var cap = require('./cap.js');
 var util = require('../utilities/util.js');
 

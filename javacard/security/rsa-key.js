@@ -16,13 +16,13 @@ var Util = require('../framework/Util.js');
  * Module exports.
  */
 module.exports = {
-	getExponent: function(RSAKey, buffer, offset){
-		Util.arrayCopyNew(RSAKey.exponent, 0, buffer, offset, 
+	getExponent: function(RSAKey, buffer, offset, smartcard){
+		Util.arrayCopy(RSAKey.exponent, 0, buffer, offset, 
 			len(RSAKey.exponent));
 
 		return len(RSAKey.exponent);
 	},
-	getModulus: function(RSAKey, buffer, offset){
+	getModulus: function(RSAKey, buffer, offset, smartcard){
 		Util.arrayCopy(RSAKey.modulus, 0, buffer, offset, 
 			len(RSAKey.modulus));
 

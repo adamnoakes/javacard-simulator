@@ -116,5 +116,6 @@ module.exports = {
         EEPROM.installedApplets.push({'AID': appletAID, 'appletRef': gRef});
     },
 
-    getObjectHeap: function(EEPROM){ return EEPROM.objectheap;}
+    getObjectHeap: function(EEPROM){ return EEPROM.objectheap;},
+    getObjectHeapValue: function(EEPROM, ref){ return EEPROM.objectheap[ref];}
 }

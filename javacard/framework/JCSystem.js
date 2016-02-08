@@ -3,8 +3,8 @@
  * atomic transaction management, object deletion mechanism and inter-applet object sharing in the Java Card 
  * environment.
  */
-var jcvm = require('../jcvm/jcvm.js');
 var opcodes = require('../utilities/opcodes.js');
+var processor = require('../smartcard/processor.js');
 
 //A0 00 00 00 62 01 01 Framework
 module.exports = {
@@ -19,15 +19,25 @@ module.exports = {
     MEMORY_TYPE_TRANSIENT_DESELECT: 2,
     MEMORY_TYPE_TRANSIENT_RESET: 1,
     NOT_A_TRANSIENT_OBJECT: 0,
-    makeTransientBooleanArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0 }; return b; },
-                //0C boolArray
-    makeTransientByteArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0 }; return b; },
-    makeTransientShortArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0 }; return b; },
-    //0C boolArray
-    makeTransientByteArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0 }; return b; },
-                //0D byteArray
-    makeTransientObjectArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0 }; return b; },
-                //0E objArray
-    makeTransientShortArray: function (length, event) { var b = []; for (var j = 0; j < length; j++) { b[j] = 0; }; return b; },
-                //0F shortArray
-}
+
+    /**
+     * Handles javacard.framework Exception api calls.
+     */
+    run: function(method, type, param, obj, smartcard){
+        switch(method){
+            case 0://abortTransaction
+                return processor.abortTransaction(smartcard);
+            case 1://beginTransaction
+                return processor.beginTransaction(smartcard);
+            case 2://commitTransaction
+                return processor.commitTransaction(smartcard);
+            case 12://makeTransientBooleanArray
+            case 13://makeTransientByteArray
+            case 14://makeTransientObjectArray
+            case 15://makeTransientShortArray
+                return {transientArray: true, array: Array.apply(null, Array(param[0])).map(Number.prototype.valueOf,0)};
+            default:
+                return new Error('Method ' + method + ' not defined for JCSystem');
+        }
+    }
+};
