@@ -32,8 +32,8 @@ module.exports = {
 		RSAKey.exponent = buffer.slice(offset, offset + length);
 	},
 	setModulus: function(RSAKey, buffer, offset, length){
-		if(length != Math.floor(key.getSize(RSAKey) / 8)){
-			//raise CryptoException(CryptoException.INVALID_INIT)
+		if(length != Math.floor(keys.getSize(RSAKey) / 8)){
+			throw new Error('CryptoException.INVALID_INIT');
 		} else {
 			RSAKey.modulus = buffer.slice(offset,
 				offset + length);

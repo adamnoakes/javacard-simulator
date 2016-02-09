@@ -9,7 +9,8 @@
  * @private
  */
 var RSAPublicKey = require('./rsa-public-key.js').RSAPublicKey;
-var RSAPrivateKey = require('./rsa-public-key.js').RSAPrivateKey;
+var RSAPrivateKey = require('./rsa-private-key.js').RSAPrivateKey;
+var RSAPrivateCrtKey = require('./rsa-private-key.js').RSAPrivateKey;
 
 /**
  * Module exports.
@@ -112,8 +113,9 @@ module.exports = {
 		    case this.TYPE_RSA_PRIVATE:
 		        return new RSAPrivateKey(keyLength);
 		    case this.TYPE_RSA_CRT_PRIVATE:
-		        //not impleneted
-		        break;
+		        return new RSAPrivateCrtKey(keyLength);
+		    default:
+		        return new Error('CryptoException.NO_SUCH_ALGORITHM');
 		}
 	}
 };

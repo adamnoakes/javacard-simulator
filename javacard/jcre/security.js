@@ -64,19 +64,13 @@ module.exports = {
 				return new Error('Unsupported class');
 		}
 	},
-	
-	newObject: function(classToken){
-		switch (classToken) {
-            case 3:
-                return new applet.Applet();
-            case 6:
-                return new aid.AID();
-            case 9:
-                return new ownerPIN.OwnerPIN();
-            case 10:
-                return new apdu.APDU();
+
+    newObject: function(classToken){
+        switch (classToken) {
+            case 16:
+                return new keyPair.KeyPair();
             default:
                 return new Error('Unsupported Object');
         }
-	}
+    }
 };

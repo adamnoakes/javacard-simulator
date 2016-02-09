@@ -1624,7 +1624,9 @@ function executeBytecode(CAPfile, startbytecode, parameters, method, appref, sma
                         //hv += ",A"+clsno+","+objectheap.length;
                         eeprom.appendHeap(smartcard.EEPROM, 160+clsno);
                         eeprom.appendHeap(smartcard.EEPROM, eeprom.getObjectHeap(smartcard.EEPROM).length);
-                        if ((info[1] == 3) && (CAPfile.COMPONENT_Import.packages[info[0] - 128].AID.join() === opcodes.jframework.join())) { ram.setGRef(smartcard.RAM, ref); };
+                        if ((info[1] == 3) && (CAPfile.COMPONENT_Import.packages[info[0] - 128].AID.join() === opcodes.jframework.join())) {
+                            ram.setGRef(smartcard.RAM, ref);
+                        }
 
                         eeprom.appendObjectHeap(smartcard.EEPROM, api.newObject(CAPfile.COMPONENT_Import.packages[info[0] - 128].AID, info[1]));
                         done = true;

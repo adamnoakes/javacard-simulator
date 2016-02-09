@@ -20,7 +20,7 @@
  * @param {[type]} size [description]
  */
 function Key(key, type, size){
-	if (this.constructor === PublicKey) {
+	if (this.constructor === this.PublicKey) {
   		throw new Error("Can't instantiate abstract class!");
 	}
 	key.initialized = 0;
@@ -33,7 +33,7 @@ function Key(key, type, size){
  * Module exports.
  */
 
-modules.exports = {
+module.exports = {
 	run: function(key, method, methodType, param){
 		switch(method){
 			case 0://void
@@ -50,19 +50,19 @@ modules.exports = {
 		}
 	},
 	PublicKey: function(publicKey, typ, size){
-		if (this.constructor === PublicKey) {
+		if (this.constructor === this.PublicKey) {
       		return new Error("Can't instantiate abstract class: PublicKey");
     	}
 		//public key extends key
-		key.key(publicKey, typ, size);
+		Key(publicKey, typ, size);
 	},
 	PrivateKey: function(privateKey, typ, size){
-		if (this.constructor === PrivateKey) {
+		if (this.constructor === this.PrivateKey) {
       		throw new Error("Can't instantiate abstract class: PrivateKey");
     	}
 		//public key extends key
-		key.key(privateKey, typ, size);
-		key.private = true;
+		Key(privateKey, typ, size);
+		privateKey.private = true;
 	},
 	
     /* 
@@ -81,6 +81,15 @@ modules.exports = {
 		for(var i= s.length; i>0; i = i - 2){
 		    out.push(parseInt(s.substr(i-2, 2), 16));
 		}
+	},
+	//http://stackoverflow.com/questions/8609289/convert-a-binary-nodejs-buffer-to-javascript-arraybuffer
+	toArrayBuffer: function(buffer) {
+	    var ab = new ArrayBuffer(buffer.length);
+	    var view = new Uint8Array(ab);
+	    for (var i = 0; i < buffer.length; ++i) {
+	        view[i] = buffer[i];
+	    }
+	    return view;
 	},
 	/*
      * make a long from an Array

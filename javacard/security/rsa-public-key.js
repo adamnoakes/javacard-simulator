@@ -8,14 +8,17 @@
  * Module dependencies.
  * @private
  */
-var keys = require('./keys.js');
 var NodeRSA = require('node-rsa');
+var keys = require('./keys.js');
+var rsaKey = require('./rsa-key.js');
 
 //cannot be saved like this in DB, but be exported on saving and then imported on load
 function createKey(RSAPublicKey){
-	var modulus = keys.arrayToLong(RSAPublicKey.modulus);
-	var exponent = keys.arrayToLong(RSAPublicKey.exponent);
-	RSAPublicKey.key = new NodeRSA(modulus, exponent);
+	RSAPublicKey.key = new NodeRSA();
+	RSAPublicKey.key.importKey({
+		e: new Buffer(RSAPublicKey.exponent),
+		n: new Buffer(RSAPublicKey.modulus)
+	});
 }
 
 function getterDecorator(f){
@@ -33,7 +36,6 @@ function setterDecorator(f){
 	function set(){
 		f.apply(this, arguments);
 		if(arguments[0].modulus && arguments[0].exponent){
-			if(!arguments[0])
 				createKey(arguments[0]);
 			keys.setInitialized(arguments[0]);
 		}
@@ -77,8 +79,8 @@ module.exports = {
 	RSAPublicKey: function(size){
 		//extends public key
 		keys.PublicKey(this, 4, size);
-		this.exponent = [];
-		this.modulus = [];
+		this.exponent;
+		this.modulus;
 		this.key = null;
 	},
 	getExponent: getterDecorator(rsaKey.getExponent),

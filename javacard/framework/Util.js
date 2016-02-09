@@ -42,7 +42,7 @@ module.exports = {
     },
     arrayCopyNew: function(src, srcOff, dest, destOff, length) {
         var args;
-        JCSystem.beginTransaction();
+        //JCSystem.beginTransaction();
         //if dest.length <  destOff + length or src.length < srcOff + length then throw an exception
         //in reality, this solution will not result in an error, it will extend the array when needed
         //and stop copying from the src array when the end is reached.
@@ -52,11 +52,11 @@ module.exports = {
             args.unshift(destOff);
             Array.prototype.splice.apply(dest,args);
         } catch (err) {
-            JCSystem.abortTransaction();
+            //JCSystem.abortTransaction();
             //throw "ArrayOutofBoundsException";
             return 0;
         }
-        JCSystem.commitTransaction();
+       // JCSystem.commitTransaction();
         return 1;
     }
 };

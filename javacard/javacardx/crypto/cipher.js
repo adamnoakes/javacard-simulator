@@ -9,7 +9,7 @@
  * @private
  */
 
-var rsaCipher = require('./rsa-cipher.js');
+
 var keys = require('../../security/keys.js');
 
 /**
@@ -50,7 +50,7 @@ module.exports = {
 	 * @param {[type]} algorithm [description]
 	 */
 	Cipher: function(cipher, algorithm){
-		if (this.constructor === PublicKey) {
+		if (this.constructor === this.Cipher) {
       		throw new Error("Can't instantiate abstract class!");
     	}
 		cipher.algorithm = algorithm;
@@ -64,35 +64,36 @@ module.exports = {
 	 */
 	getInstance: function(algorithm, externalAccess){
 		switch(algorithm){
-			case ALG_DES_CBC_NOPAD:
-			case ALG_DES_CBC_ISO9797_M1:
-			case ALG_DES_CBC_ISO9797_M2:
-			case ALG_DES_CBC_PKCS5:
-			case ALG_DES_ECB_NOPAD:
-			case ALG_DES_ECB_ISO9797_M1:
-			case ALG_DES_ECB_ISO9797_M2:
-			case ALG_DES_ECB_PKCS5:
-			case ALG_RSA_ISO14888:
+			case this.ALG_DES_CBC_NOPAD:
+			case this.ALG_DES_CBC_ISO9797_M1:
+			case this.ALG_DES_CBC_ISO9797_M2:
+			case this.ALG_DES_CBC_PKCS5:
+			case this.ALG_DES_ECB_NOPAD:
+			case this.ALG_DES_ECB_ISO9797_M1:
+			case this.ALG_DES_ECB_ISO9797_M2:
+			case this.ALG_DES_ECB_PKCS5:
+			case this.ALG_RSA_ISO14888:
 				//not implemented
 				break;
-			case ALG_RSA_PKCS1:
+			case this.ALG_RSA_PKCS1:
 				//return new rsaCipher.RSACipher(algorithm);
 				//not implemented
-			case ALG_RSA_ISO9796:
+			case this.ALG_RSA_ISO9796:
 				//deprecated
-			case ALG_RSA_NOPAD:
-			case ALG_AES_BLOCK_128_CBC_NOPAD:
-			case ALG_AES_BLOCK_128_ECB_NOPAD:
+			case this.ALG_RSA_NOPAD:
+			case this.ALG_AES_BLOCK_128_CBC_NOPAD:
+			case this.ALG_AES_BLOCK_128_ECB_NOPAD:
 				//not implemented
 				break;
-			case ALG_RSA_PKCS1_OAEP:
+			case this.ALG_RSA_PKCS1_OAEP:
+				var rsaCipher = require('./rsa-cipher.js');
 				return new rsaCipher.RSACipher(algorithm);
-			case ALG_KOREAN_SEED_ECB_NOPAD:
-			case ALG_KOREAN_SEED_CBC_NOPAD:
+			case this.ALG_KOREAN_SEED_ECB_NOPAD:
+			case this.ALG_KOREAN_SEED_CBC_NOPAD:
 				//not implemented
 				break;
 		}
-	}
+	},
 	/**
 	 * Abstract methods, to be implemented by <algorithm>-cipher
 	 */
@@ -106,7 +107,7 @@ module.exports = {
 	 * @param  {Number} bOff   [description]
 	 * @param  {Number} bLen   [description]
 	 */
-	init: function(cipher, theKey, mode, bArray = [], bOff = 0, bLen = 0){
+	init: function(cipher, theKey, mode, bArray, bOff, bLen){
 		throw new Error("Can't call abstract method");
 	},
 	/**
