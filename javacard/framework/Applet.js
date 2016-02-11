@@ -29,15 +29,16 @@ module.exports = {
                 //public equals()
                 return new Error('Applet.equals() not implemented.');
             case 1:
-                if(param){//public static install(BSB)
+                //if(param){//public static install(BSB)
                     return eeprom.addInstalledApplet(smartcard.EEPROM, smartcard.RAM.installingAppletAID, smartcard.RAM.gRef);//ISSUE
-                }
+                //}
                 //protected final register()
                 //not implmented
                 return;
             case 2://protected final register(BSB)
+                //TODO-> register should use parameters.
+                return eeprom.addInstalledApplet(smartcard.EEPROM, smartcard.RAM.installingAppletAID, smartcard.RAM.gRef);//ISSUE
                 //obj.register(param[0], param[1], param[2]);
-                return;
             case 3://protected final selectingApplet() -> boolean
                 return ram.getSelectStatementFlag(smartcard.RAM);//obj.selectingApplet();
             case 4://public deselect()

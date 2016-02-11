@@ -10,17 +10,40 @@
  */
 var NodeRSA = require('node-rsa');
 var keys = require('./keys.js');
-var rsaKey = require('./rsa-key.js');
 
 //cannot be saved like this in DB, but be exported on saving and then imported on load
 function createKey(RSAPublicKey){
-	RSAPublicKey.key = new NodeRSA();
-	RSAPublicKey.key.importKey({
+	var nodeRSAKey = new NodeRSA();
+	nodeRSAKey.importKey({
 		e: new Buffer(RSAPublicKey.exponent),
 		n: new Buffer(RSAPublicKey.modulus)
 	});
+	return nodeRSAKey;
 }
 
+function getExponent(RSAKey, buffer, offset){
+	Util.arrayCopy(RSAKey.exponent, 0, buffer, offset,
+		len(RSAKey.exponent));
+
+	return len(RSAKey.exponent);
+}
+function getModulus(RSAKey, buffer, offset){
+	Util.arrayCopy(RSAKey.modulus, 0, buffer, offset,
+		len(RSAKey.modulus));
+
+	return len(RSAKey.modulus);
+}
+function setExponent(RSAKey, buffer, offset, length){
+	RSAKey.exponent = buffer.slice(offset, offset + length);
+}
+function setModulus(RSAKey, buffer, offset, length){
+	if(length != Math.floor(keys.getSize(RSAKey) / 8)){
+		throw new Error('CryptoException.INVALID_INIT');
+	} else {
+		RSAKey.modulus = buffer.slice(offset,
+			offset + length);
+	}
+}
 function getterDecorator(f){
 	function get(){
 		if(arguments[0].initialized !== 1){
@@ -83,9 +106,16 @@ module.exports = {
 		this.modulus;
 		this.key = null;
 	},
-	getExponent: getterDecorator(rsaKey.getExponent),
-	getModulus: getterDecorator(rsaKey.getModulus),
-	setExponent: setterDecorator(rsaKey.setExponent),
-	setModulus: setterDecorator(rsaKey.setModulus),
-	setKey: setterDecorator(rsaKey.setKey)
+	getNodeRSA: function(RSAPublicKey){
+		if(RSAPublicKey.initialized === 1){
+			return createKey(RSAPublicKey);
+		} else {
+			return new Error('Key not initialized');
+		}
+	},
+	getExponent: getterDecorator(getExponent),
+	getModulus: getterDecorator(getModulus),
+	setExponent: setterDecorator(setExponent),
+	setModulus: setterDecorator(setModulus),
+	setKey: setterDecorator(require('./rsa-key.js').setKey)
 };

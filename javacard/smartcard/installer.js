@@ -75,6 +75,8 @@ function process(smartcard) {
     this[0xB8] = function(){
         var AIDLength = smartcard.processor.buffer[5];
         var createAID = smartcard.processor.buffer.slice(6, 6+AIDLength);
+        console.log("creating aid:");
+        console.log(createAID);
         var params;
         //get the cap 
         var packageToCreate = eeprom.getPackage(smartcard.EEPROM, createAID);

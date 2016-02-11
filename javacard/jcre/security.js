@@ -9,7 +9,12 @@
  * @private
  */
 
-
+var keys = require('../security/keys.js');
+var rsaPrivateKey = require('../security/rsa-private-key.js');
+var rsaPrivateCrtKey = require('../security/rsa-private-crt-key.js');
+var rsaPublicKey = require('../security/rsa-public-key.js');
+var keyBuilder = require('../security/key-builder.js');
+var keyPair = require('../security/key-pair.js');
 /**
  * Module exports.
  * @public
@@ -33,7 +38,7 @@ module.exports = {
             case 5://javacard/security/DSAPrivateKey
             case 6://javacard/security/DSAPublicKey
             case 7://javacard/security/RSAPrivateCrtKey
-            	return new Error('Unsupported class');
+            	return rsaPrivateCrtKey.run(obj, method, type, param, smartcard);
             case 8://javacard/security/RSAPrivateKey
             	return rsaPrivateKey.run(obj, method, type, param, smartcard);
             case 9://javacard/security/RSAPublicKey

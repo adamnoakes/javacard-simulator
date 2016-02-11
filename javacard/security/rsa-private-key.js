@@ -14,11 +14,12 @@ var rsaKey = require('./rsa-key.js');
 
 //cannot be saved like this in DB, but be exported on saving and then imported on load
 function importKey(RSAPrivateKey){
-	RSAPrivateKey.key = new NodeRSA();
-	RSAPrivateKey.key.importKey({
+	var nodeRSAKey = new NodeRSA();
+	nodeRSAKey.importKey({
 		e: new Buffer(exponent),
 		n: new Buffer(modulus)
 	});
+	return nodeRSAKey;
 }
 
 function getterDecorator(f){

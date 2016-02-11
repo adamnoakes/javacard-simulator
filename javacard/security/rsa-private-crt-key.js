@@ -15,8 +15,8 @@ var bignum = require('bignum');
 
 //cannot be saved like this in DB, but be exported on saving and then imported on load
 function createKey(RSAPrivateCrtKey){
-	RSAPrivateCrtKey.key = new NodeRSA();
-	RSAPrivateCrtKey.key.importKey({
+	var nodeRSAKey = new NodeRSA();
+	nodeRSAKey.importKey({
 		n: getModulus(RSAPrivateCrtKey.P,RSAPrivateCrtKey.Q),
 		e: 65537,//[0x01, 0x00, 0x01];
 		d: getPrivateExponent(RSAPrivateCrtKey.P,RSAPrivateCrtKey.Q),
@@ -26,6 +26,7 @@ function createKey(RSAPrivateCrtKey){
 		dmq1: new Buffer(RSAPrivateCrtKey.DQ1),
 		coeff: new Buffer(RSAPrivateCrtKey.PQ)
 	}, 'components');
+	return nodeRSAKey;
 }
 
 function getModulus(p,q){
@@ -50,7 +51,6 @@ function setterDecorator(f){
 		f.apply(this, arguments);
 		if(arguments[0].P && arguments[0].Q && arguments[0].DP1 && 
 			arguments[0].DQ1 && arguments[0].PQ){
-				createKey(arguments[0]);
 			keys.setInitialized(arguments[0]);
 		}
 	}
@@ -120,6 +120,13 @@ module.exports = {
 	 * @param {Number} 	offset
 	 * @type {[type]}
 	 */
+	getNodeRSA: function(RSAPrivateCrtKey){
+		if(RSAPrivateCrtKey.initialized === 1){
+			return createKey(RSAPrivateCrtKey);
+		} else {
+			return new Error('Key not initialized');
+		}
+	},
 	getDP1: function(RSAPrivateCrtKey, buffer, offset){
 		Util.arrayCopy(RSAPrivateCrtKey.DP1, 0, buffer, offset, 
 			len(RSAPrivateCrtKey.DP1));

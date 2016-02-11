@@ -28,7 +28,8 @@ module.exports = {
 	appendHeap: function(EEPROM, arr) {
         //aprox 3 times quicker than instance of array
         if (arr.constructor === Array) {
-            EEPROM.heap.push.apply(EEPROM.heap, arr);
+            //EEPROM.heap.push.apply(EEPROM.heap, arr);
+            EEPROM.heap.push(arr);
         } else {
             EEPROM.heap.push(arr);
         }
@@ -97,17 +98,10 @@ module.exports = {
 		return EEPROM.packages[index];
 	},
 	getPackage: function(EEPROM, AID){
-        console.log("Given Package: ");
-        console.log(AID);
-        console.log(EEPROM.packages.length);
-        EEPROM.packages[0].COMPONENT_Header.AID.join() 
-        AID.join();
-        //return this.packages[0];
-        //return false;
         //find the package with given AID and return it.
-        for(var i = 0; i < 1; i++){
-            if(EEPROM.packages[0].COMPONENT_Header.AID.join() === AID.join()){
-                return EEPROM.packages[0];
+        for(var i = 0; i < EEPROM.packages.length; i++){
+            if(EEPROM.packages[i].COMPONENT_Header.AID.join() === AID.join()){
+                return EEPROM.packages[i];
             }
         }
     },

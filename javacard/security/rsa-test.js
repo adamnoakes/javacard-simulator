@@ -70,10 +70,10 @@ rsaCipher.doFinal(myCipher, inBuffer, 0, inBuffer.length, midBuffer, 0);
 console.log(publicKey.encrypt(new Buffer(inBuffer)));
 console.log(midBuffer);
 
-rsaCipher.init(myCipher, myKey, cipher.MODE_DECRYPT);
-rsaCipher.doFinal(myCipher, midBuffer, 0, midBuffer.length, outBuffer, 0);
-console.log(privateKey.decrypt(publicKey.encrypt(new Buffer(inBuffer))));
-console.log(new Buffer(outBuffer));
+//rsaCipher.init(myCipher, myKey, cipher.MODE_DECRYPT);
+//rsaCipher.doFinal(myCipher, midBuffer, 0, midBuffer.length, outBuffer, 0);
+//console.log(privateKey.decrypt(publicKey.encrypt(new Buffer(inBuffer))));
+//console.log(new Buffer(outBuffer));
 
 
 

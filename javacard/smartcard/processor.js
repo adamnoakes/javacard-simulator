@@ -44,7 +44,7 @@ module.exports = {
         smartcard.processor.response = ""; //consider moving to RAM.
         //Reset variables
         smartcard.RAM.asyncState = false; //no idea what this is for
-        smartcard.Processor.transaction_flag = false; //probably should be stored in the processor? ->done
+        smartcard.processor.transaction_flag = false; //probably should be stored in the processor? ->done
         smartcard.RAM.transaction_buffer = [];
         smartcard.processor.buffer = buffer; //store buffer for installer
         //Assign APDU values
@@ -79,7 +79,7 @@ module.exports = {
             if (apdu.getCurrentState(smartcard.processor.apdu) >= 3) {
                 //@adam -1 has been added as a quick fix, why the expected length is being outputtted
                 //      should be looked into.
-                for (var k = 0; k < apdu.getBuffer(smartcard.processor.apdu).length - 1; k++) {
+                for (var k = 0; k < apdu.getBuffer(smartcard.processor.apdu).length; k++) {
                     output += util.addX(util.addpad(apdu.getBuffer(smartcard.processor.apdu)[k])) + " ";
                     //output += this.apdu.getBuffer()[k] + "";
                 }
