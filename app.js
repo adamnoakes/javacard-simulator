@@ -9,6 +9,8 @@ var MongoStore = require('connect-mongo/es5')(session);
 var dbURI = (process.env.MONGOLAB_URI || 'mongodb://localhost:27017/javacard');
 var app = express();
 var expressMongoDb = require('express-mongo-db');
+
+//var rsaTest = require('./javacard/security/rsa-test.js');
 app.use(expressMongoDb(dbURI));
 
 // view engine setup
@@ -30,6 +32,7 @@ app.use(function(err, req, res, next) {
     console.log(here);
     console.log(err.message);
 });
+
 
 /* Setup sessions */
 app.use(session({

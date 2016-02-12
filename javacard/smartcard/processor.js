@@ -14,6 +14,7 @@ module.exports = {
     Processor: function(){
         this.response = undefined;
         this.buffer = [];
+        this.transaction_flag = false;
         this.CLA = undefined;
         this.INS = undefined;
         this.P1 = undefined;
@@ -42,8 +43,8 @@ module.exports = {
         //Reset the processor response message
         smartcard.processor.response = ""; //consider moving to RAM.
         //Reset variables
-        smartcard.RAM.asyncState = false;
-        smartcard.RAM.transaction_flag = false; //probably should be stored in the processor?
+        smartcard.RAM.asyncState = false; //no idea what this is for
+        smartcard.processor.transaction_flag = false; //probably should be stored in the processor? ->done
         smartcard.RAM.transaction_buffer = [];
         smartcard.processor.buffer = buffer; //store buffer for installer
         //Assign APDU values
@@ -78,7 +79,7 @@ module.exports = {
             if (apdu.getCurrentState(smartcard.processor.apdu) >= 3) {
                 //@adam -1 has been added as a quick fix, why the expected length is being outputtted
                 //      should be looked into.
-                for (var k = 0; k < apdu.getBuffer(smartcard.processor.apdu).length - 1; k++) {
+                for (var k = 0; k < apdu.getBuffer(smartcard.processor.apdu).length; k++) {
                     output += util.addX(util.addpad(apdu.getBuffer(smartcard.processor.apdu)[k])) + " ";
                     //output += this.apdu.getBuffer()[k] + "";
                 }
@@ -146,9 +147,9 @@ module.exports = {
      */
     abortTransaction: function (smartcard) {
 
-        if (!smartcard.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
+        if (!smartcard.Processor.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
         else {
-            smartcard.RAM.transaction_flag = false;
+            smartcard.Processor.transaction_flag = false;
             smartcard.RAM.transaction_buffer = [];
         }
         
@@ -156,15 +157,15 @@ module.exports = {
     },//00
 
     beginTransaction: function (smartcard) {
-        if (smartcard.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 1); }
-        else { smartcard.RAM.transaction_flag = true; }
+        if (smartcard.Processor.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 1); }
+        else { smartcard.Processor.transaction_flag = true; }
 
         return;
     },//01
     commitTransaction: function (smartcard) {//TODO --> Execution handler convert to hex array for jframework
-        if (!smartcard.RAM.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
+        if (!smartcard.Processor.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
         else {
-            smartcard.RAM.transaction_flag = false;
+            smartcard.Processor.transaction_flag = false;
             var len = smartcard.RAM.transaction_buffer.length;
             for (var j = 0; j < len; j++) {
                 var spl = smartcard.RAM.transaction_buffer[j].split(";");//why split on ;

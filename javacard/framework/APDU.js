@@ -48,7 +48,8 @@ var cls = 10;
 
 module.exports = {
     APDU: function() {
-
+        this.state = STATE_INITIAL;
+        this.offsetincoming = 0;
     },
     run: function(method, type, param, obj, objref){
         switch (type) {
@@ -70,42 +71,74 @@ module.exports = {
             return APDU.buffer[index];
         }
     },
-    constr: function(APDU, bArray) {
-        APDU.buffer = bArray;
-        var temp;
-        if (bArray.length < 4) { APDUException.throwIt(APDUException.BAD_LENGTH); }
-        if (bArray.length > 4) { APDU.P3len = 1; }
-        if ((bArray[ISO7816.OFFSET_LC] === 0) && (bArray.length > ISO7816.OFFSET_LC + 3)) { APDU.P3len = 3; }
-        //for (var i = ISO7816.OFFSET_LC; i < ISO7816.OFFSET_LC + P3len; i++) { APDU.buffer[i] = bArray[i] }
-        APDU.offsetincoming += APDU.P3len;
+    constr: function(apdu, bArray) {
+        var P3len;
+        apdu._buffer = bArray;
+        apdu.buffer = [];//Array.apply(null, Array(255 + 2)).map(Number.prototype.valueOf,0);
 
-        if (bArray.length == 4) { APDU.type = 1; APDU.Nc = 0; APDU.Ne = 0; APDU.lelength = 0; }
-        else if ((bArray.length == 5) || ((APDU.buffer[4] === 0) && (bArray.length == 6))) {
-            APDU.type = 2; APDU.Nc = 0;
-            temp = getOutLengths(APDU.buffer, bArray.length);
-            APDU.Ne = temp[0]; APDU.lelength = temp[1];
-
-        } else if ((bArray.length == APDU.buffer[4] + 5) || (bArray.length == getInLengths(APDU.buffer)[0] + 5)) {
-            APDU.type = 3;
-            temp = getInLengths(APDU.buffer); APDU.Nc = temp[0]; APDU.lclength = temp[1];
-            APDU.Ne = 0; APDU.lelength = 0; APDU.cdataoffs += APDU.lclength - 1;
-        } else {
-            //self.type = 4; //REMOVED BY ADAM
-            if(bArray.length > 6) {
-                temp = getInLengths(APDU.buffer); APDU.Nc = temp[0]; APDU.lclength = temp[1];
-                temp = getOutLengths(APDU.buffer, bArray.length); APDU.Ne = temp[0]; APDU.lelength = temp[1];
-                APDU.cdataoffs += APDU.lclength - 1;
-                if (4 + APDU.lclength + APDU.lelength + APDU.Nc != bArray.length) { APDU.broken = 1; }
-            }
+        for(var i = 0; i<4; i++){
+            apdu.buffer[i] = bArray[i];
         }
-        APDU.outgoinglength = 0;
-        //buffer.length = 128;
+        apdu.offSetIncoming = 4;
+        if(bArray.length > 4){
+            if(bArray[ISO7816.OFFSET_LC] === 0 && bArray.length > ISO7816.OFFSET_LC + 3){
+                P3len = 3;
+            } else {
+                P3len = 1;
+            }
+            for(i = ISO7816.OFFSET_LC; i< ISO7816.OFFSET_LC + P3len; i++){
+                apdu.buffer[i] = bArray[i];
+            }
+            apdu.offSetIncoming += P3len;
+        }
+        apdu.state = STATE_INITIAL;
+        apdu.broken = false;
 
+        var temp;
+        var lcLength;
+        apdu.currentDataOffset = ISO7816.OFFSET_CDATA;
+        if(bArray.length === 4){
+            apdu.type = 1;
+            apdu.Nc = 0;
+            apdu.Ne = null;
+            apdu.leLength = 0;
+        } else if(bArray.length ===5 ||
+            (apdu._buffer[4] === 0 && bArray.length === 7)){
+            apdu.type = 2;
+            apdu.Nc = 0;
+            temp = getOutLengths(apdu, bArray.length);
+            apdu.Ne = temp[0];
+            apdu.leLength = temp[1];
+        } else if(bArray.length === apdu._buffer[4] + 5 ||
+            bArray.length === getInLengths(apdu)[0] + 5) {
+            apdu.type = 3;
+            temp = getInLengths(apdu);
+            apdu.Nc = temp[0];
+            lcLength = temp[1];
+            apdu.Ne = null;
+            apdu.leLength = 0;
+            apdu.currentDataOffset += lcLength -1;
+        } else {
+            apdu.type = 4;
+            temp = getInLengths(apdu);
+            apdu.Nc = temp[0];
+            lcLength = temp[1];
+            temp = getOutLengths(apdu, bArray.length);
+            apdu.Ne = temp[0];
+            apdu.leLength = temp[1];
+            apdu.currentDataOffset += lcLength - 1;
+
+            if( 4 + lcLength + apdu.leLength + apdu.Nc !== apdu.leLength){
+                broken = true;
+            }
+
+            apdu.outgoingLength = 0;
+        }
     },
     getCurrentState: function(APDU) {
         return APDU.state;
     },
-    getBuffer: getBuffer,
+    getBuffer: getBuffer
 };
 
 /**
@@ -121,7 +154,8 @@ function runObjectMethod(method, param, obj, objref){
         case 1://normal
             //retval = obj.getBuffer();
             //instead returns the memorylocation of buffer.
-            return "H" + objref + "#" + 1 + "#" + getArrayLength(obj, 1);
+            //return "H" + objref + "#" + 1 + "#" + getArrayLength(obj, 1);
+            return getBuffer(obj);
         case 2:
             return getNAD();
         case 3:
@@ -160,11 +194,11 @@ function runObjectMethod(method, param, obj, objref){
 function runStaticMethod(method, param, obj, objref){
     switch (method) {
         case 0:
-            return getInBlockSize(obj);
+            return getInBlockSize();
         case 1:
-            return getOutBlockSize(obj);
+            return getOutBlockSize();
         case 2:
-            return getProtocol(obj);
+            return getProtocol();
         case 3:
             return waitExtension(obj);
         case 4:
@@ -186,6 +220,42 @@ function runStaticMethod(method, param, obj, objref){
  * ROBIN'S CODE
  */
 
+function getInLengths(apdu){
+    var temp = [];
+    if(apdu._buffer[ISO7816.OFFSET_LC] === 0){
+        temp[0] = apdu._buffer[ISO7816.OFFSET_LC + 1] * 256 + 
+        apdu._buffer[ISO7816.OFFSET_LC + 2];
+        temp[1] = 3;
+    } else {
+        temp[0] = apdu._buffer[ISO7816.OFFSET_LC];
+        temp[1] = 1;
+    }
+    return temp;
+}
+
+function getOutLengths(apdu, length){
+    length -= 1;
+    if(apdu._buffer[length] === 0){
+        if(length !== ISO7816.OFFSET_LC &&
+            apdu._buffer[ISO7816.OFFSET_LC] === 0 && 
+            apdu._buffer[length -1 ] === 0){
+            return [65536, 2];
+        }
+        return [256,1];
+    } else {
+        if(length !== ISO7816.OFFSET_LC &&
+            apdu._buffer[ISO7816.OFFSET_LC] === 0){
+            return [apdu._buffer[length - 1] * 256 +
+            apdu._buffer[length], 2];
+        }
+        return [apdu._buffer[length], 1];
+    }
+}
+
+function getBuffer(apdu) {
+    return apdu.buffer;
+}
+
 /**
  * Static methods
  * @static
@@ -202,165 +272,179 @@ function getProtocol() {
     return (PROTOCOL_MEDIA_DEFAULT << 4) | PROTOCOL_T1;
 }
 
-function waitExtension() {
+function getNAD(){
     return;
 }
 
+function setIncomingAndReceive(apdu){
+    if (apdu.state !== STATE_INITIAL){
+        return new APDUException(APDUException.ILLEGAL_USE);
+    }
+    if (apdu.broken){
+        return new ISOException(ISO7816.SW_WRONG_LENGTH);
+    }
+
+    var toBeProcessed = Math.min(IN_BLOCKSIZE, apdu._buffer.length - apdu.offSetIncoming - apdu.leLength);
+    for (var i = 0; i < toBeProcessed; i++) {
+        apdu.buffer[apdu.offSetIncoming + i] = apdu._buffer[apdu.offSetIncoming + i];
+    }
+    apdu.offSetIncoming += toBeProcessed;
+
+    if (apdu.offSetIncoming === (apdu._buffer.length - apdu.leLength)){
+        apdu.state = STATE_FULL_INCOMING;
+    } else {
+        apdu.state = STATE_PARTIAL_INCOMING;
+    }
+    return toBeProcessed;
+}
+
+function receiveBytes(apdu, bOffs){
+    if(apdu.state < STATE_PARTIAL_INCOMING || apdu.state >= STATE_OUTGOING){
+        return new APDUException(APDUException.ILLEGAL_USE);
+    }
+    var toBeProcessed = Math.min(IN_BLOCKSIZE, apdu._buffer.length - apdu.offSetIncoming - apdu.leLength);
+    for(var i = 0; i< toBeProcessed; i++){
+        apdu.buffer[bOffs + i] = apdu._buffer[apdu.offSetIncoming + i];
+    }
+    apdu.offSetIncoming += toBeProcessed;
+    if(apdu.offSetIncoming === (apdu._buffer.length - apdu.leLength)){
+        apdu.state = STATE_FULL_INCOMING;
+    } else {
+        apdu.state = STATE_PARTIAL_INCOMING;
+    }
+    return toBeProcessed;
+}
+
+function setOutgoing(apdu){
+    if(apdu.state >= STATE_OUTGOING){
+        return new APDUException(APDUException.ILLEGAL_USE);
+    }
+    apdu.state = STATE_OUTGOING;
+    var outgoingLength = getOutgoingLength(apdu);
+    apdu.currentOutgoingLength = 0;
+    apdu.outgoingLength = outgoingLength;
+    return outgoingLength;
+}
+
+function setOutgoingNoChaining() {
+    return;
+}
+
+function setOutgoingLength(apdu, length){
+    if(apdu.state < STATE_OUTGOING){
+        return new APDUException(APDUException.ILLEGAL_USE);
+    }
+    if(length !== null && length > apdu.Ne){
+        return new APDUException(APDUException.BAD_LENGTH);
+    }
+    apdu.state = STATE_OUTGOING_LENGTH_KNOWN;
+    apdu.currentOutgoingLength = 0;
+    apdu.outGoingLength = length;
+}
+
+function sendBytes(apdu, bOffs, length){
+    if(apdu.state < STATE_OUTGOING){
+        return new APDUException(APDUException.ILLEGAL_USE);
+    }
+    if(apdu.currentOutgoingLength + length > OUT_BLOCKSIZE){
+        return new APDUException(APDUException.BUFFER_BOUNDS);
+    }
+    for(var i = bOffs; i < bOffs + length; i++){
+        apdu._buffer[apdu.currentOutgoingLength + i] = apdu.buffer[bOffs + i];
+    }
+    apdu.currentOutgoingLength += length;
+    if (apdu.currentOutgoingLength < apdu.outGoingLength){
+        apdu.state = STATE_PARTIAL_OUTGOING;
+    } else{
+        apdu.state = STATE_FULL_OUTGOING;
+    }
+}
+function sendBytesLong(apdu, outData, bOffs, length){
+    if(STATE_PARTIAL_OUTGOING < apdu.state && apdu.state < STATE_OUTGOING_LENGTH_KNOWN){
+        return new APDUException(APDUException.ILLEGAL_USE);
+    }
+    if(apdu.currentOutgoingLength + length > OUT_BLOCKSIZE){
+        return new APDUException(APDUException.BUFFER_BOUNDS);
+    }
+    for(var i = bOffs; i < bOffs + length; i++){
+        apdu._buffer[apdu.currentOutgoingLength + i] = outData[bOffs + i];
+    }
+    apdu.currentOutgoingLength += length;
+    if (apdu.currentOutgoingLength < apdu.outGoingLength){
+        apdu.state = STATE_PARTIAL_OUTGOING;
+    } else{
+        apdu.state = STATE_FULL_OUTGOING;
+    }
+}
+
+function setOutgoingAndSend(apdu, bOffs, length){
+    setOutgoing(apdu);
+    setOutgoingLength(apdu, length);
+    sendBytes(apdu, bOffs, length);
+}
+
+function getCurrentState(apdu){
+    return apdu.state;
+}
+
+//should be a method of smartcard
 function getCurrentAPDU(APDU) {
     return this; 
 }
 
-function getCLAChannel(APDU) {
-    return APDU.buffer[ISO7816.OFFSET_CLA] & 0x3;
-}
-
-/**
- * Virtual methods
- */
-
-function getBuffer(APDU) {
-    return APDU.buffer;
-}
-
-
-
-function getInLengths(buffer) {
-    var temp = [];
-   
-    if (buffer[ISO7816.OFFSET_LC] === 0) { temp[0] = buffer[ISO7816.OFFSET_LC + 1] * 256 + buffer[ISO7816.OFFSET_LC + 2]; temp[1] = 3; return temp; }
-    else {
-        
-        temp[0] = buffer[ISO7816.OFFSET_LC]; temp[1] = 1; return temp;
-    }
-}
-
-function getOutLengths(buffer, length) {
-    //""" return a tuple (value, length of value) """
-    var temp = [];
-    length -= 1;
-    if (buffer[length] === 0) {    //# Lc and Le must have the same format
-        if (length != ISO7816.OFFSET_LC) {
-            if (buffer[ISO7816.OFFSET_LC] === 0) {
-                if (buffer[length - 1] === 0) { temp[0] = 65536; temp[1] = 2; return temp; }
-            }
-        }
-        temp[0] = 256; temp[1] = 1; return temp;
-    } else {
-        if (length != ISO7816.OFFSET_LC) {
-            if (buffer[ISO7816.OFFSET_LC] === 0) { temp[0] = buffer[length - 1] * 256 + buffer[length]; temp[1] = 2; return temp; }
-        }
-        temp[0] = buffer[length]; temp[1] = 1; return temp;
-    }
-}
-
-function getNAD(){
-    return 0;
-}
-
-function receiveBytes(APDU, bOff) {
-    if ((APDU.state < STATE_PARTIAL_INCOMING) ||
-    (APDU.state >= STATE_OUTGOING)) { APDUException.throwIt(APDUException.ILLEGAL_USE); }
-    
-    var byteReceived;
-    if (IN_BLOCKSIZE < APDU.buffer.length - APDU.offsetincoming - APDU.lelength) { byteReceived = IN_BLOCKSIZE; }
-    else { byteReceived = APDU.buffer.length - APDU.offsetincoming - APDU.lelength; }
-    
-    for (var j = 0; j < byteReceived; j++) { APDU.buffer[bOff + j] = APDU.buffer[APDU.offsetincoming + j]; }
-    
-    APDU.offsetincoming += byteReceived;
-    if (APDU.offsetincoming == APDU.buffer.length - APDU.lelength) {
-        APDU.state = STATE_FULL_INCOMING;
-    } else { APDU.state = STATE_PARTIAL_INCOMING; }
-    
-    return byteReceived;
-}
-
-function sendBytes(APDU, bOffs, len) {
-    
-    if (APDU.state < STATE_OUTGOING) { APDUException.throwIt(APDUException.ILLEGAL_USE); }
-    if (APDU.curoutgoinglength + len > OUT_BLOCKSIZE) { APDUException.throwIt(APDUException.BUFFER_BOUNDS); }
-
-    for (var j = 0; j < len; j++) {
-        APDU.buffer[APDU.curoutgoinglength + j] = APDU.buffer[bOffs + j];
-    }
-
-    APDU.curoutgoinglength += len;
-
-    if (APDU.curoutgoinglength < APDU.outgoinglength) { APDU.state = STATE_PARTIAL_OUTGOING; }
-    else { APDU.state = STATE_FULL_OUTGOING; }
+function getCurrentAPDUBuffer(){
 
 }
 
-function sendBytesLong(APDU, outData, bOffs, len) {
-    //apdu.sendBytesLong(bArray, byte, short); //05
-    if ((STATE_PARTIAL_OUTGOING < APDU.state) && (APDU.state < STATE_OUTGOING_LENGTH_KNOWN)) {
-        APDUException.throwIt(APDUException.ILLEGAL_USE);
-    }
-    if (APDU.curoutgoinglength + len > OUT_BLOCKSIZE) { APDUException.throwIt(APDUException.BUFFER_BOUNDS); }
-    for (var j = 0; j < len; j++) { APDU.buffer[APDU.curoutgoinglength + j] = outData[bOffs + j]; }
-    APDU.curoutgoinglength += len;
-    if (APDU.curoutgoinglength < APDU.outgoinglength) { APDU.state = STATE_PARTIAL_OUTGOING; }
-    else { APDU.state = STATE_FULL_OUTGOING; }
+function getCLAChannel(apdu) {
+    return apdu.buffer[ISO7816.OFFSET_CLA] & 0x3;
 }
 
-function setIncomingAndReceive(APDU) { //06
-    if (APDU.state != STATE_INITIAL) { APDUException.throwIt(APDUException.ILLEGAL_USE); }
-    if (APDU.broken==1) { ISOException.throwIt(ISO7816.SW_WRONG_LENGTH); }
-    var tbp;
-    if (IN_BLOCKSIZE < APDU.buffer.length - APDU.offsetincoming - APDU.lelength) { tbp = IN_BLOCKSIZE; } else { tbp = APDU.buffer.length - APDU.offsetincoming - APDU.lelength; }
-    for (var j = 0; j < tbp; j++) { APDU.buffer[APDU.offsetincoming + j] = APDU.buffer[APDU.offsetincoming + j]; }
-    APDU.offsetincoming += tbp;
-    if (APDU.offsetincoming == (APDU.buffer.length - APDU.lelength)) { APDU.state = STATE_FULL_INCOMING; }
-    else { APDU.state = STATE_PARTIAL_INCOMING; }
-    return tbp;
-}
-
-function getOutgoingLength(APDU) {
-
-    return APDU.Ne;
-}
-
-function setOutgoing(APDU) { //07
-    if (APDU.state >= STATE_OUTGOING) { APDUException.throwIt(APDUException.ILLEGAL_USE); }
-    APDU.state = STATE_OUTGOING;
-    var ogl = getOutgoingLength(APDU);
-    APDU.curoutgoinglength = 0;
-    APDU.outgoinglength = ogl;
-    return ogl;
-}
-
-function setOutgoingAndSend(APDU, bOff, len) {
-    //apdu.setOutgoingAndSend(short, short);  //08
-    setOutgoing(APDU);
-    setOutgoingLength(APDU, len);
-    sendBytes(APDU, bOff, len);
-
-}
-
-function setOutgoingLength(APDU, len) {
-    //apdu.setOutgoingLength(short); //09
-    if (APDU.state < STATE_OUTGOING) { APDUException.throwIt(APDUException.ILLEGAL_USE); }
-    if ((APDU.Ne !== 0) && (len > APDU.Ne)) { APDUException.throwIt(APDUException.BAD_LENGTH); }
-    APDU.state = STATE_OUTGOING_LENGTH_KNOWN;
-    APDU.curoutgoinglength = 0;
-    APDU.outgoinglength = len;
-}
-
-function setOutgoingNoChaining() {
-    return 0;
+function waitExtension() {
+    return;
 }
 
 //apdu.isCommandChainingCLA(); //0C boolean
-function isCommandChainingCLA(APDU) {
-    if ((APDU.buffer[0] & 0x10) === 0x00) {
+function isCommandChainingCLA(apdu) {
+    if ((apdu._buffer[ISO7816.OFFSET_CLA] & 0x10) === 0x00) {
         return 1;
     } else {
         return 0;
     }
 }
 
+function getOutgoingLength(apdu) {
+
+    return apdu.Ne || 0;
+}
+
+function setOutgoing(apdu) { //07
+    var outGoingLength;
+    if (apdu.state >= STATE_OUTGOING) {
+        return new APDUException.throwIt(APDUException.ILLEGAL_USE);
+    }
+    apdu.state = STATE_OUTGOING;
+    outGoingLength = getOutgoingLength(apdu);
+    apdu.currentOutgoingLength = 0;
+    apdu.outgoingLength = outGoingLength;
+    return outGoingLength;
+}
+
+function setOutgoingAndSend(apdu, bOff, len) {
+    //apdu.setOutgoingAndSend(short, short);  //08
+    setOutgoing(apdu);
+    setOutgoingLength(apdu, len);
+    sendBytes(apdu, bOff, len);
+
+}
+
+function setOutgoingNoChaining() {
+    return 0;
+}
+
+
+
 function isSecureMessagingCLA(APDU) {
-    //apdu.isSecureMessagingCLA(); //0D boolean
     var isType16CLA = (APDU.buffer[0] & 0x40) == 64;
     var smf;
     if (isType16CLA) {
@@ -383,15 +467,12 @@ function sISOInterindustryCLA(APDU) {
     }
 }
 
-function getIncomingLength(APDU) {
+/*function getIncomingLength(APDU) {
     return APDU.Nc;
-}
+}*/
 
 function getOffsetCdata(APDU) {
-    //apdu.getOffsetCdata(); //10
-    var s; 
-    if (APDU.cdataoffs) { s = 7; } else { s = 5; }
-    return s;
+    return apdu.currentDataOffset;
 }
 
 function getArrayLength(APDU, fieldno) { 

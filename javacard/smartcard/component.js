@@ -129,7 +129,15 @@ function COMPONENT(inputData) {
 
                 break;
             case 6:
+
                 //Class
+                /*function component(component, data){
+                    component.data = data;
+                    bitfield = data[0];
+                    component.flags = (bitfield & 0xF0) >> 4;
+                    component.isInterface = Boolean(flags & 0x8);
+                    component.isShareable = Boolean(flags & 0x8);
+                }*/
 
                 pointer = 0;
                 this.signature_pool_length = (Data[0] << 8) + Data[1];
@@ -166,7 +174,7 @@ function COMPONENT(inputData) {
                         this.flag_interface = parseInt(flags.slice(0, 1), 2);
                         this.flag_shareable = parseInt(flags.slice(1, 2), 2);
                         this.flag_remote = parseInt(flags.slice(2, 3), 2);
-                        this.interface_count = parseInt(Data[pointer].toString(16).slice(1), 16);
+                        this.interface_count = Data[pointer] & 0x0F; //parseInt(Data[pointer].toString(16).slice(1), 16);
                         pointer++;
 
                         if (this.flag_interface) {
