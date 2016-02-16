@@ -45,7 +45,7 @@ var myKey = keyBuilder.buildKey(keyBuilder.TYPE_RSA_CRT_PRIVATE, keyBuilder.LENG
 var myPublicKey = keyBuilder.buildKey(keyBuilder.TYPE_RSA_PUBLIC, keyBuilder.LENGTH_RSA_512, false);
 
 
-var inBuffer = [92, 30, 28, 59];
+var inBuffer = [72, 101, 108, 108, 111, 32, 87, 111, 114, 108, 100, 33];
 var outBuffer = [];
 var midBuffer = [];
 
