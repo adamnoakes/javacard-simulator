@@ -51,12 +51,12 @@ module.exports = {
         this.state = STATE_INITIAL;
         this.offsetincoming = 0;
     },
-    run: function(method, type, param, obj, objref){
+    run: function(method, type, param, obj){
         switch (type) {
             case 3://object methods
-                return runObjectMethod(method, param, obj, objref);
+                return runObjectMethod(method, param, obj);
             case 6://static methods
-                return runStaticMethod(method, param, obj, objref);
+                return runStaticMethod(method, param, obj);
             default:
                 return new Error('Method ' + method + ' not defined for AID');
         }
@@ -146,7 +146,7 @@ module.exports = {
  * @private;
  */
 
-function runObjectMethod(method, param, obj, objref){
+function runObjectMethod(method, param, obj){
     switch(method){
         case 0://void
             return constr(obj, param[0]);
@@ -191,7 +191,7 @@ function runObjectMethod(method, param, obj, objref){
     }
 }
 
-function runStaticMethod(method, param, obj, objref){
+function runStaticMethod(method, param, obj){
     switch (method) {
         case 0:
             return getInBlockSize();

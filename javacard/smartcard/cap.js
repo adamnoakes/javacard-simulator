@@ -68,7 +68,7 @@ module.exports = {
     /**
      * @param  {CAPfile}    CAP       [description]
      * @param  {array}      appletAID [description]
-     * @param  {[type]}     token     [description]
+     * @param  {Number}     token     [description]
      * @return {[type]}
      */
     getStartCode: function(CAP, appletAID, token){

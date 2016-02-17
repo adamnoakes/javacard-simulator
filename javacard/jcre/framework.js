@@ -26,7 +26,7 @@ module.exports = {
 	/**
 	 * Handles javacard.framework api calls.
 	 */
-	run: function(classToken, method, type, param, obj, objref, smartcard){
+	run: function(classToken, method, type, param, obj, smartcard){
 		switch(classToken){
 			case 3://Applet abstract class
 				return applet.run(method, type, param, obj, smartcard);
@@ -42,7 +42,7 @@ module.exports = {
 			case 9://OwnerPIN
 				return ownerPIN.run(method, type, param, obj, smartcard);
 			case 10://APDU
-				return apdu.run(method, type, param, obj, objref);
+				return apdu.run(method, type, param, obj);
 			case 11://PINException
 			case 12://APDUException
 			case 13://SystemException

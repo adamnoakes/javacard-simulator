@@ -24,7 +24,7 @@ module.exports = {
 	/**
 	 * Handles javacard.security api calls.
 	 */
-	run: function(classToken, method, type, param, obj, objref, smartcard){
+	run: function(classToken, method, type, param, obj, smartcard){
 		switch(classToken){
 			case 0://javacard/security/Key
                 return keys.run(obj, method, type, param);

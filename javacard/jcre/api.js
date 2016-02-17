@@ -21,16 +21,16 @@ var opcodes = require('../utilities/opcodes.js');
  */
 
 module.exports = {
-	run: function(packageAID, classToken, method, type, param, obj, objref, smartcard){
+	run: function(packageAID, classToken, method, type, param, obj, smartcard){
 		switch (packageAID.join()) {
 			case opcodes.jlang.join():
 				return lang.run(classToken, method, type, param, obj);
 			case opcodes.jframework.join():
-				return framework.run(classToken, method, type, param, obj, objref, smartcard);
+				return framework.run(classToken, method, type, param, obj, smartcard);
 			case opcodes.jsecurity.join():
-				return security.run(classToken, method, type, param, obj, objref, smartcard);
+				return security.run(classToken, method, type, param, obj, smartcard);
 			case opcodes.jxcrypto.join():
-				return crypto.run(classToken, method, type, param, obj, objref, smartcard);
+				return crypto.run(classToken, method, type, param, obj, smartcard);
 			default:
 				return new Error('Unsupported package');
 		}

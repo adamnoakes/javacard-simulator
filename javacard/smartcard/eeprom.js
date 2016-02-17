@@ -5,7 +5,7 @@ module.exports = {
      */
     EEPROM: function(cardName) {
         this.cardName = cardName;
-        this.heap = [0xA0,0x00];
+        this.heap = [0xA0,0x00]; //should probably be in processor or ram?
         this.packages = [];
         this.installedApplets = [{'AID': [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01], 'appletRef': -1}];
         this.selectedApplet = {'AID': undefined, 'appletRef': undefined, 'CAP': undefined};
