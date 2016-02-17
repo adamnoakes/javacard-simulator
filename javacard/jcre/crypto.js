@@ -20,7 +20,7 @@ module.exports = {
 	/**
 	 * Handles javacard.security api calls.
 	 */
-	run: function(classToken, method, type, param, obj, objref, smartcard){
+	run: function(classToken, method, type, param, obj, smartcard){
 		switch(classToken){
             case 0://javacardx/crypto/KeyEncryption
                 return new Error('Unsupported class: KeyEncryption');

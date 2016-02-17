@@ -4,7 +4,7 @@ var installer = require('./installer.js');
 var opcodes = require('../utilities/opcodes.js');
 var jcvm = require('../jcre/jcvm.js');
 var cap = require('./cap.js');
-var util = require('../utilities/util.js');
+var util = require('../utilities/utilities.js');
 
 module.exports = {
     /**
@@ -33,7 +33,8 @@ module.exports = {
      * @param  {array} buffer
      * @return {string}
      */
-    process: function(smartcard, buffer){
+    
+    process: function(smartcard, buffer, cb){
         //contruct an APDU objects
         smartcard.processor.apdu = new apdu.APDU();
         apdu.constr(smartcard.processor.apdu, buffer);
@@ -60,33 +61,40 @@ module.exports = {
         //If select applet command
         if ((smartcard.processor.CLA === 0x00) && (smartcard.processor.INS == 0xA4) && (smartcard.processor.P1 == 0x04) && (smartcard.processor.P2 === 0x00)) {
             //Attempt to select the specified applet
-            return this.selectApplet(smartcard, buffer.slice(5,5+smartcard.processor.LC));
+            return this.selectApplet(smartcard, buffer.slice(5,5+smartcard.processor.LC), cb);
         } else {
             smartcard.RAM.select_statement_flag = 0;
         }
 
         //If the selected applet is the installer and an install command has been sent, process by installer module
         if((smartcard.EEPROM.selectedApplet.AID.join() === smartcard.processor.installerAID.join()) && (smartcard.processor.CLA == 0x80)){
-            return installer.process(smartcard);
-        } 
-        var startcode = cap.getStartCode(smartcard.EEPROM.selectedApplet.CAP, smartcard.EEPROM.selectedApplet.AID, 7);
+            return installer.process(smartcard, cb);
+        }
+
         var params = [];
         params[0] = 0;
-        jcvm.executeBytecode(smartcard.EEPROM.selectedApplet.CAP, startcode, params, 0,
-            smartcard.EEPROM.selectedApplet.appletRef, smartcard);
-
-        var output = "";
-            if (apdu.getCurrentState(smartcard.processor.apdu) >= 3) {
-                //@adam -1 has been added as a quick fix, why the expected length is being outputtted
-                //      should be looked into.
-                for (var k = 0; k < apdu.getBuffer(smartcard.processor.apdu).length; k++) {
-                    output += util.addX(util.addpad(apdu.getBuffer(smartcard.processor.apdu)[k])) + " ";
-                    //output += this.apdu.getBuffer()[k] + "";
+        jcvm.process(smartcard, params, function(err, res){
+            if(err){
+                cb(err, res);
+            } else {
+                var output = "";
+                if (apdu.getCurrentState(smartcard.processor.apdu) >= 3) {
+                    //@adam -1 has been added as a quick fix, why the expected length is being outputtted
+                    //      should be looked into.
+                    for (var k = 0; k < apdu.getBuffer(smartcard.processor.apdu).length; k++) {
+                        output += util.addX(util.addpad(apdu.getBuffer(smartcard.processor.apdu)[k])) + " ";
+                        //output += this.apdu.getBuffer()[k] + "";
+                    }
                 }
+                cb(undefined, output + res);
             }
+        });
+
+
+
         //return strout + " " + response; << haven't implemented code that uses strout yet
 
-        return output + (!smartcard.processor.response ? "0x9000" : smartcard.processor.response);
+        //return output + (!smartcard.processor.response ? "0x9000" : smartcard.processor.response);
     },
 
     /**
@@ -95,7 +103,7 @@ module.exports = {
      * @param  {array} appletAID 
      * @return {string}          
      */
-    selectApplet: function (smartcard, appletAID){
+    selectApplet: function (smartcard, appletAID, cb){
         smartcard.RAM.transient_data = [];
         smartcard.RAM.select_statement_flag = 1;
 
@@ -104,7 +112,8 @@ module.exports = {
         //set applet aid and cap file in eeprom
         if(eeprom.setSelectedApplet(smartcard.EEPROM, appletAID)){
             if(smartcard.EEPROM.selectedApplet.AID.join() === smartcard.processor.installerAID.join()){
-                return "0x9000";//if installer then the rest is not necessary
+                return cb(undefined, "0x9000");
+                //return;//if installer then the rest is not necessary
             }
 
             for(var j = 0; j < smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.count; j++) { 
@@ -117,29 +126,30 @@ module.exports = {
             var startcode = cap.getStartCode(smartcard.EEPROM.selectedApplet.CAP, appletAID, 6);
             var params = [];
 
+            var processSelect = function(err, res){
+                if(err){
+                    return cb(new Error(), res);
+                }
+                params[0] = 0;
+                jcvm.process(smartcard, params, function(err, res){
+                    if(err) {
+                        smartcard.EEPROM.selectedApplet = null;
+                        return cb(new Error(), res);
+                    }
+                    return cb(undefined, res);
+                })
+            };
+
             //if the applet has an install method, run it.
             if (startcode > 0) {
-                jcvm.executeBytecode(smartcard.EEPROM.selectedApplet.CAP, startcode, params, 2,
-                    smartcard.EEPROM.selectedApplet.appletRef, smartcard);
-            }
-
-            //if install method (above) executed sucessfully, start process method
-            if(true){
-                startcode = cap.getStartCode(smartcard.EEPROM.selectedApplet.CAP, appletAID, 7);
-                params[0] = 0;
-                jcvm.executeBytecode(smartcard.EEPROM.selectedApplet.CAP, startcode, params, 0, smartcard.EEPROM.selectedApplet.appletRef,
-                    smartcard);
-            }
-
-            if(true){//if the method above fails reset selectapplet
-                return "0x9000";
+                jcvm.selectApplet(smartcard, processSelect);
             } else {
-                smartcard.EEPROM.selectedApplet = null;
+                processSelect();
             }
             
         } else {
             //@adam no applet found
-            return "0x6A82";
+            cb(new Error(), "0x6A82");
         }
     },
     /* 
