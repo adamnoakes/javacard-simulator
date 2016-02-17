@@ -1,0 +1,278 @@
+#documentation.row.full-height
+  // Nav Bar
+  nav.col-xs-3.bs-docs-sidebar
+    ul#sidebar.nav.nav-stacked.fixed
+      li
+        a(href='#Overview') Overview
+      li
+        a(href='#CardManagement') Card Management
+      li
+        a(href='#SupportedAPDUs') Supported APDUs
+        ul.nav.nav-stacked
+          li
+            a(href='#Commands') Commands
+          li
+            a(href='#Responses') Responses
+      li
+        a(href='#Demos') Demos
+        ul.nav.nav-stacked
+          li
+            a(href='#HelloWorld') Hello World!
+          li
+            a(href='#Calculator') Calculator
+          li
+            a(href='#RSADecrypt') RSA Decrypt
+  // Main Content
+  .col-xs-9#Overview
+    section
+      h3 Overview
+      h4 Welcome to the Java Card online Simulator.
+      p By 
+        strong
+          a(href='http://www.adamnoakes.co.uk/') Adam Noakes
+        br
+        br
+        | This section provides a basic documentation for the simulator.
+        br 
+        | <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span> Sections highlighted in red have not yet been documented.
+        br
+        br
+        | Interact with the simulator by typing commands detailed in this section, and pressing enter.
+    section#CardManagement
+      h3 Card Management
+      table.table.table-bordered.table-striped
+        thead
+          tr
+            th Command
+            th Function
+            th Link
+        tbody
+          tr
+            td cards
+            td Prints out the list of virtual smart cards that are available to the user.
+            td
+              a.btn.btn-success(onclick='executeButton("cards")') Execute
+          tr
+            td newcard &lt;name&gt;
+            td Creates a new virtual smart card with the specified &lt;name&gt;.
+            td
+              a.btn.btn-success(onclick='executeButton("newcard card1")') Execute
+          tr
+            td deletecard &lt;name&gt;
+            td Deletes the virutal smart card with the specified &lt;name&gt;.
+            td
+              a.btn.btn-success(onclick='executeButton("deletecard card1")') Execute
+          tr
+            td loadcard &lt;name&gt;
+            td Loads the virutal smart card with the specified &lt;name&gt;.
+            td
+              a.btn.btn-success(onclick='executeButton("loadcard card1")') Execute
+
+    section#SupportedAPDUs
+      h3 Supported APDUs
+      #Commands
+        h4 Commands
+        table.table.table-bordered.table-striped.incomplete
+          thead
+            tr
+              th Command
+              th Function
+          tbody
+            tr
+              td .
+              td .
+            tr
+              td .
+              td .
+            tr
+              td .
+              td .
+      #Responses
+        h4 Responses
+        table.table.table-bordered.table-striped
+          thead
+            tr
+              th Response
+              th Function
+          tbody
+            tr
+              td 0x9000
+              td Successful command execution.
+            tr
+              td 0x6A82
+              td File not found.
+            tr
+              td .
+              td .
+    section#Demos
+      h3 Demos
+      #HelloWorld
+        h4 Hello World!
+        table.table.table-bordered.table-striped
+          thead
+            tr
+              th Step
+              th Function
+              th Source
+              th Link
+          tbody
+            tr.incomplete
+              td 1.
+              td Create a new virtual card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-danger(href='#') Execute
+            tr.incomplete
+              td 2.
+              td Send Hello World! applet APDU script.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-danger(href='#') Execute
+            tr.incomplete
+              td 3.
+              td Send invalid command to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-danger(href='#') Execute
+            tr.incomplete
+              td 4.
+              td Send hello command to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-danger(href='#') Execute
+      #Calculator
+        h4 Calculator
+        table.table.table-bordered.table-striped
+          thead
+            tr
+              th Step
+              th Function
+              th Source
+              th Link
+          tbody
+            tr
+              td 1.
+              td Create a new virtual card "calculator".
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(calculatorCommands.newCard)') Execute
+            tr
+              td 2.
+              td Send Calculator applet APDU script.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(calculatorCommands.sendApplet)') Execute
+            tr
+              td 3.
+              td Select Calculator applet.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(calculatorCommands.selectApplet)') Execute
+            tr
+              td 4.
+              td Send digit "3" to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(calculatorCommands.sendThree)') Execute
+            tr
+              td 5.
+              td Send opcode "+" to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(calculatorCommands.sendAddition)') Execute
+            tr
+              td 6.
+              td Send digit "2" to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(calculatorCommands.sendTwo)') Execute
+            tr
+              td 7.
+              td Send opcode "=" to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(calculatorCommands.sendEquals)') Execute
+      #RSADecrypt
+        h4 RSA Decrypt
+        table.table.table-bordered.table-striped
+          thead
+            tr
+              th Step
+              th Function
+              th Source
+              th Link
+          tbody
+            tr
+              td 1.
+              td Create a new virtual card "rsadecrypt".
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.newCard)') Execute
+            tr
+              td 2.
+              td Send RSA Decrypt applet APDU script.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendApplet)') Execute
+            tr
+              td 3.
+              td Select RSA-Decrypt applet.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.selectApplet)') Execute
+            tr
+              td 4.
+              td Send "P" to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendP)') Execute
+            tr
+              td 5.
+              td Send "Q" to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendQ)') Execute
+            tr
+              td 6.
+              td Send "DP1" to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendDP1)') Execute
+            tr
+              td 7.
+              td Send "DQ1" to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendDQ1)') Execute
+            tr
+              td 7.
+              td Send "PQ" to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendPQ)') Execute
+            tr
+              td 7.
+              td Send Encrypted text to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendEncrypted)') Execute
