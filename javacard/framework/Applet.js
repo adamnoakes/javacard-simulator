@@ -10,6 +10,7 @@
  */
 var eeprom = require('../smartcard/eeprom.js');
 var ram = require('../smartcard/ram.js');
+var e = require('./Exceptions.js');
 
 /**
  * Module exports.
@@ -57,7 +58,8 @@ module.exports = {
  * ADAM'S CODE ENDS HERE
  */
 
-//this code does not do what it should
+//this code does not do what it should and should probably be refactors
+//not a priority.
 
 /**
  * ROBIN WILLIAM'S CODE
@@ -74,7 +76,7 @@ function Applet() {
     }
     //06-01
     Applet.install = function(bArray, short, byte) {
-        ISOException.throwIt(27265);
+        return e.getISOException(27265);
     }; 
     
 
@@ -94,7 +96,7 @@ function Applet() {
         for (var j = 0; j < bLength; j++) { bArray.push(getHeap(bRef + bOffset + j + 1)); }
 
         if (bLength < 5 || bLength > 16) {
-            SystemException.throwIt(1);
+            return e.getSystemException(1);
         }
         var sAID = "";
 

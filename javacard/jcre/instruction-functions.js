@@ -214,7 +214,7 @@ module.exports = {
 	    var apiresult = api.run(packageAID, params[1], params[2], 3, args, object, smartcard);
 
 	    if(apiresult instanceof Error){
-	        throw apiresult;
+	        return apiresult;
 	    } else if (apiresult !== undefined){//if not void
 	        if(apiresult.constructor === Array){//if array
 	            operandStack.push("#H" + eeprom.getHeapSize(smartcard.EEPROM));
@@ -292,7 +292,7 @@ module.exports = {
 	    }
 	    var apiresult = api.run(packageAID, params[1], params[2], 6, args, object, smartcard);
 	    if(apiresult instanceof Error){
-            throw apiresult;
+            return apiresult;
         } else if (apiresult !== undefined){//if not void
 	        if(apiresult.constructor === Array){//if array
 	        	operandStack.push("#H" + eeprom.getHeapSize(smartcard.EEPROM));
@@ -340,7 +340,7 @@ module.exports = {
 	    var apiresult = api.run(packageAID, params[1], params[2], 6, args, null, smartcard);
 
 	    if(apiresult instanceof Error){
-            throw apiresult;
+            return apiresult;
         } else if (apiresult !== undefined){//if not void
 	        if(apiresult.constructor === Array){//if array
 	        	operandStack.push("#H" + eeprom.getHeapSize(smartcard.EEPROM));
@@ -354,14 +354,11 @@ module.exports = {
 	        }
 	    }
 	},
-	invokeinterface: function(smartcard, capFile, opcodes, operandStack, constantPool){
-		var numOfArgs = opcodes[i + 1];
-        var classRef = constantPool[(opcodes[i + 2] << 8) + opcodes[i + 3]].info;
+	invokeinterface: function(smartcard, capFile, operandStack, classRef, methodToken, numOfArgs){
         var packageAID = capFile.COMPONENT_Import.packages[(classRef[0] >= 128 ? classRef[0] - 128 : classRef[0])].AID;
         var classToken = classRef[1];
         var typeToken = classRef[2];
         //var class_offset = (info[0] << 8) + info[1];
-        var methodToken = opcodes[i + 4];
         var args = operandStack.slice(-(numOfArgs-1));
         loadAnyArrays(smartcard, args);
         operandStack.length = operandStack.length - (numOfArgs -1);

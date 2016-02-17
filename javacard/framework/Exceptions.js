@@ -5,6 +5,13 @@
  */
 
 /**
+ * Module depedencies
+ * @private
+ */
+
+var ISO7816 = require('./ISO7816.js');
+
+/**
  * Module exports.
  * @public
  */
@@ -18,33 +25,33 @@ module.exports = {
      * Handles javacard.framework Exception api calls.
      */
     run: function(clas, method, type, param, obj){
-        switch(method){
-             case 4:  //CardException
+        switch(clas){
+            case 4:  //CardException
                  return (method === 0 ? new CardException(param[0]) : 
-                    getCardException(obj));
+                    getCardException(obj || param[0]));
             case 5:  //CardRuntimeException
                 return (method === 0 ? new CardRuntimeException(param[0]) : 
-                    getCardRuntimeException(obj));
+                    getCardRuntimeException(obj || param[0]));
             case 7:  //ISOException
-               return (method === 0 ? new ISOException(param[0]) : 
-                    getISOException(obj));
+                return (method === 0 ? new ISOException(param[0]) : 
+                    getISOException(obj || param[0]));
             case 11:  //PINException
                 return (method === 0 ? new PINException(param[0]) : 
-                    getPINException(obj));
+                    getPINException(obj || param[0]));
             case 12:  //APDUException
                 return (method === 0 ? new APDUException(param[0]) : 
-                    getAPDUException(obj));
+                    getAPDUException(obj || param[0]));
             case 13:  //SystemException
                 return (method === 0 ? new SystemException(param[0]) : 
-                    getSystemException(obj));
+                    getSystemException(obj || param[0]));
             case 14:  //TransactionException
                 return (method === 0 ? new TransactionException(param[0]) : 
-                    getTransactionException(obj));
+                    getTransactionException(obj || param[0]));
             case 15:  //UserException
                 return (method === 0 ? new UserException(param[0]) : 
-                    getUserException(obj));
+                    getUserException(obj || param[0]));
             default:
-                return new Error('Method ' + method + ' not defined for Exception');
+                return new Error('Class token ' + clas + ' not implemented in simulator.');
         }
     }
 };
@@ -97,6 +104,7 @@ function getPINException(PINException){
     return new Error('PINException: ' + reasons[PINException.reason]);
 
 }
+//TODO -> check if int or object
 function getSystemException(SystemException){
     var reasons = [];
     reasons[1] = 'ILLEGAL_VALUE';
@@ -108,7 +116,9 @@ function getSystemException(SystemException){
     return new Error('SystemException: ' + reasons[SystemException.reason]);
 }
 function getISOException(ISOException){
-    return new Error('0x' + ISOException.reason.toString(16));
+    var reason = (ISOException instanceof Object ? 
+        ISOException.reason : ISOException);
+    return new Error(ISO7816.search(reason));
 }
 function getAPDUException(APDUException){
     var reasons = [];

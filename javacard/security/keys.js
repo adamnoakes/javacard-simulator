@@ -6,22 +6,26 @@
 
 //TODO: should import s1
 
+/**
+ * Module dependencies.
+ * @private
+ */
+
 
 /**
  * Private functions.
  */
 
 /**
- * [Key description]
  * @constructor
  * @abstract
- * @param {[type]} key  [description]
- * @param {[type]} type  [description]
- * @param {[type]} size [description]
+ * @param {Key} key
+ * @param {Number} type
+ * @param {Number} size
  */
 function Key(key, type, size){
 	if (this.constructor === this.PublicKey) {
-  		throw new Error("Can't instantiate abstract class!");
+  		return new Error("Can't instantiate abstract class!");
 	}
 	key.initialized = 0;
 	key.size = size;
@@ -49,6 +53,13 @@ module.exports = {
 				//throw error, cannot perform method method, methodType methodType
 		}
 	},
+	/**
+	 * @constructor
+	 * @abstract
+	 * @param {PublicKey} publicKey
+	 * @param {Number} typ
+	 * @param {Number} size
+	 */
 	PublicKey: function(publicKey, typ, size){
 		if (this.constructor === this.PublicKey) {
       		return new Error("Can't instantiate abstract class: PublicKey");
@@ -56,9 +67,16 @@ module.exports = {
 		//public key extends key
 		Key(publicKey, typ, size);
 	},
+	/**
+	 * @constructor
+	 * @abstract
+	 * @param {PrivateKey} privateKey
+	 * @param {Number} typ
+	 * @param {Number} size
+	 */
 	PrivateKey: function(privateKey, typ, size){
 		if (this.constructor === this.PrivateKey) {
-      		throw new Error("Can't instantiate abstract class: PrivateKey");
+      		return new Error("Can't instantiate abstract class: PrivateKey");
     	}
 		//public key extends key
 		Key(privateKey, typ, size);
@@ -125,27 +143,23 @@ module.exports = {
 
 	/**
 	 * Calls the clearKey method for the relevant key.type
-	 * @param  {[type]} key [description]
-	 * @return {[type]}     [description]
+	 * @param  {Key} key
+	 * @return {Key | Error}
 	 */
 	clearKey: function(key){
 		switch (key.type) {
 		    case this.TYPE_DES_TRANSIENT_RESET:
-		        //not implemented
-		        break;
+		        return new Error('TYPE_DES_TRANSIENT_RESET not implmeneted');
 		    case this.TYPE_DES_TRANSIENT_DESELECT:
-		    	//not implemented
-		        break;
+		    	return new Error('TYPE_DES_TRANSIENT_DESELECT not implmeneted');
 		    case this.TYPE_DES:
-		        //not implmeneted
-		        break;
+		        return new Error('TYPE_DES not implmeneted');
 		    case this.TYPE_RSA_PUBLIC:
 		    	return rsaPublicKey.clearKey(key);
 		    case this.TYPE_RSA_PRIVATE:
 		        return rsaPrivateKey.clearKey(key);
 		    case this.TYPE_RSA_CRT_PRIVATE:
-		        //not impleneted
-		        break;
+		        return rsaPrivateCrtKey.clearKey(key);
 		}
 	},
 

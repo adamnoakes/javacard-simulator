@@ -118,7 +118,6 @@ module.exports = {
 	 * @param {RSAKey} 	RSAKey
 	 * @param {Array} 	buffer
 	 * @param {Number} 	offset
-	 * @type {[type]}
 	 */
 	getNodeRSA: function(RSAPrivateCrtKey){
 		if(RSAPrivateCrtKey.initialized === 1){

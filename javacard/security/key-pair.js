@@ -64,8 +64,16 @@ module.exports = {
         KeyPair.keyLength = keyLength;
         //needs to catch an exception
         //CryptoException.NO_SUCH_ALGORITHM
-        KeyPair.publicKey = keyBuilder.buildKey(algorithm, KeyPair.keyLength);
-        KeyPair.privateKey = keyBuilder.buildKey(algorithm, KeyPair.keyLength);
+        var result = keyBuilder.buildKey(algorithm, KeyPair.keyLength);
+        if(result instanceof Error){
+            return result;
+        }
+        KeyPair.publicKey = result;
+        result = keyBuilder.buildKey(algorithm, KeyPair.keyLength);
+        if(result instanceof Error){
+            return result;
+        }
+        KeyPair.privateKey = result;
     },
 
     initFromPair: function(KeyPair, publicKey, privateKey){
@@ -78,7 +86,7 @@ module.exports = {
     genKeyPair: function(keyPair){
     	var tmpKey;
     	if(keyPair.publicKey.initialized || keyPair.privateKey.initialized){
-    		//throw CryptoException(CryptoException.ILLEGAL_VALUE)
+    		return new Error('CryptoException.ILLEGAL_VALUE');
     	} else {
     		switch(keyPair.algorithm){
                 //should set crt variables and otherss

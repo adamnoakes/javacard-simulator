@@ -127,24 +127,30 @@ module.exports = function () {
 		        		console.log(err);
 		        		res.end();
 		        	} else {
-		        		//@this must be replaced with an ascynronous function to allow the app to scale 
-		        		//Loop through the APDU commands and processes them one by one
-		        		smartcard.process(loadedCard, req.body.APDU, function(err, apduResponse){
+		        		smartcard.process(loadedCard, req.body.APDU, function(executionError, apduResponse){
 		        			//Update the smartcard object
-							req.db.collection('smartcards').update(
-								{ _id: require('mongodb').ObjectID(req.session.smartcard) },
-								loadedCard,
-								{ upsert: true }, function(err, result){
-									if (err) {
-										//TODO -> send error
-				                   		console.log(err);
-				                	}
-				                	res.send({'APDU': apduResponse});
-								}
-							);
+		        			if(executionError){
+		        				res.send({
+		        					'APDU': apduResponse,
+		        					'error': executionError.message
+		        				});
+		        			} else {
+		        				req.db.collection('smartcards').update(
+									{ _id: require('mongodb').ObjectID(req.session.smartcard) },
+									loadedCard,
+									{ upsert: true }, function(err, result){
+										if (err) {
+											//TODO -> send error
+					                   		console.log(err);
+					                	}
+					                	res.send({'APDU': apduResponse});
+									}
+								);
+		        			}
 		        		});
 		        	}
-        	});
+        		}
+        	);
 	    }
 	});
 

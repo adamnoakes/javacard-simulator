@@ -52,9 +52,9 @@ module.exports = {
 		//if theKey is not isinstance of RSAPrivateKey/ RSAPublicKey/ RSAPrivateCRTKey
         //raise CryptoException(CryptoException.ILLEGAL_VALUE)
         if(!keys.isInitialized(RSAKey)){
-        	//throw CryptoException(CryptoException.UNINITIALIZED_KEY)
-        } else if(mode != cipher.MODE_ENCRYPT || mode != cipher.MODE_DECRYPT){
-        	//throw CryptoException(CryptoException.ILLEGAL_VALUE)
+        	return new Error('CryptoException.UNINITIALIZED_KEY');
+        } else if(mode !== cipher.MODE_ENCRYPT && mode !== cipher.MODE_DECRYPT){
+        	return new Error('CryptoException.ILLEGAL_VALUE');
         }
 		cipherObj.mode = mode;
 		cipherObj.key = RSAKey;
@@ -66,7 +66,7 @@ module.exports = {
 	 */
 	doFinal: function(cipherObj, inBuff, inOffset, inLength, outBuff, outOffset){
 		if(!cipherObj.initialized){
-			//throw CryptoException(CryptoException.INVALID_INIT)
+			return new Error('CryptoException.INVALID_INT');
 		}
 		var data;
 		var result;
@@ -74,30 +74,34 @@ module.exports = {
 		data = Array.apply(null, Array(inLength)).map(Number.prototype.valueOf,0);//new Array(inLength).fill(0);
 		require('../../framework/Util.js').arrayCopyNonAtomic(inBuff, inOffset, data, 0, inLength);
 		if(data.length != Math.floor(cipherObj.key.size / 8)){
-			//throw ryptoException(CryptoException.ILLEGAL_VALUE)
+			console.log(data.length);
+			return new Error('CryptoException.ILLEGAL_VALUE');
 		}
-
-		if(cipherObj.key.private){
-			nodeRSA = rsaPrivateCrtKey.getNodeRSA(cipherObj.key);
-			if(cipherObj.mode === cipher.MODE_ENCRYPT){
-				result = Array.prototype.slice.call(nodeRSA.encryptPrivate(new Buffer(data)), 0);
-			} else if (cipherObj.mode === cipher.MODE_DECRYPT){
-				result = Array.prototype.slice.call(nodeRSA.decrypt(new Buffer(data)), 0);
+		try {
+			if (cipherObj.key.private) {
+				nodeRSA = rsaPrivateCrtKey.getNodeRSA(cipherObj.key);
+				if (cipherObj.mode === cipher.MODE_ENCRYPT) {
+					result = Array.prototype.slice.call(nodeRSA.encryptPrivate(new Buffer(data)), 0);
+				} else if (cipherObj.mode === cipher.MODE_DECRYPT) {
+					result = Array.prototype.slice.call(nodeRSA.decrypt(new Buffer(data)), 0);
+				}
+			} else {
+				nodeRSA = rsaPublicKey.getNodeRSA(cipherObj.key);
+				if (cipherObj.mode === cipher.MODE_ENCRYPT) {
+					result = Array.prototype.slice.call(nodeRSA.encrypt(new Buffer(data)), 0);
+				} else if (cipherObj.mode === cipher.MODE_DECRYPT) {
+					result = Array.prototype.slice.call(nodeRSA.decryptPublic(new Buffer(data)), 0);
+				}
 			}
-		} else {
-			nodeRSA = rsaPublicKey.getNodeRSA(cipherObj.key);
-			if(cipherObj.mode === cipher.MODE_ENCRYPT){
-				result = Array.prototype.slice.call(nodeRSA.encrypt(new Buffer(data)), 0);
-			} else if (cipherObj.mode === cipher.MODE_DECRYPT){
-				result =  Array.prototype.slice.call(nodeRSA.decryptPublic(new Buffer(data)), 0);
+			outBuff.length = outOffset + result.length;
+			for (var i = 0; i < outOffset; i++) {
+				outBuff[i] = 0;
 			}
+			//console.log(result);
+			require('../../framework/Util.js').arrayCopyNonAtomic(result, 0, outBuff, outOffset, result.length);
+			return result.length;
+		} catch(err){
+			return new Error('doFinal() failed for RSA.');
 		}
-		outBuff.length = outOffset + result.length;
-		for(var i =0; i < outOffset; i++){
-			outBuff[i] = 0;
-		}
-		//console.log(result);
-		require('../../framework/Util.js').arrayCopyNonAtomic(result, 0, outBuff, outOffset, result.length);
-		return result.length;
 	}
 };

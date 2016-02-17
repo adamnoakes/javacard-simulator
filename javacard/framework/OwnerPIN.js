@@ -1,5 +1,10 @@
 ﻿// 09
 
+var e = require('./Exceptions.js');
+/**
+ * functionality of this class has not been checked by adam
+ * 
+ */
 function OwnerPIN() {
     
 
@@ -33,7 +38,7 @@ function OwnerPIN() {
 
     //06-00
     this.constr = function(tryLimitb,maxPINSizeb) {
-        if(tryLimitb < 1 || maxPINSizeb < 1) {PINException.throwIt(1);}
+        if(tryLimitb < 1 || maxPINSizeb < 1) {e.getPINException(1);}
         tryLimit = tryLimitb;
         maxPINSize = maxPINSizeb;
 
@@ -95,7 +100,7 @@ function OwnerPIN() {
 
     //08
     this.update = function (pin, offset, length) {
-        if (length > maxPINSize) { PINException.throwIt(1); }
+        if (length > maxPINSize) { e.getPINException(1); }
 
         for(var j=0;j<length;j++) {
             pinValue[j] = Number(arrload(pin, j+offset));

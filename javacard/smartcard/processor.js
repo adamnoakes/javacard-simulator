@@ -29,16 +29,17 @@ module.exports = {
 
     /**
      * Process a single APDU command with smartcard
-     * @param  {smartcard} smartcard
-     * @param  {array} buffer
-     * @return {string}
+     * @param  {SmartCard} smartcard
+     * @param  {Array} buffer
+     * @param  {Function} cb;
      */
-    
     process: function(smartcard, buffer, cb){
         //contruct an APDU objects
         smartcard.processor.apdu = new apdu.APDU();
         apdu.constr(smartcard.processor.apdu, buffer);
-
+        if(smartcard.processor.apdu.broken){
+            return cb(new Error("Broken APDU"), "0x6F00");
+        }
         //Set the APDU object on the first position of the object heap
         smartcard.EEPROM.objectheap[0] = smartcard.processor.apdu; //maybe object heap should be stored in RAM?
         //Reset the processor response message
@@ -54,8 +55,6 @@ module.exports = {
         smartcard.processor.P1 = buffer[2];     //@adam parameter 1
         smartcard.processor.P2 = buffer[3];     //@adam parameter 2
         smartcard.processor.LC = buffer[4];     //@adam length of command data
-
-        var found = false;
 
 
         //If select applet command
@@ -89,19 +88,13 @@ module.exports = {
                 cb(undefined, output + res);
             }
         });
-
-
-
-        //return strout + " " + response; << haven't implemented code that uses strout yet
-
-        //return output + (!smartcard.processor.response ? "0x9000" : smartcard.processor.response);
     },
 
     /**
      * Called by process, to select an applet
-     * @param  {smartcard} smartcard 
-     * @param  {array} appletAID 
-     * @return {string}          
+     * @param  {SmartCard} smartcard
+     * @param  {Array} appletAID
+     * @param  {Function} cb
      */
     selectApplet: function (smartcard, appletAID, cb){
         smartcard.RAM.transient_data = [];
@@ -137,7 +130,7 @@ module.exports = {
                         return cb(new Error(), res);
                     }
                     return cb(undefined, res);
-                })
+                });
             };
 
             //if the applet has an install method, run it.

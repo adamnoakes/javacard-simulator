@@ -11,7 +11,7 @@
  * @private
  */
 var ISO7816 = require('./ISO7816.js');
-
+var e = require('./Exceptions.js');
 /**
  * Constants
  * @private
@@ -49,7 +49,17 @@ var cls = 10;
 module.exports = {
     APDU: function() {
         this.state = STATE_INITIAL;
-        this.offsetincoming = 0;
+        this.broken = false;
+        this.type = 0;
+        this.Nc = 0;
+        this.Ne = 0;
+        this.leLength = 0;
+        this.lcLength = 0;
+        this.currentDataOffset = 0;
+        this.buffer = [];
+        this.P3len = 0;
+        this.offSetIncoming = 4;
+        this.currentOutgoingLength = 0;
     },
     run: function(method, type, param, obj){
         switch (type) {
@@ -72,7 +82,6 @@ module.exports = {
         }
     },
     constr: function(apdu, bArray) {
-        var P3len;
         apdu._buffer = bArray;
         apdu.buffer = [];//Array.apply(null, Array(255 + 2)).map(Number.prototype.valueOf,0);
 
@@ -81,22 +90,21 @@ module.exports = {
         }
         apdu.offSetIncoming = 4;
         if(bArray.length > 4){
-            if(bArray[ISO7816.OFFSET_LC] === 0 && bArray.length > ISO7816.OFFSET_LC + 3){
-                P3len = 3;
+            if(bArray[ISO7816.get('OFFSET_LC')] === 0 && bArray.length > ISO7816.get('OFFSET_LC') + 3){
+                this.P3len = 3;
             } else {
-                P3len = 1;
+                this.P3len = 1;
             }
-            for(i = ISO7816.OFFSET_LC; i< ISO7816.OFFSET_LC + P3len; i++){
+            for(i = ISO7816.get('OFFSET_LC'); i< ISO7816.get('OFFSET_LC') + this.P3len; i++){
                 apdu.buffer[i] = bArray[i];
             }
-            apdu.offSetIncoming += P3len;
+            apdu.offSetIncoming += this.P3len;
         }
         apdu.state = STATE_INITIAL;
         apdu.broken = false;
 
         var temp;
-        var lcLength;
-        apdu.currentDataOffset = ISO7816.OFFSET_CDATA;
+        apdu.currentDataOffset = ISO7816.get('OFFSET_CDATA');
         if(bArray.length === 4){
             apdu.type = 1;
             apdu.Nc = 0;
@@ -114,23 +122,23 @@ module.exports = {
             apdu.type = 3;
             temp = getInLengths(apdu);
             apdu.Nc = temp[0];
-            lcLength = temp[1];
+            apdu.lcLength = temp[1];
             apdu.Ne = null;
             apdu.leLength = 0;
-            apdu.currentDataOffset += lcLength -1;
+            apdu.currentDataOffset += apdu.lcLength -1;
         } else {
             apdu.type = 4;
             temp = getInLengths(apdu);
             apdu.Nc = temp[0];
-            lcLength = temp[1];
+            apdu.lcLength = temp[1];
             temp = getOutLengths(apdu, bArray.length);
             apdu.Ne = temp[0];
             apdu.leLength = temp[1];
-            apdu.currentDataOffset += lcLength - 1;
+            apdu.currentDataOffset += apdu.lcLength - 1;
 
-            if( 4 + lcLength + apdu.leLength + apdu.Nc !== apdu.leLength){
-                broken = true;
-            }
+            //if((4 + apdu.lcLength + apdu.leLength + apdu.Nc) !== bArray.length){
+            //    apdu.broken = false;
+            //}
 
             apdu.outgoingLength = 0;
         }
@@ -222,12 +230,12 @@ function runStaticMethod(method, param, obj){
 
 function getInLengths(apdu){
     var temp = [];
-    if(apdu._buffer[ISO7816.OFFSET_LC] === 0){
-        temp[0] = apdu._buffer[ISO7816.OFFSET_LC + 1] * 256 + 
-        apdu._buffer[ISO7816.OFFSET_LC + 2];
+    if(apdu._buffer[ISO7816.get('OFFSET_LC')] === 0){
+        temp[0] = apdu._buffer[ISO7816.get('OFFSET_LC') + 1] * 256 + 
+        apdu._buffer[ISO7816.get('OFFSET_LC') + 2];
         temp[1] = 3;
     } else {
-        temp[0] = apdu._buffer[ISO7816.OFFSET_LC];
+        temp[0] = apdu._buffer[ISO7816.get('OFFSET_LC')];
         temp[1] = 1;
     }
     return temp;
@@ -236,15 +244,15 @@ function getInLengths(apdu){
 function getOutLengths(apdu, length){
     length -= 1;
     if(apdu._buffer[length] === 0){
-        if(length !== ISO7816.OFFSET_LC &&
-            apdu._buffer[ISO7816.OFFSET_LC] === 0 && 
+        if(length !== ISO7816.get('OFFSET_LC') &&
+            apdu._buffer[ISO7816.get('OFFSET_LC')] === 0 && 
             apdu._buffer[length -1 ] === 0){
             return [65536, 2];
         }
         return [256,1];
     } else {
-        if(length !== ISO7816.OFFSET_LC &&
-            apdu._buffer[ISO7816.OFFSET_LC] === 0){
+        if(length !== ISO7816.get('OFFSET_LC') &&
+            apdu._buffer[ISO7816.get('OFFSET_LC')] === 0){
             return [apdu._buffer[length - 1] * 256 +
             apdu._buffer[length], 2];
         }
@@ -278,10 +286,10 @@ function getNAD(){
 
 function setIncomingAndReceive(apdu){
     if (apdu.state !== STATE_INITIAL){
-        return new APDUException(APDUException.ILLEGAL_USE);
+        return e.getAPDUException(6);//ILLEAGAL_USE
     }
     if (apdu.broken){
-        return new ISOException(ISO7816.SW_WRONG_LENGTH);
+        return e.getISOException(ISO7816.get('SW_WRONG_LENGTH'));
     }
 
     var toBeProcessed = Math.min(IN_BLOCKSIZE, apdu._buffer.length - apdu.offSetIncoming - apdu.leLength);
@@ -300,7 +308,7 @@ function setIncomingAndReceive(apdu){
 
 function receiveBytes(apdu, bOffs){
     if(apdu.state < STATE_PARTIAL_INCOMING || apdu.state >= STATE_OUTGOING){
-        return new APDUException(APDUException.ILLEGAL_USE);
+        return e.getAPDUException(6);//ILLEAGAL_USE
     }
     var toBeProcessed = Math.min(IN_BLOCKSIZE, apdu._buffer.length - apdu.offSetIncoming - apdu.leLength);
     for(var i = 0; i< toBeProcessed; i++){
@@ -317,7 +325,7 @@ function receiveBytes(apdu, bOffs){
 
 function setOutgoing(apdu){
     if(apdu.state >= STATE_OUTGOING){
-        return new APDUException(APDUException.ILLEGAL_USE);
+        return e.getAPDUException(6);//ILLEAGAL_USE
     }
     apdu.state = STATE_OUTGOING;
     var outgoingLength = getOutgoingLength(apdu);
@@ -332,10 +340,10 @@ function setOutgoingNoChaining() {
 
 function setOutgoingLength(apdu, length){
     if(apdu.state < STATE_OUTGOING){
-        return new APDUException(APDUException.ILLEGAL_USE);
+        return e.getAPDUException(6);//ILLEAGAL_USE
     }
     if(length !== null && length > apdu.Ne){
-        return new APDUException(APDUException.BAD_LENGTH);
+        return e.getAPDUException(3);//BAD_LENGTH
     }
     apdu.state = STATE_OUTGOING_LENGTH_KNOWN;
     apdu.currentOutgoingLength = 0;
@@ -344,10 +352,10 @@ function setOutgoingLength(apdu, length){
 
 function sendBytes(apdu, bOffs, length){
     if(apdu.state < STATE_OUTGOING){
-        return new APDUException(APDUException.ILLEGAL_USE);
+        return e.getAPDUException(6);//ILLEAGAL_USE
     }
     if(apdu.currentOutgoingLength + length > OUT_BLOCKSIZE){
-        return new APDUException(APDUException.BUFFER_BOUNDS);
+        return e.getAPDUException(2);//BUFFER_BOUNDS
     }
     for(var i = bOffs; i < bOffs + length; i++){
         apdu._buffer[apdu.currentOutgoingLength + i] = apdu.buffer[bOffs + i];
@@ -361,10 +369,10 @@ function sendBytes(apdu, bOffs, length){
 }
 function sendBytesLong(apdu, outData, bOffs, length){
     if(STATE_PARTIAL_OUTGOING < apdu.state && apdu.state < STATE_OUTGOING_LENGTH_KNOWN){
-        return new APDUException(APDUException.ILLEGAL_USE);
+        return e.getAPDUException(6);//ILLEAGAL_USE
     }
     if(apdu.currentOutgoingLength + length > OUT_BLOCKSIZE){
-        return new APDUException(APDUException.BUFFER_BOUNDS);
+        return e.getAPDUException(2);//BUFFER_BOUNDS
     }
     for(var i = bOffs; i < bOffs + length; i++){
         apdu._buffer[apdu.currentOutgoingLength + i] = outData[bOffs + i];
@@ -397,7 +405,7 @@ function getCurrentAPDUBuffer(){
 }
 
 function getCLAChannel(apdu) {
-    return apdu.buffer[ISO7816.OFFSET_CLA] & 0x3;
+    return apdu.buffer[ISO7816.get('OFFSET_CLA')] & 0x3;
 }
 
 function waitExtension() {
@@ -406,7 +414,7 @@ function waitExtension() {
 
 //apdu.isCommandChainingCLA(); //0C boolean
 function isCommandChainingCLA(apdu) {
-    if ((apdu._buffer[ISO7816.OFFSET_CLA] & 0x10) === 0x00) {
+    if ((apdu._buffer[ISO7816.get('OFFSET_CLA')] & 0x10) === 0x00) {
         return 1;
     } else {
         return 0;
@@ -421,7 +429,7 @@ function getOutgoingLength(apdu) {
 function setOutgoing(apdu) { //07
     var outGoingLength;
     if (apdu.state >= STATE_OUTGOING) {
-        return new APDUException.throwIt(APDUException.ILLEGAL_USE);
+        return e.getAPDUException(6);//ILLEAGAL_USE
     }
     apdu.state = STATE_OUTGOING;
     outGoingLength = getOutgoingLength(apdu);

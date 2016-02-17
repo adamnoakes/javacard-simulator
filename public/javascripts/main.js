@@ -163,7 +163,10 @@ function sendAPDU(APDU, handler){
         dataType: 'json',
         contentType: 'application/json',
         data: JSON.stringify({"APDU": APDU}),
-        success: function(data) { 
+        success: function(data) {
+            if(data.error){
+                jqconsole.Write('Error: ' + data.error + '\n', 'response-error');
+            }
             jqconsole.Write("==> " + data.APDU, "response-ok"); 
             jqconsole.Write('\n'); 
             jqconsole.Prompt(true, handler);
