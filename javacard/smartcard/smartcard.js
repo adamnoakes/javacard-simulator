@@ -21,21 +21,6 @@ module.exports = {
      */
     process: function(smartcard, apduScript, cb){
 		processScript(smartcard, apduScript, cb);
-  		/*for(i=0; i<req.body.APDU.length; i++){
-            if(req.body.APDU[i][0] != null){
-            	//This is when simulation starts
-                response = processor.process(smartcard, req.body.APDU[i], function(err, res){
-                	if(err){
-
-                	}
-
-                });
-                if(response == ""){
-                	//TODO -> send error
-                    break;
-                }
-            }
-        }*/
     }
 }
 

@@ -93,7 +93,7 @@ module.exports = {
 	 */
 	Cipher: function(cipher, algorithm){
 		if (this.constructor === this.Cipher) {
-      		throw new Error("Can't instantiate abstract class!");
+      		return new Error("Can't instantiate abstract class!");
     	}
 		cipher.algorithm = algorithm;
 		cipher.initialized = false;
@@ -158,7 +158,7 @@ module.exports = {
 	 * @param  {Number} bLen   [description]
 	 */
 	init: function(cipher, theKey, mode, bArray, bOff, bLen){
-		throw new Error("Can't call abstract method");
+		return new Error("Can't call abstract method");
 	},
 	/**
 	 * @abstract
@@ -166,13 +166,13 @@ module.exports = {
 	 * @return {Number}        [description]
 	 */
 	getAlgorithm: function(cipher){
-		throw new Error("Can't call abstract method");
+		return new Error("Can't call abstract method");
 	},
 	update: function(cipher, inBuff, inOffset, inLength, outBuff, outOffset){
-		throw new Error("Can't call abstract method");
+		return new Error("Can't call abstract method");
 	},
 	doFinal: function(){
-		throw new Error("Can't call abstract method");
+		return new Error("Can't call abstract method");
 	}
 
 };

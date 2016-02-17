@@ -10,7 +10,7 @@
  */
 var RSAPublicKey = require('./rsa-public-key.js').RSAPublicKey;
 var RSAPrivateKey = require('./rsa-private-key.js').RSAPrivateKey;
-var RSAPrivateCrtKey = require('./rsa-private-key.js').RSAPrivateKey;
+var RSAPrivateCrtKey = require('./rsa-private-crt-key.js').RSAPrivateCrtKey;
 
 /**
  * Module exports.

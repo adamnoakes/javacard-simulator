@@ -38,7 +38,7 @@ function setExponent(RSAKey, buffer, offset, length){
 }
 function setModulus(RSAKey, buffer, offset, length){
 	if(length != Math.floor(keys.getSize(RSAKey) / 8)){
-		throw new Error('CryptoException.INVALID_INIT');
+		return new Error('CryptoException.INVALID_INIT');
 	} else {
 		RSAKey.modulus = buffer.slice(offset,
 			offset + length);
@@ -47,7 +47,7 @@ function setModulus(RSAKey, buffer, offset, length){
 function getterDecorator(f){
 	function get(){
 		if(arguments[0].initialized !== 1){
-			//throw CryptoException(CryptoException.UNINITIALIZED_KEY)
+			return CryptoException(CryptoException.UNINITIALIZED_KEY)
 		} else {
 			return f.apply(this, arguments);
 		}

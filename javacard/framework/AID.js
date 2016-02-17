@@ -9,7 +9,7 @@
  * @private
  */
 var util = require('./Util.js');
-
+var e = require('./Exceptions.js');
 /**
  * Module exports.
  * @public
@@ -44,7 +44,7 @@ module.exports = {
     },
     constr: function(AID, bArray, offset, length){
         if (length < 5 || length > 16) {
-            SystemException.throwIt(1);
+            return e.getSystemException(1);
         }
         if (bArray.length < offset + length) {
             ArrayIndexOutOfBoundsException.throwIt(offset + length);//TODO -> undefined

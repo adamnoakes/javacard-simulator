@@ -5,6 +5,7 @@ var ram = require('../smartcard/ram.js');
 var ins = require('./instruction-functions.js');
 var utilities = require('../utilities/utilities.js');
 var cap = require('../smartcard/cap.js');
+var ISO7816 = require('../framework/ISO7816.js');
 
 //JCVM
 
@@ -94,9 +95,10 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
     var constantPool = capFile.COMPONENT_ConstantPool.constant_pool;
     var tempOperands;
     var tempValue;
-    var words;
+    var apiresult;
+    var words, params;
     var v, w, v1, v2, v1w1, v1w2, v2w1, v2w2, val, val1, val2, vres, sa;
-    var res, lc;
+    var res, lc, branch;
     var info, objref, retval;
 
     switch (opcodes[i]) {
@@ -778,10 +780,14 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             i += 2;
             break;
         case mnemonics.invokevirtual: //0x8B
-            var params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
+            params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
             frames[currentFrame].return_pointer = i + 3;
             if(params[0] >= 128){
-                ins.invokevirtualExternal(smartcard, capFile, operandStack, params); i += 3; break;
+                apiresult = ins.invokevirtualExternal(smartcard, capFile, operandStack, params);
+                if(apiresult instanceof Error){
+                    return apiError(apiresult, cb);
+                }
+                i += 3; break;
             } else {
                 i = ins.invokevirtualInternal(capFile, opcodes, operandStack, frames, params);
                 frames[frames.length - 1].invoker = currentFrame;
@@ -789,10 +795,14 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.invokespecial: //0x8C
-            var params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);//info
+            params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);//info
             frames[currentFrame].return_pointer = i + 3;
             if(params[0] >= 128){
-                ins.invokespecialExternal(smartcard, capFile, operandStack, params); i += 3; break;
+                apiresult = ins.invokespecialExternal(smartcard, capFile, operandStack, params);
+                if(apiresult instanceof Error){
+                    return apiError(apiresult, cb);
+                }
+                i += 3; break;
             } else {
                 i = ins.invokespecialInternal(opcodes, operandStack, frames, params);
                 frames[frames.length - 1].invoker = currentFrame;
@@ -800,10 +810,14 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.invokestatic: //0x8D
-            var params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
+            params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
             frames[currentFrame].return_pointer = i + 3;
             if(params[0] >= 128){
-                ins.invokestaticExternal(smartcard, capFile, operandStack, params); i += 3; break;
+                apiresult = ins.invokestaticExternal(smartcard, capFile, operandStack, params);
+                if(apiresult instanceof Error){
+                    return apiError(apiresult, cb);
+                }
+                i += 3; break;
             } else {
                 currentFrame = frames.length;
                 i = ins.invokespecialInternal(opcodes, operandStack, frames, params);
@@ -811,14 +825,18 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             break;
         case mnemonics.invokeinterface: //0x8E
             //invokeinterface, nargs, ind1, ind2, method
-            ins.invokeinterface(smartcard, capFile, opcodes, operandStack, constantPool);
-            i+=4;
-            break;
+            var numOfArgs = opcodes[i + 1];
+            var classRef = constantPool[(opcodes[i + 2] << 8) + opcodes[i + 3]].info;
+            var methodToken = opcodes[i + 4];
+            apiresult = ins.invokeinterface(smartcard, capFile, operandStack, classRef, methodToken, numOfArgs);
+            if(apiresult instanceof Error){
+                return apiError(apiresult, cb);
+            }
+            i+=4; break;
         case mnemonics.new_v: //0x8F
 
             //new, ind1, ind2
             var ref = eeprom.getHeapSize(smartcard.EEPROM);
-            
 
             var done = false;
             info = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
@@ -869,7 +887,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
         case mnemonics.newarray: //0x90
             //newarray, atype
             var count = operandStack.pop();
-            var atype = opcodes[i + 1];
+            //var atype = opcodes[i + 1];
             var ref = eeprom.getHeapSize(smartcard.EEPROM);
             if (count < 0) { executeBytecode.exception_handler(mnemonics.jlang,6,"");}
 
@@ -1001,7 +1019,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             i += 4;
             break;
         case mnemonics.ifeq_w: //0x98
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = utilities.shortToValue(operandStack.pop());
 
             if (val == 0) {
@@ -1011,7 +1029,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.ifne_w: //0x99
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = utilities.shortToValue(operandStack.pop());
 
             if (val != 0) {
@@ -1021,7 +1039,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.iflt_w: //0x9A
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = utilities.shortToValue(operandStack.pop());
 
             if (val < 0) {
@@ -1031,7 +1049,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.ifge_w: //0x9B
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = utilities.shortToValue(operandStack.pop());
 
             if (val >= 0) {
@@ -1041,7 +1059,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.ifgt_w: //0x9C
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = utilities.shortToValue(operandStack.pop());
 
             if (val > 0) {
@@ -1051,7 +1069,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.ifle_w: //0x9D
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = utilities.shortToValue(operandStack.pop());
 
             if (val < 0) {
@@ -1061,7 +1079,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.ifnull_w: //0x9E
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = operandStack.pop();
 
             if (val == null) {
@@ -1071,7 +1089,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.ifnonnull_w: //0x9F
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = operandStack.pop();
 
             if (val != null) {
@@ -1081,7 +1099,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.if_acmpeq_w: //0xA0
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val2 = operandStack.pop();
             val1 = operandStack.pop();
 
@@ -1092,7 +1110,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.if_acmpne_w: //0xA1
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val2 = operandStack.pop();
             val1 = operandStack.pop();
 
@@ -1103,7 +1121,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.if_scmpeq_w: //0xA2
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val2 = operandStack.pop();
             val1 = operandStack.pop();
 
@@ -1114,7 +1132,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.if_scmpne_w: //0xA3
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val2 = operandStack.pop();
             val1 = operandStack.pop();
 
@@ -1125,7 +1143,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.if_scmplt_w: //0xA4
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val2 = operandStack.pop();
             val1 = operandStack.pop();
 
@@ -1136,7 +1154,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.if_scmpge_w: //0xA5
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val2 = operandStack.pop();
             val1 = operandStack.pop();
 
@@ -1147,7 +1165,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.if_scmpgt_w: //0xA6
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val2 = operandStack.pop();
             val1 = operandStack.pop();
 
@@ -1158,7 +1176,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             }
             break;
         case mnemonics.if_scmple_w: //0xA7
-            var branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
+            branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val2 = operandStack.pop();
             val1 = operandStack.pop();
 
@@ -1388,4 +1406,19 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             cb(undefined, "0x9000");
         });
     }
+}
+
+/**
+ * Parses and sends api error message
+ * @param  {Error}   apiresult
+ * @param  {Function} cb
+ */
+function apiError(apiresult, cb){
+    var apdu = ISO7816.get(apiresult.message);
+    if(apdu){
+        apdu = "0x" + apdu.toString(16);
+    } else {
+        apdu = "0x6F00"
+    }
+    cb(apiresult, apdu);
 }

@@ -3,6 +3,8 @@
  * atomic transaction management, object deletion mechanism and inter-applet object sharing in the Java Card 
  * environment.
  */
+
+//this class needs work
 var opcodes = require('../utilities/opcodes.js');
 var processor = require('../smartcard/processor.js');
 
