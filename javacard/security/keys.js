@@ -7,12 +7,6 @@
 //TODO: should import s1
 
 /**
- * Module dependencies.
- * @private
- */
-
-
-/**
  * Private functions.
  */
 
@@ -155,10 +149,13 @@ module.exports = {
 		    case this.TYPE_DES:
 		        return new Error('TYPE_DES not implmeneted');
 		    case this.TYPE_RSA_PUBLIC:
+		    	var rsaPublicKey = require('./rsa-public-key.js');
 		    	return rsaPublicKey.clearKey(key);
 		    case this.TYPE_RSA_PRIVATE:
+		    	var rsaPrivateKey = require('./rsa-private-key.js');
 		        return rsaPrivateKey.clearKey(key);
 		    case this.TYPE_RSA_CRT_PRIVATE:
+		    	var rsaPrivateCrtKey = require('./rsa-private-crt-key.js');
 		        return rsaPrivateCrtKey.clearKey(key);
 		}
 	},
