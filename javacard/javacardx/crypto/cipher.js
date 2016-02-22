@@ -22,7 +22,7 @@ module.exports = {
 	/**
 	 * Constants.
 	 */
-	
+
 	ALG_DES_CBC_NOPAD: 1,
 	ALG_DES_CBC_ISO9797_M1: 2,
 	ALG_DES_CBC_ISO9797_M2: 3,
@@ -43,53 +43,63 @@ module.exports = {
 	MODE_DECRYPT: 1,
 	MODE_ENCRYPT: 2,
 
-	run: function(Cipher, method, methodType, param, smartcard){
-		var algorithm = (Cipher != null ? Cipher.algorithm : param[0]);
+	/**
+	 * Handles javacardx.crypto.cipher api calls
+	 *
+	 * @param  {Number} method     The method token.
+	 * @param  {Number} methodType The method type token.
+	 * @param  {Array}  param      Popped from operand stack.
+	 * @param  {Cipher} cipher     The cipher object.
+	 * @return            				 Error or the result of called function.
+	 */
+	run: function(method, methodType, param, cipher){
+		var algorithm = (cipher !== null ? cipher.algorithm : param[0]);
 		switch(algorithm){
 			case this.ALG_DES_CBC_NOPAD:
-				return new Error('Unsupported algorithm: ALG_DES_CBC_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_CBC_NOPAD');
 			case this.ALG_DES_CBC_ISO9797_M1:
-				return new Error('Unsupported algorithm: ALG_DES_CBC_ISO9797_M1 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_CBC_ISO9797_M1');
 			case this.ALG_DES_CBC_ISO9797_M2:
-				return new Error('Unsupported algorithm: ALG_DES_CBC_ISO9797_M2 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_CBC_ISO9797_M2');
 			case this.ALG_DES_CBC_PKCS5:
-				return new Error('Unsupported algorithm: ALG_DES_CBC_PKCS5 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_CBC_PKCS5');
 			case this.ALG_DES_ECB_NOPAD:
-				return new Error('Unsupported algorithm: ALG_DES_ECB_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_ECB_NOPAD');
 			case this.ALG_DES_ECB_ISO9797_M1:
-				return new Error('Unsupported algorithm: ALG_DES_ECB_ISO9797_M1 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_ECB_ISO9797_M1');
 			case this.ALG_DES_ECB_ISO9797_M2:
-				return new Error('Unsupported algorithm: ALG_DES_ECB_ISO9797_M2 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_ECB_ISO9797_M2');
 			case this.ALG_DES_ECB_PKCS5:
-				return new Error('Unsupported algorithm: ALG_DES_ECB_PKCS5 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_ECB_PKCS5');
 			case this.ALG_RSA_ISO14888:
-				return new Error('Unsupported algorithm: ALG_RSA_ISO14888 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_RSA_ISO14888');
 			case this.ALG_RSA_PKCS1:
-				return new Error('Unsupported algorithm: ALG_RSA_PKCS1 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_RSA_PKCS1');
 			case this.ALG_RSA_ISO9796:
-				return new Error('Unsupported algorithm: ALG_RSA_ISO9796 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_RSA_ISO9796');
 			case this.ALG_RSA_NOPAD:
-				return new Error('Unsupported algorithm: ALG_RSA_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_RSA_NOPAD');
 			case this.ALG_AES_BLOCK_128_CBC_NOPAD:
-				return new Error('Unsupported algorithm: ALG_AES_BLOCK_128_CBC_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_AES_BLOCK_128_CBC_NOPAD');
 			case this.ALG_RSA_PKCS1_OAEP:
 				var rsaCipher = require('./rsa-cipher.js');
-				return rsaCipher.run(Cipher, method, methodType, param, smartcard);
+				return rsaCipher.run(method, methodType, param, cipher);
 			case this.ALG_KOREAN_SEED_ECB_NOPAD:
-				return new Error('Unsupported algorithm: ALG_KOREAN_SEED_ECB_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_KOREAN_SEED_ECB_NOPAD');
 			case this.ALG_KOREAN_SEED_CBC_NOPAD:
-				return new Error('Unsupported algorithm: ALG_KOREAN_SEED_CBC_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_KOREAN_SEED_CBC_NOPAD');
 			default:
-				return new Error('Unsupported algorithm for javacardx.crypto.cipher');
+				return new Error('Unsupported algorithm');
 				//throw error, cannot perform method method, methodType methodType
 		}
 	},
 
 	/**
-	 * Cipher constructor.
+	 * Cipher constructor, called by a class that inherits Cipher.
 	 * @abstract
-	 * @param {[type]} cipher    [description]
-	 * @param {[type]} algorithm [description]
+	 *
+	 * @param {Cipher} cipher    The Cipher object.
+	 * @param {Number} algorithm Algorithm token number, defined in constants.
 	 */
 	Cipher: function(cipher, algorithm){
 		if (this.constructor === this.Cipher) {
@@ -100,82 +110,67 @@ module.exports = {
 	},
 
 	/**
-	 * Returns an instance of the relevant Cipher object
-	 * @param  {Number} algorithm      [description]
-	 * @param  {[type]} externalAccess [description]
+	 * Creates a Cipher object instance of the selected algorithm.
+	 *
+	 * @param  {Number} algorithm      The desired Cipher algorithm. Valid codes
+	 *                                 listed in ALG_* constants above.
+	 * @param  {boolean} externalAccess True indicates that the instance will be
+	 *                                 shared among multiple applet instances and
+	 *                                 that the Cipher instance will also be
+	 *                                 accessed.
+	 *                                 (not implemented).
 	 */
 	getInstance: function(algorithm, externalAccess){
 		switch(algorithm){
 			case this.ALG_DES_CBC_NOPAD:
-				return new Error('Unsupported algorithm: ALG_DES_CBC_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_CBC_NOPAD');
 			case this.ALG_DES_CBC_ISO9797_M1:
-				return new Error('Unsupported algorithm: ALG_DES_CBC_ISO9797_M1 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_CBC_ISO9797_M1');
 			case this.ALG_DES_CBC_ISO9797_M2:
-				return new Error('Unsupported algorithm: ALG_DES_CBC_ISO9797_M2 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_CBC_ISO9797_M2');
 			case this.ALG_DES_CBC_PKCS5:
-				return new Error('Unsupported algorithm: ALG_DES_CBC_PKCS5 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_CBC_PKCS5');
 			case this.ALG_DES_ECB_NOPAD:
-				return new Error('Unsupported algorithm: ALG_DES_ECB_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_ECB_NOPAD');
 			case this.ALG_DES_ECB_ISO9797_M1:
-				return new Error('Unsupported algorithm: ALG_DES_ECB_ISO9797_M1 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_ECB_ISO9797_M1');
 			case this.ALG_DES_ECB_ISO9797_M2:
-				return new Error('Unsupported algorithm: ALG_DES_ECB_ISO9797_M2 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_ECB_ISO9797_M2');
 			case this.ALG_DES_ECB_PKCS5:
-				return new Error('Unsupported algorithm: ALG_DES_ECB_PKCS5 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_DES_ECB_PKCS5');
 			case this.ALG_RSA_ISO14888:
-				return new Error('Unsupported algorithm: ALG_RSA_ISO14888 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_RSA_ISO14888');
 			case this.ALG_RSA_PKCS1:
-				return new Error('Unsupported algorithm: ALG_RSA_PKCS1 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_RSA_PKCS1');
 			case this.ALG_RSA_ISO9796:
-				return new Error('Unsupported algorithm: ALG_RSA_ISO9796 for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_RSA_ISO9796');
 			case this.ALG_RSA_NOPAD:
-				return new Error('Unsupported algorithm: ALG_RSA_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_RSA_NOPAD');
 			case this.ALG_AES_BLOCK_128_CBC_NOPAD:
-				return new Error('Unsupported algorithm: ALG_AES_BLOCK_128_CBC_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_AES_BLOCK_128_CBC_NOPAD');
 			case this.ALG_RSA_PKCS1_OAEP:
 				var rsaCipher = require('./rsa-cipher.js');
 				return new rsaCipher.RSACipher(algorithm);
 			case this.ALG_KOREAN_SEED_ECB_NOPAD:
-				return new Error('Unsupported algorithm: ALG_KOREAN_SEED_ECB_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_KOREAN_SEED_ECB_NOPAD');
 			case this.ALG_KOREAN_SEED_CBC_NOPAD:
-				return new Error('Unsupported algorithm: ALG_KOREAN_SEED_CBC_NOPAD for javacardx.crypto.cipher');
+				return unsupportedAlgorithm('ALG_KOREAN_SEED_CBC_NOPAD');
 			default:
-				return new Error('Unsupported algorithm for javacardx.crypto.cipher');
+				return new Error(algorithm.toString());
 			//throw error, cannot perform method method, methodType methodType
 		}
-	},
-	/**
-	 * Abstract methods, to be implemented by <algorithm>-cipher
-	 */
-	/**
-	 * Sets the mode of the cipher
-	 * @abstract
-	 * @param  {Cipher} cipher [description]
-	 * @param  {Key} 	theKey [description]
-	 * @param  {Number} mode   [description]
-	 * @param  {Array}  bArray [description]
-	 * @param  {Number} bOff   [description]
-	 * @param  {Number} bLen   [description]
-	 */
-	init: function(cipher, theKey, mode, bArray, bOff, bLen){
-		return new Error("Can't call abstract method");
-	},
-	/**
-	 * @abstract
-	 * @param  {Cipher} cipher [description]
-	 * @return {Number}        [description]
-	 */
-	getAlgorithm: function(cipher){
-		return new Error("Can't call abstract method");
-	},
-	update: function(cipher, inBuff, inOffset, inLength, outBuff, outOffset){
-		return new Error("Can't call abstract method");
-	},
-	doFinal: function(){
-		return new Error("Can't call abstract method");
 	}
-
 };
+
 /**
- * 
+ * Private functions
  */
+
+/**
+ * Returns error that an algorithm was referenced that is not supported
+ * @param  {String} alg Name of the algorithm.
+ * @return {Error}      The error.
+ */
+function unsupportedAlgorithm(alg){
+	return new Error('Unsupported algorithm: ' + alg + ' for javacardx.crypto.cipher');
+}

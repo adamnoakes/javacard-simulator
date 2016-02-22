@@ -24,7 +24,7 @@ module.exports = {
 	/**
 	 * Handles javacard.security api calls.
 	 */
-	run: function(classToken, method, type, param, obj, smartcard){
+	run: function(classToken, method, type, param, obj){
 		switch(classToken){
 			case 0://javacard/security/Key
                 return keys.run(obj, method, type, param);
@@ -38,9 +38,9 @@ module.exports = {
             case 5://javacard/security/DSAPrivateKey
             case 6://javacard/security/DSAPublicKey
             case 7://javacard/security/RSAPrivateCrtKey
-            	return rsaPrivateCrtKey.run(obj, method, type, param, smartcard);
+            	return rsaPrivateCrtKey.run(obj, method, type, param);
             case 8://javacard/security/RSAPrivateKey
-            	return rsaPrivateKey.run(obj, method, type, param, smartcard);
+            	return rsaPrivateKey.run(obj, method, type, param);
             case 9://javacard/security/RSAPublicKey
             	return rsaPublicKey.run(obj, method, type, param);
             case 10://javacard/security/DESKey

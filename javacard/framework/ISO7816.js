@@ -1,5 +1,22 @@
-﻿var HashMap = require('hashmap');
+﻿/*!
+ * ISO7816
+ *
+ * Creates a HashMap used to Map the Hex values of ISO7816 to their textual
+ * description.
+ * 
+ * @author Adam Noakes
+ * University of Southamption
+ */
 
+/**
+ * Module depedencies
+ * @private
+ */
+var HashMap = require('hashmap');
+
+/**
+ * Create HashMap and initialise.
+ */
 var ISO7816 = new HashMap();
 
 ISO7816.set('SW_NO_ERROR', 0x9000);
@@ -40,8 +57,8 @@ ISO7816.set('OFFSET_CDATA', 5);
 ISO7816.set('OFFSET_EXT_CDATA', 7);
 ISO7816.set('CLA_ISO7816', 0);
 
-
-
-
+/**
+ * Export HashMap
+ */
 
 module.exports = ISO7816;

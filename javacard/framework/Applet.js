@@ -1,6 +1,6 @@
 ﻿/*!
  * Applet
- * @author Adam Noakes
+ * @author Robin Williams
  * University of Southamption
  */
 
@@ -17,9 +17,16 @@ var e = require('./Exceptions.js');
  * @public
  */
 
+//This class is not really used.
 module.exports = {
     /**
-     * Handles javacard.framework.Applet api calls.
+     * Handles javacard.framework.Applet api calls
+     * 
+     * @param  {Number} method The method token
+     * @param  {Number} type   The method type token
+     * @param  {Array}  param  Popped from operand stack
+     * @param  {Applet} obj    The Applet object
+     * @return                 Error or the result of called function.
      */
     run: function(method, type, param, obj, smartcard){
         switch(method){
@@ -152,20 +159,6 @@ function Applet() {
 
         return appAID;
     }
-
-
-    this.restore = function (params) {
-
-        appAID = params[0];
-
-    }
-
-    this.save = function () {
-
-        var str = "f03/" + appAID;
-        return str;
-    }
-
 }
 
 exports.Applet = Applet;

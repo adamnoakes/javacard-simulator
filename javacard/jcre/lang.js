@@ -5,6 +5,12 @@
  */
 
 /**
+* Module dependencies.
+* @private
+*/
+var le = require('../lang/Exceptions.js');
+
+/**
  * Module exports.
  * @private
  */
@@ -16,7 +22,7 @@ module.exports = {
             case 1:  //Throwable
             case 2:  //Exception
             case 3:  //RuntimeException
-            case 4:  //IndexOutOfBoundsException 
+            case 4:  //IndexOutOfBoundsException
             case 5:  //ArrayIndexOutOfBoundsException
             case 6:  //NegativeArraySizeException
             case 7:  //NullPointerException
@@ -24,19 +30,15 @@ module.exports = {
             case 9:  //ArithmeticException
             case 10:  //SecurityException
             case 11:  //ArrayStoreException
-
-                if (method === 0) {
-                    return obj.constr();
-                }
-                return new Error('ArrayStoreException');
+							return new Error('Unsupported Method');
             default:
-                return new Error('Unsupported Method');
+              return new Error('Unsupported Method');
         }
 	},
     newObject: function(classToken){
         switch (classToken) {
             case 0:
-                return new Object();
+                return {};//new Object()
             case 1:
                 return new Throwable();
             case 2:

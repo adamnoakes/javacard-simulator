@@ -1,4 +1,4 @@
-﻿var api = require('./api.js');
+var api = require('./api.js');
 var mnemonics = require('../utilities/mnemonics.js');
 var eeprom = require('../smartcard/eeprom.js');
 var ram = require('../smartcard/ram.js');
@@ -10,6 +10,14 @@ var ISO7816 = require('../framework/ISO7816.js');
 //JCVM
 
 module.exports = {
+    /**
+     * Sets up execution environment for standard APDU command and pushes
+     * executeBytecode function call onto event loop.
+     *
+     * @param  {SmartCard} smartcard The SmartCard object.
+     * @param  {Array}     params
+     * @param  {Function}  cb       Called by executeBytecode
+     */
     process: function(smartcard, params, cb){
         var capFile = smartcard.EEPROM.selectedApplet.CAP;
         var appletReference = smartcard.EEPROM.selectedApplet.appletRef;
@@ -28,10 +36,18 @@ module.exports = {
         frames[currentFrame].local_vars.push(params[0]);
 
         setImmediate(function() {
-            executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, cb);
+            executeBytecode(smartcard, capFile, i, frames, currentFrame, cb);
         });
     },
 
+    /**
+     * Sets up execution environment for select applet APDU command and pushes
+     * executeBytecode function call onto event loop.
+     *
+     * @param  {SmartCard} smartcard The SmartCard object.
+     * @param  {Array}     params
+     * @param  {Function}  cb        Called by executeBytecode.
+     */
     selectApplet: function(smartcard, cb){
         var capFile = smartcard.EEPROM.selectedApplet.CAP;
         var appletReference = smartcard.EEPROM.selectedApplet.appletRef;
@@ -48,13 +64,23 @@ module.exports = {
         frames[currentFrame].local_vars.push(Number(appletReference));
 
         setImmediate(function() {
-            executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, cb);
+            executeBytecode(smartcard, capFile, i, frames, currentFrame, cb);
         });
     },
 
-    createInstance: function(smartcard, packageToCreate, params, appletRef, cb){
-        var i = packageToCreate.COMPONENT_Applet.applets[appletRef].install_method_offset - 1;
-        var opcodes = packageToCreate.COMPONENT_Method.method_info;
+    /**
+     * Sets up execution environment for create instance APDU command and pushes
+     * executeBytecode function call onto event loop.
+     *
+     * @param  {SmartCard} smartcard The SmartCard object.
+     * @param  {CAPfile}   capFile   CAPfile of package to creat instance of.
+     * @param  {Array}     params
+     * @param  {Number}    appletRef
+     * @param  {Function}  cb        Called by executeBytecode.
+     */
+    createInstance: function(smartcard, capFile, params, appletRef, cb){
+        var i = capFile.COMPONENT_Applet.applets[appletRef].install_method_offset - 1;
+        var opcodes = capFile.COMPONENT_Method.method_info;
         if (opcodes[i] > 127) {
             i += 4;
         } else {
@@ -72,10 +98,15 @@ module.exports = {
         frames[currentFrame].local_vars.push(params[2]);
 
         setImmediate(function() {
-            executeBytecode(smartcard, packageToCreate, opcodes, i, frames, currentFrame, cb);
+            executeBytecode(smartcard, capFile, i, frames, currentFrame, cb);
         });
 
     },
+
+    /**
+     * Frame constructor
+     * @constructor
+     */
     Frame: function (){
         this.local_vars = [];
         this.operand_stack = [];
@@ -84,11 +115,20 @@ module.exports = {
     }
 };
 
-function pushOperands(operandStack, array){
-    Array.prototype.push.apply(operandStack, array);
-}
-
-function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, cb){
+/**
+ * Executes a single Opcode instruction, opcodes[i].
+ * This function should only be called by wrapping inside setImmediate to
+ * ensure that it does not block the event loop.
+ *
+ * @param  {SmartCard}  smartcard
+ * @param  {CAPfile}    capFile
+ * @param  {Number}     i         The instruction pointer
+ * @param  {Array}      frames
+ * @param  {Number}     currentFrame
+ * @param  {Function}   cb
+ */
+function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
+    var opcodes = capFile.COMPONENT_Method.method_info;
     var operandStack = frames[currentFrame].operand_stack;
     var localVariables = frames[currentFrame].local_vars;
     var invoker = frames[currentFrame].invoker;
@@ -357,7 +397,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             i++; break;
         case mnemonics.sdiv: //0x47
             sa = Number(operandStack.pop());
-            if (sa == 0) { executeBytecode.exception_handler(mnemonics.jlang,9,""); }
+            if (sa === 0) { executeBytecode.exception_handler(mnemonics.jlang,9,""); }
             sa = Math.round(operandStack.pop() / sa);
             operandStack.push(sa);
             i++; break;
@@ -367,7 +407,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             v1w2 = Number(operandStack.pop());
             v1w1 = Number(operandStack.pop());
             val = (v2w1 << 8) + v2w2;
-            if (val == 0) { executeBytecode.exception_handler(mnemonics.jlang,9,""); }
+            if (val === 0) { executeBytecode.exception_handler(mnemonics.jlang,9,""); }
 
             val = Math.round((v1w1 * mnemonics.short_s + v1w2) / val);
             words = utilities.convertIntegerToWords(val % mnemonics.int_s);
@@ -378,7 +418,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
         case mnemonics.srem: //0x49
             v2 = Number(operandStack.pop());
             v1 = Number(operandStack.pop());
-            if (v2 == 0) { executeBytecode.exception_handler(mnemonics.jlang,9,""); }
+            if (v2 === 0) { executeBytecode.exception_handler(mnemonics.jlang,9,""); }
             v = v1 - (v1 / v2) * v2;
 
             operandStack.push(v);
@@ -390,7 +430,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             v1w1 = Number(operandStack.pop());
             v2 = v2w1 << 8 + v2w2;
             v1 = v1w1 << 8 + v1w2;
-            if (v2 == 0) { executeBytecode.exception_handler(mnemonics.jlang,9,""); }
+            if (v2 === 0) { executeBytecode.exception_handler(mnemonics.jlang,9,""); }
             vres = utilities.convertIntegerToWords(v1 - (v1 / v2) * v2);
 
             operandStack.push(vres[0]);
@@ -644,7 +684,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             i += ins.itableswitch(operandStack, opcodes, i);
             break;
         case mnemonics.slookupswitch: //0x75
-            i += ins.slookupswitch(operandStack, opcodes, i); 
+            i += ins.slookupswitch(operandStack, opcodes, i);
             break;
         case mnemonics.ilookupswitch: //0x76
             i += ins.ilookupswitch(operandStack, opcodes, i);
@@ -855,10 +895,10 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
                             var dis = capFile.COMPONENT_Class.interface_info[j].declared_instance_size;
                             //hv += ","+offset;
                             eeprom.appendHeap(smartcard.EEPROM, offset);
-                            
+
                             //for (var k = 0; k < dis; k++) { hv += ",0"; }
                             for (var k = 0; k < dis; k++) { eeprom.appendHeap(smartcard.EEPROM, 0); }
-                            
+
                             info[0] = capFile.COMPONENT_Class.interface_info[j].super_class_ref1;
                             info[1] = capFile.COMPONENT_Class.interface_info[j].super_class_ref2;
 
@@ -973,7 +1013,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             break;
         case mnemonics.arraylength: //0x92
             var arref = operandStack.pop();
-            if (arref == null) { executeBytecode.exception_handler(mnemonics.jlang,6,""); }
+            if (arref === null) { executeBytecode.exception_handler(mnemonics.jlang,6,""); }
             var ar = eeprom.getHeapValue(smartcard.EEPROM, arref);
             if (ar.slice(0, 2) == "#H") {
                 ar = eeprom.getHeapValue(Number(ar.split("#H")[1])).length;
@@ -1022,7 +1062,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = utilities.shortToValue(operandStack.pop());
 
-            if (val == 0) {
+            if (val === 0) {
                 i += branch;
             } else {
                 i += 3;
@@ -1032,7 +1072,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = utilities.shortToValue(operandStack.pop());
 
-            if (val != 0) {
+            if (val !== 0) {
                 i += branch;
             } else {
                 i += 3;
@@ -1082,7 +1122,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = operandStack.pop();
 
-            if (val == null) {
+            if (val === null) {
                 i += branch;
             } else {
                 i += 3;
@@ -1092,7 +1132,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
             branch = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
             val = operandStack.pop();
 
-            if (val != null) {
+            if (val !== null) {
                 i += branch;
             } else {
                 i += 3;
@@ -1233,7 +1273,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
         case mnemonics.getfield_b_this: //0xAE
             info = constantPool[opcodes[i + 1]].info.slice(0);
             objref = localVariables[0];
-            
+
             retval = getfield(info, objref);
             operandStack.push(retval);
             i += 2;
@@ -1328,19 +1368,19 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
 
             i += 2;
             break;
-        default: 
+        default:
             alert("Unsupported Bytecode " + opcodes[i].toString(16));
             break;
     }
     function getfield(info,objref) {
         var infoclass = (info[0] << 8) + info[1];
-        if (objref == null) { executeBytecode.exception_handler(mnemonics.jlang,7,""); }
+        if (objref === null) { executeBytecode.exception_handler(mnemonics.jlang,7,""); }
         var bfound = false;
         var oheap = objref;
         var retval;
         var dis;
         var jf;
-        
+
         //assume internal
         var refclass = eeprom.getHeapValue(smartcard.EEPROM, objref);
         while (!bfound) {
@@ -1363,14 +1403,14 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
 
         }
         return retval;
-        
+
     }
-        
+
 
     function putfield(info, val, objref) {
 
         var infoclass = (info[0] << 8) + info[1];
-        if (objref == null) { executeBytecode.exception_handler(mnemonics.jlang,7,""); }
+        if (objref === null) { executeBytecode.exception_handler(mnemonics.jlang,7,""); }
         var bfound = false;
         var oheap = objref;
         var dis;
@@ -1399,7 +1439,7 @@ function executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, c
 
     if(currentFrame >= 0){
         setImmediate(function(){
-            executeBytecode(smartcard, capFile, opcodes, i, frames, currentFrame, cb);
+            executeBytecode(smartcard, capFile, i, frames, currentFrame, cb);
         });
     } else {
         setImmediate(function(){
@@ -1418,7 +1458,11 @@ function apiError(apiresult, cb){
     if(apdu){
         apdu = "0x" + apdu.toString(16);
     } else {
-        apdu = "0x6F00"
+        apdu = "0x6F00";
     }
     cb(apiresult, apdu);
+}
+
+function pushOperands(operandStack, array){
+    Array.prototype.push.apply(operandStack, array);
 }

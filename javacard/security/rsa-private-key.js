@@ -49,7 +49,7 @@ function setterDecorator(f){
  */
 
 module.exports = {
-	run: function(RSAPrivateKey, method, methodType, param, smartcard){
+	run: function(RSAPrivateKey, method, methodType, param){
 		switch(method){
 			case 0:
 				return keys.clearKey(RSAPrivateKey);
@@ -60,9 +60,9 @@ module.exports = {
 			case 3:
 				return keys.isInitialized(RSAPrivateKey);
 			case 4:
-				return this.getExponent(RSAPrivateKey, param[0], param[1], smartcard);
+				return this.getExponent(RSAPrivateKey, param[0], param[1]);
 			case 5:
-				return this.getModulus(RSAPrivateKey, param[0], param[1], smartcard);
+				return this.getModulus(RSAPrivateKey, param[0], param[1]);
 			case 6:
 				return this.setExponent(RSAPrivateKey, param[0], param[1], param[2]);
 			case 7:
@@ -78,12 +78,12 @@ module.exports = {
 	 * @constructor
 	 * @param {Number} size
 	 */
-	
+
 	RSAPrivateKey: function(size){
 		//extends private key
 		keys.PrivateKey(this, 5, size);
-		this.exponent;
-		this.modulus;
+		this.exponent = undefined;
+		this.modulus = undefined;
 		this.key = null;
 	},
 	/**

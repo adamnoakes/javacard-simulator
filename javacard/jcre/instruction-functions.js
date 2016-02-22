@@ -1,10 +1,38 @@
+/*!
+ * instruction-functions
+ *
+ * Contains the code for complex jcvm instructions to reduce the size
+ * of the switch statment.
+ *
+ * @author Adam Noakes
+ * University of Southampton
+ */
+
+/**
+ * Module dependencies.
+ * @private
+ */
+
 var ram = require('../smartcard/ram.js');
 var eeprom = require('../smartcard/eeprom.js');
 var mnemonics = require('../utilities/mnemonics.js');
 var api = require('./api.js');
 var utilities = require('../utilities/utilities.js');
 
+/**
+ * Module exports.
+ * @public
+ */
+
 module.exports = {
+	/**
+	 * Load value of type x from Array.
+	 * Called by a/b/s/iload.
+	 *
+	 * @param  {SmartCard} smartcard
+	 * @param  {Array}     operandStack
+	 * @return Type depends on instruction that called function.
+	 */
 	xaload: function(smartcard, operandStack){
 	    var index = operandStack.pop();
 	    var arref = operandStack.pop();
@@ -37,19 +65,20 @@ module.exports = {
 	    var m = parseInt(pad(x.toString(16)).slice(0, 1), 16);
 	    var n = parseInt(pad(x.toString(16)).slice(1), 16);
 	    var ar = [];
-	    if (n == 0) {
-	        for (var j = 0; j < m; j++) {
+	    var j;
+	    if (n === 0) {
+	        for (j = 0; j < m; j++) {
 	            ar.push(operandStack.pop());
 	        }
 	    } else {
-	        for (var j = 0; j < n; j++) {
+	        for (j = 0; j < n; j++) {
 	            ar.push(operandStack.pop());
 	        }
 	    }
-	    for (var j = m - 1; j >= 0; j--) {
+	    for (j = m - 1; j >= 0; j--) {
 	        operandStack.push(ar[j]);
 	    }
-	    for (var j = n - 1; j >= 0; j--) {
+	    for (j = n - 1; j >= 0; j--) {
 	        operandStack.push(ar[j]);
 	    }
 	},
@@ -59,22 +88,23 @@ module.exports = {
 	    var n = parseInt(x.slice(1), 16);
 	    var arM = [];
 	    var arN = [];
-	    for (var j = 0; j < m; j++) {
+	    var j;
+	    for (j = 0; j < m; j++) {
 	        arM.push(operandStack.pop());
 	    }
-	    for (var j = 0; j < n; j++) {
+	    for (j = 0; j < n; j++) {
 	        arN.push(operandStack.pop());
 	    }
-	    for (var j = 0; j < n; j++) {
+	    for (j = 0; j < n; j++) {
 	        operandStack.push(arN.pop());
 	    }
-	    for (var j = 0; j < m; j++) {
+	    for (j = 0; j < m; j++) {
 	        operandStack.push(arM.pop());
 	    }
 	},
 
 	stableswitch: function(operandStack, opcodes, i){
-	    //stableswitch, defaultbyte1, defaultbyte2, lowbyte1, lowbyte2, 
+	    //stableswitch, defaultbyte1, defaultbyte2, lowbyte1, lowbyte2,
 	    //highbyte1, highbyte2, jump offsets...
 	    var defaultbyte = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
 	    var low = utilities.shortToValue((opcodes[i + 3] << 8) + opcodes[i + 4]);
@@ -93,7 +123,7 @@ module.exports = {
 	},
 
 	itableswitch: function(operandStack, opcodes, i){
-	    //itableswitch, defaultbyte1, defaultbyte2, lowbyte1, lowbyte2, lowbyte3, lowbyte4, 
+	    //itableswitch, defaultbyte1, defaultbyte2, lowbyte1, lowbyte2, lowbyte3, lowbyte4,
 	    //highbyte1, highbyte2, highbyte3, highbyte4, jump offsets...
 	    var defaultbyte = utilities.shortToValue((opcodes[i + 1] + opcodes[i + 2], 16));
 	    var low = utilities.intToValue((opcodes[i + 3] << 24) + (opcodes[i + 4] << 16) + (opcodes[i + 5] << 8) + opcodes[i + 6]);
@@ -116,7 +146,7 @@ module.exports = {
 	},
 
 	slookupswitch: function(operandStack, opcodes, i){
-	    //slookupswitch, defaultbyte1, defaultbyte2, npairs1, npairs2, 
+	    //slookupswitch, defaultbyte1, defaultbyte2, npairs1, npairs2,
 	    //match-offset pairs...
 	    var key = utilities.shortToValue(operandStack.pop());
 	    var defaultbyte = utilities.shortToValue((opcodes[i + 1] << 8) + opcodes[i + 2]);
@@ -132,7 +162,7 @@ module.exports = {
 
 	ilookupswitch: function(operandStack, opcodes, i){
 	    //this code has errors?
-	    //ilookupswitch, defaultbyte1, defaultbyte2, npairs1, npairs2, 
+	    //ilookupswitch, defaultbyte1, defaultbyte2, npairs1, npairs2,
 	    //match-offset pairs...
 	    var key2 = operandStack.pop();
 	    var key = operandStack.pop();
@@ -164,13 +194,13 @@ module.exports = {
 	    var barr = utilities.convertToBytes(val, size);
 	    var offset = (info[1] << 8) + info[2];
 	    var sf = readStaticField().split(',');
-
-	    for (var j = 0; j < size; j++) {
+	    var j;
+	    for (j = 0; j < size; j++) {
 	        sf[offset + j] = barr[j];
 	    }
 
 	    var opstr = '';
-	    for (var j = 0; j < sf.length - 1; j++) {
+	    for (j = 0; j < sf.length - 1; j++) {
 	        opstr += sf[j] + ',';
 	    }
 	    writeStaticField(opstr);
@@ -181,9 +211,10 @@ module.exports = {
 		var packageAID = capFile.COMPONENT_Import.packages[param0].AID;
 		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], 3);
 		var args = [];
+		var found = false;
+
 		if(numOfArgs > 0) {
 			args = operandStack.slice(-numOfArgs);
-			var found = false;
 			loadAnyArrays(smartcard, args);
 			operandStack.length = operandStack.length - numOfArgs;
 		}
@@ -193,7 +224,7 @@ module.exports = {
 	    if(!(object instanceof Object)){
 	    	var ocls = eeprom.getHeapValue(smartcard.EEPROM, object);
 	    	var clssig = ((param0 << 8) + params[1]);
-	        
+
 	        while (!found) {
 	            if (160 + clssig == ocls) {
 	                found = true;
@@ -262,9 +293,10 @@ module.exports = {
 		var packageAID = capFile.COMPONENT_Import.packages[param0].AID;
 		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], 6);
 		var args = [];
+		var found = false;
+
 		if(numOfArgs > 0){
 			args = operandStack.slice(- numOfArgs);
-			var found = false;
 			loadAnyArrays(smartcard, args);
 			operandStack.length = operandStack.length - numOfArgs;
 		}
@@ -365,6 +397,9 @@ module.exports = {
         var object = operandStack.pop();
 
 		api.run(packageAID, classToken, methodToken, typeToken, args, object, null, smartcard);
+	},
+	new_v: function(){
+
 	}
 };
 

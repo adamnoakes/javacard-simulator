@@ -1,7 +1,12 @@
-﻿/* @anoakes
+﻿/*!
+ * JCSystem
+ *
  * The this class includes a collection of methods to control applet execution, resource management, 
  * atomic transaction management, object deletion mechanism and inter-applet object sharing in the Java Card 
  * environment.
+ * 
+ * @author Adam Noakes
+ * University of Southamption
  */
 
 //this class needs work
@@ -23,7 +28,7 @@ module.exports = {
     NOT_A_TRANSIENT_OBJECT: 0,
 
     /**
-     * Handles javacard.framework Exception api calls.
+     * Handles javacard.framework JCSystem api calls.
      */
     run: function(method, type, param, obj, smartcard){
         switch(method){

@@ -1,12 +1,13 @@
-﻿// 09
+
+// 09
 
 var e = require('./Exceptions.js');
 /**
  * functionality of this class has not been checked by adam
- * 
+ *
  */
 function OwnerPIN() {
-    
+
 
     var tryLimit = 0;
     var maxPINSize = 0;
@@ -44,59 +45,62 @@ function OwnerPIN() {
 
         pinSize = maxPINSize;
         triesLeft = tryLimit;
-    }
-    
+    };
+
 
     //01
-    this.check = function(pin, offset, length)
-    {
+    this.check = function(pin, offset, length){
         alert(pin + "," + offset + "," + length);
         var noMoreTries = false;
         setValidatedFlag(0);
-        if(this.getTriesRemaining() == 0) {
+        if(this.getTriesRemaining() === 0) {
             noMoreTries = true;}
         else {
             decrementTriesRemaining(); }
-        
+
         if(length != pinSize || noMoreTries) {return 0;}
-        
+
         var compare = true;
-        
-        if(length > 0) { 
+
+        if(length > 0) {
             for (var j = 0; j < length; j++) {
                 alert(arrload(pin, j + offset) + ";" + pinValue[j]);
-                if(arrload(pin,j+offset) != pinValue[j]) {compare = false;}
+                if(arrload(pin,j+offset) != pinValue[j])
+                  compare = false;
             }
         }
 
         if(compare) {
             setValidatedFlag(1);
-            resetTriesRemaining(); return 1
-        } else { return 0;}
-    }
+            resetTriesRemaining();
+            return 1;
+        } else {
+          return 0;
+        }
+    };
 
     //02
     this.getTriesRemaining = function () {
         return triesLeft;
-    }
+    };
 
     //04
     this.isValidated = function() {
         return getValidatedFlag();
 
-    }
+    };
 
     //05
     this.reset = function () {
         if(this.isValidated()) {
             this.resetAndUnblock(); }
-    }
+    };
 
     //06
     this.resetAndUnblock = function () {
         resetTriesRemaining();
         setValidatedFlag(0);
-    }
+    };
 
     //08
     this.update = function (pin, offset, length) {
@@ -105,25 +109,25 @@ function OwnerPIN() {
         for(var j=0;j<length;j++) {
             pinValue[j] = Number(arrload(pin, j+offset));
         }
-        
+
         pinSize = length;
         triesLeft = tryLimit;
         setValidatedFlag(0);
-        
-    }
 
-    
+    };
+
+
     this.restore = function (params) {
 
         tryLimit = params[0];
         maxPINSize = Number(params[1]);
         pinValue = params[2];
         flags = params[3];
-        VALIDATED = params[4]; 
+        VALIDATED = params[4];
         NUMFLAGS = params[5];
         triesLeft = params[6];
         pinSize = params[7];
-    }
+    };
 
     this.save = function () {
 
@@ -132,12 +136,8 @@ function OwnerPIN() {
             NUMFLAGS + "/" + triesLeft + "/" + pinSize;
         return str;
 
-    }
+    };
 
 
 
 }
-
-
-
-

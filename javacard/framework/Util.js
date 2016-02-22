@@ -1,15 +1,8 @@
 ﻿/*!
- * AID (Class token: 6)
+ * Util
  * @author Adam Noakes
  * University of Southamption
  */
-
-/**
- * Module dependencies.
- * @private
- */
-var jcvm = require('../jcre/jcvm.js');
-//-> No this should not have reference to jcvm, the arrays should be passed directly
 
 /**
  * Module exports.
@@ -41,25 +34,6 @@ module.exports = {
         }
     },
     arrayCopyNonAtomic: arrayCopyNonAtomic,
-    arrayCopyNew: function(src, srcOff, dest, destOff, length) {
-        var args;
-        //JCSystem.beginTransaction();
-        //if dest.length <  destOff + length or src.length < srcOff + length then throw an exception
-        //in reality, this solution will not result in an error, it will extend the array when needed
-        //and stop copying from the src array when the end is reached.
-        try {
-            args = src.slice(srcOff, length+1);
-            args.unshift(length);
-            args.unshift(destOff);
-            Array.prototype.splice.apply(dest,args);
-        } catch (err) {
-            //JCSystem.abortTransaction();
-            //throw "ArrayOutofBoundsException";
-            return 0;
-        }
-       // JCSystem.commitTransaction();
-        return 1;
-    }
 };
 
 /**

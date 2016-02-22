@@ -49,7 +49,7 @@ function getPrivateExponent(p, q) {
 function setterDecorator(f){
 	function set(){
 		f.apply(this, arguments);
-		if(arguments[0].P && arguments[0].Q && arguments[0].DP1 && 
+		if(arguments[0].P && arguments[0].Q && arguments[0].DP1 &&
 			arguments[0].DQ1 && arguments[0].PQ){
 			keys.setInitialized(arguments[0]);
 		}
@@ -62,7 +62,7 @@ function setterDecorator(f){
  */
 
 module.exports = {
-	run: function(RSAPrivateCrtKey, method, methodType, param, smartcard){
+	run: function(RSAPrivateCrtKey, method, methodType, param){
 		switch(method){
 			case 0:
 				return keys.clearKey(RSAPrivateCrtKey);
@@ -73,15 +73,15 @@ module.exports = {
 			case 3:
 				return keys.isInitialized(RSAPrivateCrtKey);
 			case 4:
-				return this.getDP1(RSAPrivateCrtKey, param[0], param[1], smartcard);
+				return this.getDP1(RSAPrivateCrtKey, param[0], param[1]);
 			case 5:
-				return this.getDQ1(RSAPrivateCrtKey, param[0], param[1], smartcard);
+				return this.getDQ1(RSAPrivateCrtKey, param[0], param[1]);
 			case 6:
-				return this.getP(RSAPrivateCrtKey, param[0], param[1], smartcard);
+				return this.getP(RSAPrivateCrtKey, param[0], param[1]);
 			case 7:
-				return this.getPQ(RSAPrivateCrtKey, param[0], param[1], smartcard);
+				return this.getPQ(RSAPrivateCrtKey, param[0], param[1]);
 			case 8:
-				return this.getQ(RSAPrivateCrtKey, param[0], param[1], smartcard);
+				return this.getQ(RSAPrivateCrtKey, param[0], param[1]);
 			case 9:
 				return this.setDP1(RSAPrivateCrtKey, param[0], param[1], param[2]);
 			case 10:
@@ -103,15 +103,15 @@ module.exports = {
 	 * @constructor
 	 * @param {Number} size
 	 */
-	
+
 	RSAPrivateCrtKey: function(size){
 		//extends private key
 		keys.PrivateKey(this, 5, size);
-		this.P;
-		this.Q;
-		this.DP1;
-		this.DQ1;
-		this.PQ;
+		this.P = undefined;
+		this.Q = undefined;
+		this.DP1 = undefined;
+		this.DQ1 = undefined;
+		this.PQ = undefined;
 		this.key = null;
 	},
 	/**
@@ -127,27 +127,27 @@ module.exports = {
 		}
 	},
 	getDP1: function(RSAPrivateCrtKey, buffer, offset){
-		Util.arrayCopy(RSAPrivateCrtKey.DP1, 0, buffer, offset, 
+		Util.arrayCopy(RSAPrivateCrtKey.DP1, 0, buffer, offset,
 			len(RSAPrivateCrtKey.DP1));
 		return len(RSAPrivateCrtKey.DP1);
 	},
 	getDQ1: function(RSAPrivateCrtKey, buffer, offset){
-		Util.arrayCopy(RSAPrivateCrtKey.DQ1, 0, buffer, offset, 
+		Util.arrayCopy(RSAPrivateCrtKey.DQ1, 0, buffer, offset,
 			len(RSAPrivateCrtKey.DQ1));
 		return len(RSAPrivateCrtKey.DQ1);
 	},
 	getP: function(RSAPrivateCrtKey, buffer, offset){
-		Util.arrayCopy(RSAPrivateCrtKey.P, 0, buffer, offset, 
+		Util.arrayCopy(RSAPrivateCrtKey.P, 0, buffer, offset,
 			len(RSAPrivateCrtKey.P));
 		return len(RSAPrivateCrtKey.P);
 	},
 	getQ: function(RSAPrivateCrtKey, buffer, offset){
-		Util.arrayCopy(RSAPrivateCrtKey.Q, 0, buffer, offset, 
+		Util.arrayCopy(RSAPrivateCrtKey.Q, 0, buffer, offset,
 			len(RSAPrivateCrtKey.Q));
 		return len(RSAPrivateCrtKey.Q);
 	},
 	getPQ: function(RSAPrivateCrtKey, buffer, offset){
-		Util.arrayCopy(RSAPrivateCrtKey.PQ, 0, buffer, offset, 
+		Util.arrayCopy(RSAPrivateCrtKey.PQ, 0, buffer, offset,
 			len(RSAPrivateCrtKey.PQ));
 		return len(RSAPrivateCrtKey.PQ);
 	},

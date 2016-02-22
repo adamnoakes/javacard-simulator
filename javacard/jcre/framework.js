@@ -23,8 +23,17 @@ var util = require('../framework/Util.js');
  */
 
 module.exports = {
+
 	/**
 	 * Handles javacard.framework api calls.
+	 *
+	 * @param  {Number}    classToken The class token.
+	 * @param  {Number}    method     The method token.
+	 * @param  {Number}    type       The method type token.
+	 * @param  {Array}     param      Params popped from operand stack.
+	 * @param  {Object}    obj        The javacard.framework object.
+	 * @param  {SmartCard} smartcard  The smartcard objet.
+	 * @return 						            Error or the result of called function.
 	 */
 	run: function(classToken, method, type, param, obj, smartcard){
 		switch(classToken){
@@ -58,16 +67,16 @@ module.exports = {
 
 	newObject: function(classToken){
 		switch (classToken) {
-            case 3:
-                return new applet.Applet();
-            case 6:
-                return new aid.AID();
-            case 9:
-                return new ownerPIN.OwnerPIN();
-            case 10:
-                return new apdu.APDU();
-            default:
-                return new Error('Unsupported Object');
-        }
+			case 3:
+        return new applet.Applet();
+      case 6:
+        return new aid.AID();
+      case 9:
+        return new ownerPIN.OwnerPIN();
+      case 10:
+        return new apdu.APDU();
+      default:
+        return new Error('Unsupported Object');
+    }
 	}
 };
