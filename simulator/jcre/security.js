@@ -9,12 +9,12 @@
  * @private
  */
 
-var keys = require('../security/keys.js');
-var rsaPrivateKey = require('../security/rsa-private-key.js');
-var rsaPrivateCrtKey = require('../security/rsa-private-crt-key.js');
-var rsaPublicKey = require('../security/rsa-public-key.js');
-var keyBuilder = require('../security/key-builder.js');
-var keyPair = require('../security/key-pair.js');
+var keys = require('../javacard/security/keys.js');
+var rsaPrivateKey = require('../javacard/security/rsa-private-key.js');
+var rsaPrivateCrtKey = require('../javacard/security/rsa-private-crt-key.js');
+var rsaPublicKey = require('../javacard/security/rsa-public-key.js');
+var keyBuilder = require('../javacard/security/key-builder.js');
+var keyPair = require('../javacard/security/key-pair.js');
 /**
  * Module exports.
  * @public

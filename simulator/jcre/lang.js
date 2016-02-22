@@ -8,7 +8,7 @@
 * Module dependencies.
 * @private
 */
-var le = require('../lang/Exceptions.js');
+var le = require('../java/lang/Exceptions.js');
 
 /**
  * Module exports.

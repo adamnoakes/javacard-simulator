@@ -10,10 +10,10 @@
  */
 
 var cipher = require('./cipher.js');
-var Util = require('../../framework/Util.js');
-var keys = require('../../security/keys.js');
-var rsaPublicKey = require('../../security/rsa-public-key.js');
-var rsaPrivateCrtKey = require('../../security/rsa-private-crt-key.js');
+var Util = require('../../javacard/framework/Util.js');
+var keys = require('../../javacard/security/keys.js');
+var rsaPublicKey = require('../../javacard/security/rsa-public-key.js');
+var rsaPrivateCrtKey = require('../../javacard/security/rsa-private-crt-key.js');
 
 /**
  * Module exports.
@@ -104,7 +104,7 @@ module.exports = {
 		var result;
 		var nodeRSA;
 		data = Array.apply(null, Array(inLength)).map(Number.prototype.valueOf,0);
-		require('../../framework/Util.js').arrayCopyNonAtomic(inBuff, inOffset, data, 0, inLength);
+		Util.arrayCopyNonAtomic(inBuff, inOffset, data, 0, inLength);
 		if(data.length != Math.floor(cipherObj.key.size / 8)){
 			console.log(data.length);
 			return new Error('CryptoException.ILLEGAL_VALUE');
@@ -140,7 +140,7 @@ module.exports = {
 			}
 
 			//Copy data to output buffer
-			require('../../framework/Util.js').arrayCopyNonAtomic(result, 0, outBuff, outOffset, result.length);
+			Util.arrayCopyNonAtomic(result, 0, outBuff, outOffset, result.length);
 			return result.length;
 		} catch(err){
 			//Likely because NodeRSA method failed

@@ -8,8 +8,8 @@
  * Module dependencies.
  * @private
  */
-var eeprom = require('../smartcard/eeprom.js');
-var ram = require('../smartcard/ram.js');
+var eeprom = require('../../smartcard/eeprom.js');
+var ram = require('../../smartcard/ram.js');
 var e = require('./Exceptions.js');
 
 /**

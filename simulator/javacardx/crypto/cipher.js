@@ -10,7 +10,7 @@
  */
 
 
-var keys = require('../../security/keys.js');
+var keys = require('../../javacard/security/keys.js');
 
 /**
  * Module exports.

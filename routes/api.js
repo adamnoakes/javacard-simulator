@@ -1,18 +1,18 @@
 
-/* 
+/*
  * Handles the requests for the simulator application
- */ 
+ */
 
 var express = require('express');
 var validator = require('validator');
 var router = express.Router();
-var smartcard = require('../javacard/smartcard/smartcard.js');
-var eeprom = require('../javacard/smartcard/eeprom.js');
-var smartcard = require('../javacard/smartcard/smartcard.js');
+var smartcard = require('../simulator/smartcard/smartcard.js');
+var eeprom = require('../simulator/smartcard/eeprom.js');
+var smartcard = require('../simulator/smartcard/smartcard.js');
 
 module.exports = function () {
     var router = express.Router();
-    
+
     /* GET smartcards -> Return available smart cards. */
 	router.get('/smartcards', function(req, res){
 	    req.db.collection('smartcards').find({}, { fields : { 'EEPROM.cardName':1, _id:0} }).toArray(function(e,docs){
@@ -28,11 +28,11 @@ module.exports = function () {
 	        'result': false,
 	        'message': "Alphanumeric characters only."
 	    });
-	    
+
 	    //Check if the cardname already exists
 	    req.db.collection('smartcards').find(
 	        {"EEPROM.cardName": req.body.cardName},
-	        { limit : 1 }).toArray( 
+	        { limit : 1 }).toArray(
 	        function(e, docs){
 	            //Name already exists
 	            if(docs.length > 0){
@@ -45,7 +45,7 @@ module.exports = function () {
 	                var newcard = new smartcard.SmartCard(req.body.cardName);
 	                req.db.collection('smartcards').insert(newcard, function (err, doc) {
 	                    if (err) {
-	                    	console.log(err)
+	                    	console.log(err);
 	                        // If it failed, return error
 	                        res.send({
 	                            'result': false,
@@ -108,7 +108,7 @@ module.exports = function () {
 	        }
 	    );
 	});
-	
+
 	/* POST apdu -> Send APDU to card's processor for execution. */
 	router.post('/apdu', function(req, res){
 	    if(!req.session.smartcard){
@@ -155,4 +155,4 @@ module.exports = function () {
 	});
 
     return router;
-}
+};

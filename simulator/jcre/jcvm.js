@@ -5,7 +5,7 @@ var ram = require('../smartcard/ram.js');
 var ins = require('./instruction-functions.js');
 var utilities = require('../utilities/utilities.js');
 var cap = require('../smartcard/cap.js');
-var ISO7816 = require('../framework/ISO7816.js');
+var ISO7816 = require('../javacard/framework/ISO7816.js');
 
 //JCVM
 

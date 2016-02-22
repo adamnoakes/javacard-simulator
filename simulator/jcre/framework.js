@@ -9,13 +9,13 @@
  * @private
  */
 
-var applet = require('../framework/Applet.js');
-var exceptions = require('../framework/Exceptions.js');
-var aid = require('../framework/AID.js');
-var jcSystem = require('../framework/JCSystem.js');
-var ownerPIN = require('../framework/OwnerPIN.js');
-var apdu = require('../framework/APDU.js');
-var util = require('../framework/Util.js');
+var applet = require('../javacard/framework/Applet.js');
+var exceptions = require('../javacard/framework/Exceptions.js');
+var aid = require('../javacard/framework/AID.js');
+var jcSystem = require('../javacard/framework/JCSystem.js');
+var ownerPIN = require('../javacard/framework/OwnerPIN.js');
+var apdu = require('../javacard/framework/APDU.js');
+var util = require('../javacard/framework/Util.js');
 
 /**
  * Module exports.

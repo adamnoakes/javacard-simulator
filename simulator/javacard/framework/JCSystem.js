@@ -1,17 +1,17 @@
 ﻿/*!
  * JCSystem
  *
- * The this class includes a collection of methods to control applet execution, resource management, 
- * atomic transaction management, object deletion mechanism and inter-applet object sharing in the Java Card 
+ * The this class includes a collection of methods to control applet execution, resource management,
+ * atomic transaction management, object deletion mechanism and inter-applet object sharing in the Java Card
  * environment.
- * 
+ *
  * @author Adam Noakes
  * University of Southamption
  */
 
 //this class needs work
-var opcodes = require('../utilities/opcodes.js');
-var processor = require('../smartcard/processor.js');
+var opcodes = require('../../utilities/opcodes.js');
+var processor = require('../../smartcard/processor.js');
 
 //A0 00 00 00 62 01 01 Framework
 module.exports = {

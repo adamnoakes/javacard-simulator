@@ -15,7 +15,7 @@
  */
 var util = require('./Util.js');
 var e = require('./Exceptions.js');
-var le = require('../lang/exceptions.js');
+var le = require('../../java/lang/exceptions.js');
 /**
  * Module exports.
  * @public

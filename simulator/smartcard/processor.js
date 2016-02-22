@@ -1,4 +1,4 @@
-var apdu = require('../framework/APDU.js');
+var apdu = require('../javacard/framework/APDU.js');
 var eeprom = require('./eeprom.js');
 var installer = require('./installer.js');
 var opcodes = require('../utilities/opcodes.js');
