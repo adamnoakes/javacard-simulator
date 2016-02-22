@@ -1,5 +1,5 @@
-/* 
- *  RAM Functions  
+/*
+ *  RAM Functions
  */
 module.exports = {
     /**
@@ -11,10 +11,11 @@ module.exports = {
         this.gRef = undefined;
         this.asyncstate = false;
         this.transaction_buffer = [];
+        this.heap = [0xA0,0x00];
+        this.objectheap = [];
         this.select_statement_flag = 0; //should probabl be stored in processor
         this.installation_failed = false;
         this.installingAppletAID = undefined;
-
         this.currentComponent = null;
         this.tempComponents = [];
     },
@@ -30,4 +31,3 @@ module.exports = {
     setTempComponent: function(RAM, pos, val){RAM.tempComponents[pos] = val;},
     resetTempComponents: function(RAM){RAM.tempComponents = [];},
 }
-    

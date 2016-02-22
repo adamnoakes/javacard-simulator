@@ -8,7 +8,7 @@ var eeprom = require('./eeprom.js');
  * @param  {SmartCard}  smartcard
  * @param  {function} cb
  */
-function process(smartcard, cb) {
+function process(smartcard, buffer, cb) {
     /**
      * Create a new package
      */
@@ -22,8 +22,8 @@ function process(smartcard, cb) {
      * the component data.
      */
 	this[0xB2] = function (cb){
-        ram.setCurrentComponent(smartcard.RAM, smartcard.processor.P1);
-        ram.setTempComponent(smartcard.RAM, 
+        ram.setCurrentComponent(smartcard.RAM, buffer[2]);//p1
+        ram.setTempComponent(smartcard.RAM,
             ram.getCurrentComponent(smartcard.RAM), []);
         //AppletManager.CurrentComponent = P1;
         //PageMethods.startComponent(cardname; P1);
@@ -32,9 +32,9 @@ function process(smartcard, cb) {
     /**
      * Write data in buffer to current component.
      */
-	this[0xB4] = function(cb){
+	this[0xB4] = function(cb, buffer){
 		//Component Data
-        var data = smartcard.processor.buffer.slice(5, 5 + smartcard.processor.LC);
+        var data = buffer.slice(5, 5 + buffer[4]);//LC
         //this.asyncState = false;
         //why get current component from variable and not from parameter?
         //PageMethods.writeComponent(cardname; AppletManager.CurrentComponent; data; Result_Method);
@@ -72,13 +72,13 @@ function process(smartcard, cb) {
     /**
      * Creates an instance of a package on the smart card.
      */
-    this[0xB8] = function(cb){
-        var AIDLength = smartcard.processor.buffer[5];
-        var createAID = smartcard.processor.buffer.slice(6, 6+AIDLength);
+    this[0xB8] = function(cb, buffer){
+        var AIDLength = buffer[5];
+        var createAID = buffer.slice(6, 6+AIDLength);
         console.log("creating aid:");
         console.log(createAID);
         var params;
-        //get the cap 
+        //get the cap
         var packageToCreate = eeprom.getPackage(smartcard.EEPROM, createAID);
         //if the package does not exists the we can't create an instance --> fail.
         if(!packageToCreate){
@@ -91,20 +91,21 @@ function process(smartcard, cb) {
             for(var i=0; i < packageToCreate.COMPONENT_Applet.applets.length; i++){//TODO --> change from 0
                 ram.setInstallingAppletAID(smartcard.RAM, packageToCreate.COMPONENT_Applet.applets[i].AID);
                 params =[];
-                params[0] = smartcard.processor.buffer;
+                params[0] = buffer;
                 params[1] = AIDLength + 7;
-                params[2] = smartcard.processor.buffer[AIDLength + 1];
+                params[2] = buffer[AIDLength + 1];
                 //execute the install code
                 jcvm.createInstance(smartcard, packageToCreate, params, i, cb);
             }
             //return "0x9000";
         }
-        
+
     };
 
     //Call the relevant function and return result
-    //return 
-    this[smartcard.processor.INS](cb);
+    //return
+    this[buffer[1]](cb, buffer);
 }
 
 exports.process = process;
+exports.AID = [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01];

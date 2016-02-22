@@ -15,16 +15,8 @@ module.exports = {
         this.response = undefined;
         this.buffer = [];
         this.transaction_flag = false;
-        this.CLA = undefined;
-        this.INS = undefined;
-        this.P1 = undefined;
-        this.P2 = undefined;
-        this.LC = undefined;
-        this.apdu = undefined;
         this.selectedAID = undefined;
         this.appletInstance = undefined;
-        this.installerAID = [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01];//merge into installer module
-        //this.installer = new installJS.Installer(this);//Should this be moved down? --> YES when select install applet, just realised it messed up probably due to installer boolean down there \/
     },
 
     /**
@@ -34,55 +26,45 @@ module.exports = {
      * @param  {Function} cb;
      */
     process: function(smartcard, buffer, cb){
-        //contruct an APDU objects
-        smartcard.processor.apdu = new apdu.APDU();
-        apdu.constr(smartcard.processor.apdu, buffer);
-        if(smartcard.processor.apdu.broken){
+        var cla = buffer[0];    //@adam class of instruction, category
+        var ins = buffer[1];    //@adam instruction
+        var p1 = buffer[2];     //@adam parameter 1
+        var p2 = buffer[3];     //@adam parameter 2
+        var lc = buffer[4];     //@adam length of command data
+        var tmpApdu = new apdu.APDU(); //contruct an APDU objects
+        apdu.constr(tmpApdu, buffer);
+        if(tmpApdu.broken){
             return cb(new Error("Broken APDU"), "0x6F00");
         }
+
         //Set the APDU object on the first position of the object heap
-        smartcard.EEPROM.objectheap[0] = smartcard.processor.apdu; //maybe object heap should be stored in RAM?
-        //Reset the processor response message
-        smartcard.processor.response = ""; //consider moving to RAM.
+        smartcard.EEPROM.objectheap[0] = tmpApdu; //maybe object heap should be stored in RAM?
+
         //Reset variables
         smartcard.RAM.asyncState = false; //no idea what this is for
-        smartcard.processor.transaction_flag = false; //probably should be stored in the processor? ->done
         smartcard.RAM.transaction_buffer = [];
-        smartcard.processor.buffer = buffer; //store buffer for installer
-        //Assign APDU values
-        smartcard.processor.CLA = buffer[0];    //@adam class of instruction, category
-        smartcard.processor.INS = buffer[1];    //@adam instruction
-        smartcard.processor.P1 = buffer[2];     //@adam parameter 1
-        smartcard.processor.P2 = buffer[3];     //@adam parameter 2
-        smartcard.processor.LC = buffer[4];     //@adam length of command data
-
+        smartcard.processor.transaction_flag = false; //probably should be stored in the processor? ->done
+        smartcard.RAM.select_statement_flag = 0;
 
         //If select applet command
-        if ((smartcard.processor.CLA === 0x00) && (smartcard.processor.INS == 0xA4) && (smartcard.processor.P1 == 0x04) && (smartcard.processor.P2 === 0x00)) {
-            //Attempt to select the specified applet
-            return this.selectApplet(smartcard, buffer.slice(5,5+smartcard.processor.LC), cb);
-        } else {
-            smartcard.RAM.select_statement_flag = 0;
+        if (buffer.slice(0,4).join() === [0x00, 0xA4, 0x04, 0x00].join()) {
+            return this.selectApplet(smartcard, buffer.slice(5,5+lc), cb);
         }
 
         //If the selected applet is the installer and an install command has been sent, process by installer module
-        if((smartcard.EEPROM.selectedApplet.AID.join() === smartcard.processor.installerAID.join()) && (smartcard.processor.CLA == 0x80)){
-            return installer.process(smartcard, cb);
+        if((smartcard.EEPROM.selectedApplet.AID.join() === installer.AID.join()) && (cla == 0x80)){
+            return installer.process(smartcard, buffer, cb);
         }
 
-        var params = [];
-        params[0] = 0;
-        jcvm.process(smartcard, params, function(err, res){
+        jcvm.process(smartcard, [0], function(err, res){
             if(err){
                 cb(err, res);
             } else {
                 var output = "";
-                if (apdu.getCurrentState(smartcard.processor.apdu) >= 3) {
-                    //@adam -1 has been added as a quick fix, why the expected length is being outputtted
-                    //      should be looked into.
-                    for (var k = 0; k < apdu.getBuffer(smartcard.processor.apdu).length; k++) {
-                        output += util.addX(util.addpad(apdu.getBuffer(smartcard.processor.apdu)[k])) + " ";
-                        //output += this.apdu.getBuffer()[k] + "";
+                var apdu = smartcard.EEPROM.objectheap[0];
+                if (apdu.state >= 3) {
+                    for (var k = 0; k < apdu.buffer.length; k++) {
+                        output += util.addX(util.addpad(apdu.buffer[k])) + " ";
                     }
                 }
                 cb(undefined, output + res);
@@ -104,18 +86,17 @@ module.exports = {
         smartcard.processor.selectedAID = []; //not the way to deselect, see code below
         //set applet aid and cap file in eeprom
         if(eeprom.setSelectedApplet(smartcard.EEPROM, appletAID)){
-            if(smartcard.EEPROM.selectedApplet.AID.join() === smartcard.processor.installerAID.join()){
+            if(smartcard.EEPROM.selectedApplet.AID.join() === installer.AID.join()){
                 return cb(undefined, "0x9000");
-                //return;//if installer then the rest is not necessary
             }
 
-            for(var j = 0; j < smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.count; j++) { 
+            for(var j = 0; j < smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.count; j++) {
                 if(smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.packages[j].AID.join() === opcodes.jframework.join()) {
-                    eeprom.setHeapValue(smartcard.EEPROM, 0, 160 + (j*256) + 10);
+                    smartcard.RAM.heap[0] = 160 + (j*256) + 10;
                     break;
                 }
             }
-            
+
             var startcode = cap.getStartCode(smartcard.EEPROM.selectedApplet.CAP, appletAID, 6);
             var params = [];
 
@@ -139,14 +120,14 @@ module.exports = {
             } else {
                 processSelect();
             }
-            
+
         } else {
             //@adam no applet found
             cb(new Error(), "0x6A82");
         }
     },
-    /* 
-     *  JCSystem Functions  
+    /*
+     *  JCSystem Functions
      */
     abortTransaction: function (smartcard) {
 
@@ -155,7 +136,7 @@ module.exports = {
             smartcard.Processor.transaction_flag = false;
             smartcard.RAM.transaction_buffer = [];
         }
-        
+
         return;
     },//00
 
@@ -177,7 +158,7 @@ module.exports = {
                 } else {
                     eeprom.setHeap(smartcard.EEPROM, Number(spl[0]), Number(spl[1]));
                 }
-                
+
             }
             smartcard.RAM.transaction_buffer = [];
         }

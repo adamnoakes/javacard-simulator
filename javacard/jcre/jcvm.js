@@ -90,9 +90,9 @@ module.exports = {
         var frames = [];
         frames[currentFrame] = new this.Frame();
 
-        var address = eeprom.getHeapSize(smartcard.EEPROM);
+        var address = smartcard.RAM.heap.length;
         //stores buffer on the heap
-        eeprom.appendHeap(smartcard.EEPROM, params[0]);
+        smartcard.RAM.heap.push(params[0]);
         frames[currentFrame].local_vars.push("#H" + address);
         frames[currentFrame].local_vars.push(params[1]);
         frames[currentFrame].local_vars.push(params[2]);
@@ -133,6 +133,7 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
     var localVariables = frames[currentFrame].local_vars;
     var invoker = frames[currentFrame].invoker;
     var constantPool = capFile.COMPONENT_ConstantPool.constant_pool;
+    var heap = smartcard.RAM.heap;
     var tempOperands;
     var tempValue;
     var apiresult;
@@ -823,13 +824,15 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
             frames[currentFrame].return_pointer = i + 3;
             if(params[0] >= 128){
-                apiresult = ins.invokevirtualExternal(smartcard, capFile, operandStack, params);
+                apiresult = ins.invokevirtualExternal(smartcard, capFile, heap,
+                  operandStack, params);
                 if(apiresult instanceof Error){
                     return apiError(apiresult, cb);
                 }
                 i += 3; break;
             } else {
-                i = ins.invokevirtualInternal(capFile, opcodes, operandStack, frames, params);
+                i = ins.invokevirtualInternal(capFile, opcodes, operandStack,
+                  frames, params);
                 frames[frames.length - 1].invoker = currentFrame;
                 currentFrame = frames.length - 1;
             }
@@ -838,13 +841,15 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);//info
             frames[currentFrame].return_pointer = i + 3;
             if(params[0] >= 128){
-                apiresult = ins.invokespecialExternal(smartcard, capFile, operandStack, params);
+                apiresult = ins.invokespecialExternal(smartcard, capFile, heap,
+                  operandStack, params);
                 if(apiresult instanceof Error){
                     return apiError(apiresult, cb);
                 }
                 i += 3; break;
             } else {
-                i = ins.invokespecialInternal(opcodes, operandStack, frames, params);
+                i = ins.invokespecialInternal(opcodes, operandStack, frames,
+                  params);
                 frames[frames.length - 1].invoker = currentFrame;
                 currentFrame = frames.length - 1;
             }
@@ -853,14 +858,16 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
             frames[currentFrame].return_pointer = i + 3;
             if(params[0] >= 128){
-                apiresult = ins.invokestaticExternal(smartcard, capFile, operandStack, params);
+                apiresult = ins.invokestaticExternal(smartcard, capFile, heap,
+                  operandStack, params);
                 if(apiresult instanceof Error){
                     return apiError(apiresult, cb);
                 }
                 i += 3; break;
             } else {
                 currentFrame = frames.length;
-                i = ins.invokespecialInternal(opcodes, operandStack, frames, params);
+                i = ins.invokespecialInternal(opcodes, operandStack, frames,
+                  params);
             }
             break;
         case mnemonics.invokeinterface: //0x8E
@@ -868,7 +875,8 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             var numOfArgs = opcodes[i + 1];
             var classRef = constantPool[(opcodes[i + 2] << 8) + opcodes[i + 3]].info;
             var methodToken = opcodes[i + 4];
-            apiresult = ins.invokeinterface(smartcard, capFile, operandStack, classRef, methodToken, numOfArgs);
+            apiresult = ins.invokeinterface(smartcard, capFile, operandStack,
+              classRef, methodToken, numOfArgs);
             if(apiresult instanceof Error){
                 return apiError(apiresult, cb);
             }
@@ -876,7 +884,7 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
         case mnemonics.new_v: //0x8F
 
             //new, ind1, ind2
-            var ref = eeprom.getHeapSize(smartcard.EEPROM);
+            var ref = heap.length;
 
             var done = false;
             info = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
@@ -894,10 +902,10 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                             clsno = j;
                             var dis = capFile.COMPONENT_Class.interface_info[j].declared_instance_size;
                             //hv += ","+offset;
-                            eeprom.appendHeap(smartcard.EEPROM, offset);
+                            heap.push(offset);
 
                             //for (var k = 0; k < dis; k++) { hv += ",0"; }
-                            for (var k = 0; k < dis; k++) { eeprom.appendHeap(smartcard.EEPROM, 0); }
+                            for (var k = 0; k < dis; k++) { heap.push(0); }
 
                             info[0] = capFile.COMPONENT_Class.interface_info[j].super_class_ref1;
                             info[1] = capFile.COMPONENT_Class.interface_info[j].super_class_ref2;
@@ -909,8 +917,8 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                 } else {
                     var clsno = ((info[0] - 128) << 8) + info[1];
                     //hv += ",A"+clsno+","+objectheap.length;
-                    eeprom.appendHeap(smartcard.EEPROM, 160+clsno);
-                    eeprom.appendHeap(smartcard.EEPROM, eeprom.getObjectHeap(smartcard.EEPROM).length);
+                    heap.push(160+clsno);
+                    heap.push(eeprom.getObjectHeap(smartcard.EEPROM).length);
                     if ((info[1] == 3) && (capFile.COMPONENT_Import.packages[info[0] - 128].AID.join() === mnemonics.jframework.join())) {
                         ram.setGRef(smartcard.RAM, ref);
                     }
@@ -928,14 +936,14 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             //newarray, atype
             var count = operandStack.pop();
             //var atype = opcodes[i + 1];
-            var ref = eeprom.getHeapSize(smartcard.EEPROM);
+            var ref = heap.length;
             if (count < 0) { executeBytecode.exception_handler(mnemonics.jlang,6,"");}
 
             //allocate space on heap
            // var heapspace = [];
-            eeprom.appendHeap(smartcard.EEPROM, count);
+            heap.push(count);
             for (var j = 0; j < count; j++) {
-               eeprom.appendHeap(smartcard.EEPROM, 0);
+               heap.push(0);
             }
             //newHeap(hv);
             //push ref onto operand stack
@@ -991,21 +999,21 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                 }
             }
 
-            var ref = eeprom.getHeapSize(smartcard.EEPROM);
+            var ref = heap.length;
 
             //var hv = "," + count;
-            eeprom.appendHeap(smartcard.EEPROM, count);
+            heap.push(count);
             var ival = 0;
             for (var j = 0; j < count; j++) {
                 ival = ref + dis * (j + 1) + 1;
-                eeprom.appendHeap(smartcard.EEPROM, ival);
+                heap.push(ival);
                 //hv += "," + ival;
             }
 
             for (var j = 0; j < count; j++) {
                 //hv += ","+ dis;
                 //hv += tv;
-                eeprom.appendHeap(smartcard.EEPROM, tv);
+                heap.push(tv);
             }
             //newHeap(hv);
             operandStack.push(ref);
@@ -1014,16 +1022,16 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
         case mnemonics.arraylength: //0x92
             var arref = operandStack.pop();
             if (arref === null) { executeBytecode.exception_handler(mnemonics.jlang,6,""); }
-            var ar = eeprom.getHeapValue(smartcard.EEPROM, arref);
+            var ar = heap[arref];
             if (ar.slice(0, 2) == "#H") {
-                ar = eeprom.getHeapValue(Number(ar.split("#H")[1])).length;
+                ar = heap[Number(ar.split("#H")[1])].length;
             }
 
             operandStack.push(ar);
             i++; break;
         case mnemonics.athrow: //0x93
             objref = operandStack.pop();
-            var oheap = eeprom.getHeapValue(smartcard.EEPROM, objref);
+            var oheap = heap[objref];
             //search for catch clause
             if(oheap.slice(0,1) == "A") {
                 var ncls = Number(oheap.slice(1));
@@ -1382,12 +1390,12 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
         var jf;
 
         //assume internal
-        var refclass = eeprom.getHeapValue(smartcard.EEPROM, objref);
+        var refclass = heap[objref];
         while (!bfound) {
             //get object field size
             if (refclass == infoclass) {
                 bfound = true;
-                retval = eeprom.getHeapValue(smartcard.EEPROM, oheap + info[2] + 1);
+                retval = heap[oheap + info[2] + 1];
             } else {
 
                 for (var j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
@@ -1417,12 +1425,12 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
         var jf;
 
         //assume internal
-        var refclass = eeprom.getHeapValue(smartcard.EEPROM, objref);
+        var refclass = heap[objref];
         while (!bfound) {
             //get object field size
             if (refclass === infoclass) {
                 bfound = true;
-                eeprom.setHeapValue(smartcard.EEPROM, oheap + info[2] + 1, val);
+                heap[oheap + info[2] + 1] =  val;
             } else {
                 for (var j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
                     if (capFile.COMPONENT_Class.interface_info[j].start == refclass) {

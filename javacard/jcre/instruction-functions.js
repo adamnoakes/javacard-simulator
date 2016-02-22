@@ -206,7 +206,7 @@ module.exports = {
 	    writeStaticField(opstr);
 	},
 
-	invokevirtualExternal: function(smartcard, capFile, operandStack, params){
+	invokevirtualExternal: function(smartcard, capFile, heap, operandStack, params){
 		var param0 = params[0] - 128;
 		var packageAID = capFile.COMPONENT_Import.packages[param0].AID;
 		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], 3);
@@ -222,7 +222,7 @@ module.exports = {
 	    var object = operandStack.pop();
 
 	    if(!(object instanceof Object)){
-	    	var ocls = eeprom.getHeapValue(smartcard.EEPROM, object);
+	    	var ocls = heap[object];
 	    	var clssig = ((param0 << 8) + params[1]);
 
 	        while (!found) {
@@ -233,14 +233,14 @@ module.exports = {
 	                for (var j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
 	                    if (capFile.COMPONENT_Class.interface_info[j].start == ocls) {
 	                        object += capFile.COMPONENT_Class.interface_info[j].declared_instance_size + 1;
-	                        ocls = eeprom.getHeapValue(smartcard.EEPROM, object);
+	                        ocls = heap[object];
 	                        break;
 	                    }
 	                }
 	            }
 	        }
-	        var heapref = eeprom.getHeapValue(smartcard.EEPROM, object);
-	        object = eeprom.getObjectHeapValue(smartcard.EEPROM, heapref);
+
+	        object = eeprom.getObjectHeapValue(smartcard.EEPROM, heap[object]);
 	    }
 	    var apiresult = api.run(packageAID, params[1], params[2], 3, args, object, smartcard);
 
@@ -248,8 +248,8 @@ module.exports = {
 	        return apiresult;
 	    } else if (apiresult !== undefined){//if not void
 	        if(apiresult.constructor === Array){//if array
-	            operandStack.push("#H" + eeprom.getHeapSize(smartcard.EEPROM));
-				eeprom.appendHeap(smartcard.EEPROM, apiresult);
+	            operandStack.push("#H" + heap.length);
+				heap.push(apiresult);
 	        } else if(!apiresult.type) {//if it doesn't have a type, i.e it's not transient
 	            operandStack.push(apiresult);
 	        } else {
@@ -288,7 +288,7 @@ module.exports = {
 		return offset;
 	},
 
-	invokespecialExternal: function(smartcard, capFile, operandStack, params){
+	invokespecialExternal: function(smartcard, capFile, heap, operandStack, params){
 		var param0 = params[0] - 128;
 		var packageAID = capFile.COMPONENT_Import.packages[param0].AID;
 		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], 6);
@@ -303,7 +303,7 @@ module.exports = {
 
 	    var object = operandStack.pop();
 	    if(!(object instanceof Object)){
-	    	var ocls = eeprom.getHeapValue(smartcard.EEPROM, object);
+	    	var ocls = heap[object];
 	    	var clssig = ((param0 << 8) + params[1]);
 	    	while (!found) {
                 if (160 + clssig == ocls) {//clssig + 160 changed from A + clssig
@@ -313,22 +313,22 @@ module.exports = {
                     for (var j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
                         if (capFile.COMPONENT_Class.interface_info[j].start === ocls) {
                             object += capFile.COMPONENT_Class.interface_info[j].declared_instance_size + 1;
-                            ocls = eeprom.getHeapValue(smartcard.EEPROM, object);
+                            ocls = heap[object];
                             break;
                         }
                     }
                 }
             }
-            var heapref = eeprom.getHeapValue(smartcard.EEPROM, object);
-            object = eeprom.getObjectHeapValue(smartcard.EEPROM, heapref);
+
+            object = eeprom.getObjectHeapValue(smartcard.EEPROM, heap[object]);
 	    }
 	    var apiresult = api.run(packageAID, params[1], params[2], 6, args, object, smartcard);
 	    if(apiresult instanceof Error){
             return apiresult;
         } else if (apiresult !== undefined){//if not void
 	        if(apiresult.constructor === Array){//if array
-	        	operandStack.push("#H" + eeprom.getHeapSize(smartcard.EEPROM));
-	            eeprom.appendHeap(smartcard.EEPROM, apiresult);
+	        	operandStack.push("#H" + heap.length);
+	            heap.push(apiresult);
 	        } else if(!apiresult.type) {//if it doesn't have a type, i.e it's not transient
 	            operandStack.push(apiresult);
 	        } else {
@@ -358,7 +358,7 @@ module.exports = {
 
         return offset;
 	},
-	invokestaticExternal: function(smartcard, capFile, operandStack, params){
+	invokestaticExternal: function(smartcard, capFile, heap, operandStack, params){
 		var param0 = params[0] - 128;
 		var packageAID = capFile.COMPONENT_Import.packages[param0].AID;
 		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], 6);
@@ -375,8 +375,8 @@ module.exports = {
             return apiresult;
         } else if (apiresult !== undefined){//if not void
 	        if(apiresult.constructor === Array){//if array
-	        	operandStack.push("#H" + eeprom.getHeapSize(smartcard.EEPROM));
-	            eeprom.appendHeap(smartcard.EEPROM, apiresult);
+	        	operandStack.push("#H" + heap.length);
+	            heap.push(apiresult);
 	        } else if(!apiresult.transientArray) {//if it doesn't have a type, i.e it's not transient
 	            operandStack.push(apiresult);
 	        } else {
@@ -425,7 +425,7 @@ function loadArray(smartcard, parameter){
         parameter instanceof String){
         if (parameter.toString().slice(0, 2) == "#H") {
             references = parameter.split('#H');
-            return eeprom.getHeapValue(smartcard.EEPROM, Number(references[1]));
+            return smartcard.RAM.heap[Number(references[1])];//TODO --> remove refernce to smartcard, replace with heap
         } else if (parameter.toString().slice(0, 1) == "T"){
             references = parameter.slice(1).split("#");
             if(smartcard.RAM.transient_data[Number(references[0])] === undefined){

@@ -21,7 +21,7 @@ var e = require('./Exceptions.js');
 module.exports = {
     /**
      * Handles javacard.framework.Applet api calls
-     * 
+     *
      * @param  {Number} method The method token
      * @param  {Number} type   The method type token
      * @param  {Array}  param  Popped from operand stack
@@ -38,14 +38,14 @@ module.exports = {
                 return new Error('Applet.equals() not implemented.');
             case 1:
                 //if(param){//public static install(BSB)
-                    return eeprom.addInstalledApplet(smartcard.EEPROM, smartcard.RAM.installingAppletAID, smartcard.RAM.gRef);//ISSUE
+                    return addInstalledApplet(smartcard);
                 //}
                 //protected final register()
                 //not implmented
-                return;
+
             case 2://protected final register(BSB)
                 //TODO-> register should use parameters.
-                return eeprom.addInstalledApplet(smartcard.EEPROM, smartcard.RAM.installingAppletAID, smartcard.RAM.gRef);//ISSUE
+                return addInstalledApplet(smartcard);//ISSUE
                 //obj.register(param[0], param[1], param[2]);
             case 3://protected final selectingApplet() -> boolean
                 return ram.getSelectStatementFlag(smartcard.RAM);//obj.selectingApplet();
@@ -55,12 +55,18 @@ module.exports = {
             case 7://public abstract process(APDU) -> void
                 return;
             default:
-                return new Error('Method not defined');    
+                return new Error('Method not defined');
         }
     },
     Applet: Applet
 };
 
+function addInstalledApplet(smartcard){
+  var appletAID = smartcard.RAM.installingAppletAID;
+  var gRef = smartcard.RAM.gRef;
+	var installedApplets = smartcard.EEPROM.installedApplets;
+  installedApplets.push({'AID': appletAID, 'appletRef': gRef, 'heap': smartcard.RAM.heap});
+}
 /**
  * ADAM'S CODE ENDS HERE
  */
@@ -75,17 +81,17 @@ function Applet() {
     //Class Token - 03
     this.cls = 3;
     var appAID = "";
-    
+
     //06-00 Constructor
-    Applet.constr = function() 
+    Applet.constr = function()
     {
         //thePrivAccess = PrivAccess.getPrivAccess();
     }
     //06-01
     Applet.install = function(bArray, short, byte) {
         return e.getISOException(27265);
-    }; 
-    
+    };
+
 
     this.reg = function() {
         //01 Create Applet Instance
