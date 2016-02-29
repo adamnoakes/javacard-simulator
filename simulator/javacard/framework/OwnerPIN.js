@@ -1,143 +1,216 @@
-
-// 09
-
-var e = require('./Exceptions.js');
-/**
- * functionality of this class has not been checked by adam
+/*!
+ * OwnerPIN
  *
+ * This class represents an Owner PIN, implements Personal Identification Number
+ * functionality as defined in the PIN interface, and provides the ability to
+ * update the PIN and thus owner functionality.
+
+ * @author Adam Noakes
+ * University of Southamption
  */
-function OwnerPIN() {
 
+/**
+ * Module dependencies.
+ * @private
+ */
+var JCSystem = require('./JCSystem.js');
+var e = require('./Exceptions.js');
+var le = require('../../java/lang/exceptions.js');
 
-    var tryLimit = 0;
-    var maxPINSize = 0;
-    var pinValue = [];
-    var pinSize = 0;
-    var flags = [0]; //bool
-    var VALIDATED = 0;
-    var NUMFLAGS = 1;
-    var triesLeft = 0;
-    this.cls = 9;
+/**
+ * Module exports.
+ * @public
+ */
 
-
-
-    function getValidatedFlag() {
-        return flags[0];
+module.exports ={
+  /**
+   * Handles javacard.framework.OwnerPIN api calls.
+   * @param  {Number}   method The method token.
+   * @param  {Number}   type   The method type token.
+   * @param  {Array}    param  Popped from operand stack.
+   * @param  {OwnerPIN} obj    The OwnerPIN object.
+   * @return                   Error or the result of called function.
+   */
+  run: function(method, type, param, obj){
+    switch(method){
+      case 0://init
+        return init(obj, param[0], param[1]);
+      case 1://check
+        return check(obj, param[0], param[1], param[2]);
+      case 2://getTriesRemaining
+        return getTriesRemaining(obj);
+      case 3://getValidatedFlag (protected)
+        return getValidatedFlag(obj);
+      case 4://isValidated
+        return isValidated(obj);
+      case 5://reset
+        return reset(obj);
+      case 6://resetAndUnblock
+        return resetAndUnblock(obj);
+      case 7://setValidatedFlag
+        return setValidatedFlag(obj, param[0]);
+      case 8://update
+        return update(obj, param[0], param[1], param[3]);
+      default:
+        return new Error('Method ' + method + ' not defined for OwnerPIN');
     }
+  },
 
-    function setValidatedFlag(value) {
-        flags[0] = value;
+  /**
+   * Called on new keyword and sets initial values.
+   */
+  OwnerPIN: function(){
+    this.pin = [];
+    this.tryLimit = 0;
+    this.triesRemaining = 0;
+    this.maxPINSize = 0;
+    this.validatedFlag = false;
+    this.blocked = false;
+  }
+};
+
+/**
+ * OwnerPIN contructor, sets values.
+ *
+ * @param  {OwnerPIN} ownerPIN   The OwnerPIN object.
+ * @param  {Number}   tryLimit   The maximum number of times an incorrect PIN
+ *                               can be presented. tryLimit must be >=1
+ * @param  {Number}   maxPINSize The maximum allowed PIN size.
+ *                               maxPINSize must be >=1
+ */
+function init(ownerPIN, tryLimit, maxPINSize){
+  ownerPIN.tryLimit = tryLimit;
+  ownerPIN.maxPINSize = maxPINSize;
+}
+
+/**
+ * Compares pin against the PIN value. If they match and the PIN is not blocked,
+ * it sets the validated flag and resets the try counter to its maximum.
+ *
+ * @param  {OwnerPIN} ownerPIN The OwnerPIN object.
+ * @param  {Array}    pin      The byte array containing the PIN being checked.
+ * @param  {Number}   offset   The starting offset in the pin array.
+ * @param  {Number}   length   The length of pin.
+ * @return {boolean}           true if the PIN value matches; false otherwise.
+ */
+function check(ownerPIN, pin, offset, length){
+  if(pin.length < offset + length || offset < 0 || length < 0){
+    logAttempt(ownerPIN);
+    return le.getArrayIndexOutOfBounds();
+  }
+  if(pin || pin.constructor !== Array){
+    logAttempt(ownerPIN);
+    return le.getNullPointer();
+  }
+  if(ownerPIN.blocked || ownerPIN.pin.length !== pin.length){
+    logAttempt(ownerPIN);
+    return false;
+  }
+  for(var i = 0; i < pin.length; i++){
+    if(pin[i] !== ownerPIN.pin[i]){
+      logAttempt(ownerPIN);
+      return false;
     }
+  }
+  ownerPIN.validatedFlag = true;
+  ownerPIN.triesLeft = ownerPIN.tryLimit;
+  return true;
+}
 
-    function resetTriesRemaining() {
-        triesLeft = tryLimit;
+/**
+ * Returns the number of times remaining that an incorrect PIN
+ * can be presented before the PIN is blocked.
+ *
+ * @param  {OwnerPIN} ownerPIN The OwnerPIN object.
+ * @return {Number}            The number of times remaining.
+ */
+function getTriesRemaining(ownerPIN){
+  return ownerPIN.triesRemaining;
+}
+
+/**
+ * Returns validated flag and sets result in internal state.
+ * @protected
+ *
+ * @param  {OwnerPIN} ownerPIN The OwnerPIN object.
+ * @return {boolean}           validated flag.
+ */
+function getValidatedFlag(ownerPIN){
+  return validatedFlag;
+}
+
+/**
+ * Returns true if a valid PIN has been presented since the
+ * last card reset or last call to reset().
+ *
+ * @param  {OwnerPIN} ownerPIN The OwnerPIN object.
+ * @return {Boolean}          [description]
+ */
+function isValidated(ownerPIN){
+  return getValidatedFlag(ownerPIN);
+}
+
+/**
+ * If the validated flag is set, this method resets the validated flag and
+ * resets the PIN try counter to the value of the PIN try limit.
+ *
+ * @param {OwnerPIN} ownerPIN The OwnerPIN object.
+ */
+function reset(ownerPIN){
+  if(ownerPIN.validatedFlag){
+    ownerPIN.triesRemaining = ownerPIN.tryLimit;
+    ownerPIN.validatedFlag = false;
+  }
+}
+
+/**
+ * This method sets a new value for the PIN and resets the PIN try counter to
+ * the value of the PIN try limit. It also resets the validated flag.
+ *
+ * @param  {OwnerPIN} ownerPIN The OwnerPIN object.
+ * @param  {Array}    pin      The byte array containing the PIN being checked.
+ * @param  {Number}   offset   The starting offset in the pin array.
+ * @param  {Number}   length   The length of pin.
+ */
+function update(ownerPIN, pin, offset, length){
+  var err;
+  if(pin.length > ownerPIN.maxPINSize){
+    return e.getPINException(1);
+  }
+
+  //should use transactions
+  err = JCSystem.beginTransaction(smartcard);
+  if(err instanceof Error) return err;
+  try{
+    ownerPIN.triesRemaining = ownerPIN.tryLimit;
+    ownerPIN.validatedFlag = false;
+    ownerPIN.pin = pin.slice(offset, offset + length);
+  } catch (error){
+    err = JCSystem.abortTransaction(smartcard);
+    if(err instanceof Error){
+      return err;
     }
+    return;
+  }
+  JCSystem.commitTransaction(smartcard);
+}
 
-    function decrementTriesRemaining() {
-        triesLeft--;
-    }
+/**
+ * This method resets the validated flag and resets the PIN try counter to the
+ * value of the PIN try limit and clears the blocking state of the PIN.
+ * @param {OwnerPIN} ownerPIN The OwnerPIN object.
+ */
+function resetAndUnblock(ownerPIN){
+  ownerPIN.triesRemaining = ownerPIN.tryLimit;
+  ownerPIN.validatedFlag = false;
+}
 
-    //06-00
-    this.constr = function(tryLimitb,maxPINSizeb) {
-        if(tryLimitb < 1 || maxPINSizeb < 1) {e.getPINException(1);}
-        tryLimit = tryLimitb;
-        maxPINSize = maxPINSizeb;
-
-        pinSize = maxPINSize;
-        triesLeft = tryLimit;
-    };
-
-
-    //01
-    this.check = function(pin, offset, length){
-        alert(pin + "," + offset + "," + length);
-        var noMoreTries = false;
-        setValidatedFlag(0);
-        if(this.getTriesRemaining() === 0) {
-            noMoreTries = true;}
-        else {
-            decrementTriesRemaining(); }
-
-        if(length != pinSize || noMoreTries) {return 0;}
-
-        var compare = true;
-
-        if(length > 0) {
-            for (var j = 0; j < length; j++) {
-                alert(arrload(pin, j + offset) + ";" + pinValue[j]);
-                if(arrload(pin,j+offset) != pinValue[j])
-                  compare = false;
-            }
-        }
-
-        if(compare) {
-            setValidatedFlag(1);
-            resetTriesRemaining();
-            return 1;
-        } else {
-          return 0;
-        }
-    };
-
-    //02
-    this.getTriesRemaining = function () {
-        return triesLeft;
-    };
-
-    //04
-    this.isValidated = function() {
-        return getValidatedFlag();
-
-    };
-
-    //05
-    this.reset = function () {
-        if(this.isValidated()) {
-            this.resetAndUnblock(); }
-    };
-
-    //06
-    this.resetAndUnblock = function () {
-        resetTriesRemaining();
-        setValidatedFlag(0);
-    };
-
-    //08
-    this.update = function (pin, offset, length) {
-        if (length > maxPINSize) { e.getPINException(1); }
-
-        for(var j=0;j<length;j++) {
-            pinValue[j] = Number(arrload(pin, j+offset));
-        }
-
-        pinSize = length;
-        triesLeft = tryLimit;
-        setValidatedFlag(0);
-
-    };
-
-
-    this.restore = function (params) {
-
-        tryLimit = params[0];
-        maxPINSize = Number(params[1]);
-        pinValue = params[2];
-        flags = params[3];
-        VALIDATED = params[4];
-        NUMFLAGS = params[5];
-        triesLeft = params[6];
-        pinSize = params[7];
-    };
-
-    this.save = function () {
-
-        var str = "f09/" + tryLimit + "/" + maxPINSize + "/" +
-            pinValue + "/" + flags + "/" + VALIDATED + "/" +
-            NUMFLAGS + "/" + triesLeft + "/" + pinSize;
-        return str;
-
-    };
-
-
-
+/**
+ * Helper functions
+ */
+function logAttempt(ownerPIN){
+  ownerPIN.triesLeft --;
+  if(ownerPIN.triesLeft === 0){
+    ownerPIN.blocked = true;
+  }
 }

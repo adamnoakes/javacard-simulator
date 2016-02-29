@@ -6,7 +6,7 @@ $(function() {
     var header =    'Welcome to the Java Card online simulator!\n' +
                     'Adam Noakes - University of Southampton\n' +
                     'Tip: Ensure window width is above 992px to view documentation.\n';
-                    
+
     window.jqconsole = $('#console').jqconsole(header, 'Java Card> ');
 
     // Abort prompt on Ctrl+Z.
@@ -48,21 +48,21 @@ $(function() {
 function executeButton(command)
 {
     jqconsole.Write("Java Card> " + command, "jqconsole-old-prompt");
-    jqconsole.Write('\n'); 
+    jqconsole.Write('\n');
     handler(command);
 }
 
-/* 
+/*
  * Identifies commanded entered by the user and calls
  * the correct ajax function.
  */
 function sendCommand(input, handler){
-    
+
     var words = input.split(" ");
     switch(words[0]){
         case "cards":
             getCards(handler);
-            break;            
+            break;
         case "loadcard":
             loadCard(handler, words[1]);
             break;
@@ -74,12 +74,15 @@ function sendCommand(input, handler){
             break;
         default:
             var lines = input.split(";");
+            if(lines[lines.length -1] === ''){
+              lines.pop();
+            }
             for(i=0; i<lines.length; i++){
                 lines[i] = lines[i].split(" ");
             }
             sendAPDU(lines, handler);
             break;
-    };
+    }
 }
 
 /* Gets and prints the list of smart cards, stored on the server */
@@ -91,7 +94,7 @@ function getCards(handler){
             $.each(cards, function(i, card) {
                 jqconsole.Write(card.EEPROM.cardName + " ", "response-ok");
             });
-            jqconsole.Write('\n'); 
+            jqconsole.Write('\n');
             jqconsole.Prompt(true, handler);
         }
     });
@@ -144,7 +147,7 @@ function loadCard(handler, cardName){
             } else {
                 jqconsole.Write(data.message, "response-error");
             }
-            jqconsole.Write('\n'); 
+            jqconsole.Write('\n');
             jqconsole.Prompt(true, handler);
         }
     });
@@ -167,15 +170,15 @@ function sendAPDU(APDU, handler){
             if(data.error){
                 jqconsole.Write('Error: ' + data.error + '\n', 'response-error');
             }
-            jqconsole.Write("==> " + data.APDU, "response-ok"); 
-            jqconsole.Write('\n'); 
+            jqconsole.Write("==> " + data.APDU, "response-ok");
+            jqconsole.Write('\n');
             jqconsole.Prompt(true, handler);
         },
         error: function(xhr, error){
             jqconsole.Write(error);
             jqconsole.Write(xhr);
             console.debug(xhr);
-            jqconsole.Write('\n'); 
+            jqconsole.Write('\n');
             jqconsole.Prompt(true, handler);
     }
     });

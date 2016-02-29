@@ -90,9 +90,9 @@ module.exports = {
         var frames = [];
         frames[currentFrame] = new this.Frame();
 
-        var address = smartcard.RAM.heap.length;
+        var address = smartcard.EEPROM.heap.length;
         //stores buffer on the heap
-        smartcard.RAM.heap.push(params[0]);
+        eeprom.pushToHeap(smartcard, params[0]);
         frames[currentFrame].local_vars.push("#H" + address);
         frames[currentFrame].local_vars.push(params[1]);
         frames[currentFrame].local_vars.push(params[2]);
@@ -133,7 +133,7 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
     var localVariables = frames[currentFrame].local_vars;
     var invoker = frames[currentFrame].invoker;
     var constantPool = capFile.COMPONENT_ConstantPool.constant_pool;
-    var heap = smartcard.RAM.heap;
+    var heap = smartcard.EEPROM.heap;//should not be used for writing to heap
     var tempOperands;
     var tempValue;
     var apiresult;
@@ -902,10 +902,10 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                             clsno = j;
                             var dis = capFile.COMPONENT_Class.interface_info[j].declared_instance_size;
                             //hv += ","+offset;
-                            heap.push(offset);
+                            eeprom.pushToHeap(smartcard, offset);
 
                             //for (var k = 0; k < dis; k++) { hv += ",0"; }
-                            for (var k = 0; k < dis; k++) { heap.push(0); }
+                            for (var k = 0; k < dis; k++) { eeprom.pushToHeap(smartcard, 0); }
 
                             info[0] = capFile.COMPONENT_Class.interface_info[j].super_class_ref1;
                             info[1] = capFile.COMPONENT_Class.interface_info[j].super_class_ref2;
@@ -917,8 +917,8 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                 } else {
                     var clsno = ((info[0] - 128) << 8) + info[1];
                     //hv += ",A"+clsno+","+objectheap.length;
-                    heap.push(160+clsno);
-                    heap.push(eeprom.getObjectHeap(smartcard.EEPROM).length);
+                    eeprom.pushToHeap(smartcard, 160+clsno);
+                    eeprom.pushToHeap(smartcard, eeprom.getObjectHeap(smartcard.EEPROM).length);
                     if ((info[1] == 3) && (capFile.COMPONENT_Import.packages[info[0] - 128].AID.join() === mnemonics.jframework.join())) {
                         ram.setGRef(smartcard.RAM, ref);
                     }
@@ -941,9 +941,9 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
 
             //allocate space on heap
            // var heapspace = [];
-            heap.push(count);
+            eeprom.pushToHeap(smartcard, count);
             for (var j = 0; j < count; j++) {
-               heap.push(0);
+               eeprom.pushToHeap(smartcard, 0);
             }
             //newHeap(hv);
             //push ref onto operand stack
@@ -1002,18 +1002,18 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             var ref = heap.length;
 
             //var hv = "," + count;
-            heap.push(count);
+            eeprom.pushToHeap(smartcard, count);
             var ival = 0;
             for (var j = 0; j < count; j++) {
                 ival = ref + dis * (j + 1) + 1;
-                heap.push(ival);
+                eeprom.pushToHeap(smartcard, ival);
                 //hv += "," + ival;
             }
 
             for (var j = 0; j < count; j++) {
                 //hv += ","+ dis;
                 //hv += tv;
-                heap.push(tv);
+                eeprom.pushToHeap(smartcard, tv);
             }
             //newHeap(hv);
             operandStack.push(ref);
@@ -1430,7 +1430,7 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             //get object field size
             if (refclass === infoclass) {
                 bfound = true;
-                heap[oheap + info[2] + 1] =  val;
+                eeprom.setHeap(smartcard, oheap + info[2] + 1, val);
             } else {
                 for (var j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
                     if (capFile.COMPONENT_Class.interface_info[j].start == refclass) {

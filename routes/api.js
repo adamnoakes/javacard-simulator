@@ -100,6 +100,7 @@ module.exports = function () {
 	                    'message': "An error occured trying to remove " + req.params.cardName + "."
 	            	});
 	            } else {
+                req.session.smartcard = undefined;
 	            	res.send({
 	                    'result': true,
 	                    'cardName': req.params.cardName
@@ -111,6 +112,7 @@ module.exports = function () {
 
 	/* POST apdu -> Send APDU to card's processor for execution. */
 	router.post('/apdu', function(req, res){
+    console.log('smartcard id:' + req.session.smartcard);
 	    if(!req.session.smartcard){
 	    	//no card selected apdu
 	        res.send({'APDU': "0x6A82"});
@@ -125,8 +127,9 @@ module.exports = function () {
 	        		//Check smartcard was loaded successfully
 		        	if(err || !loadedCard){
 		        		console.log(err);
-		        		res.end();
+		        		res.send({'APDU': "0x6A82"});
 		        	} else {
+                console.log(req.body);
 		        		smartcard.process(loadedCard, req.body.APDU, function(executionError, apduResponse){
 		        			//Update the smartcard object
 		        			if(executionError){

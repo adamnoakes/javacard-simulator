@@ -249,7 +249,7 @@ module.exports = {
 	    } else if (apiresult !== undefined){//if not void
 	        if(apiresult.constructor === Array){//if array
 	            operandStack.push("#H" + heap.length);
-				heap.push(apiresult);
+				eeprom.pushToHeap(smartcard, apiresult);
 	        } else if(!apiresult.type) {//if it doesn't have a type, i.e it's not transient
 	            operandStack.push(apiresult);
 	        } else {
@@ -328,7 +328,7 @@ module.exports = {
         } else if (apiresult !== undefined){//if not void
 	        if(apiresult.constructor === Array){//if array
 	        	operandStack.push("#H" + heap.length);
-	            heap.push(apiresult);
+	            smartcard.eeprom(smartcard, apiresult);
 	        } else if(!apiresult.type) {//if it doesn't have a type, i.e it's not transient
 	            operandStack.push(apiresult);
 	        } else {
@@ -376,7 +376,7 @@ module.exports = {
         } else if (apiresult !== undefined){//if not void
 	        if(apiresult.constructor === Array){//if array
 	        	operandStack.push("#H" + heap.length);
-	            heap.push(apiresult);
+	            eeprom.pushToHeap(apiresult);
 	        } else if(!apiresult.transientArray) {//if it doesn't have a type, i.e it's not transient
 	            operandStack.push(apiresult);
 	        } else {
@@ -425,7 +425,7 @@ function loadArray(smartcard, parameter){
         parameter instanceof String){
         if (parameter.toString().slice(0, 2) == "#H") {
             references = parameter.split('#H');
-            return smartcard.RAM.heap[Number(references[1])];//TODO --> remove refernce to smartcard, replace with heap
+            return smartcard.EEPROM.heap[Number(references[1])];//TODO --> remove refernce to smartcard, replace with heap
         } else if (parameter.toString().slice(0, 1) == "T"){
             references = parameter.slice(1).split("#");
             if(smartcard.RAM.transient_data[Number(references[0])] === undefined){

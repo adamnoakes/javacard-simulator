@@ -23,5 +23,10 @@
     "rimraf": "^2.4.3",
     "serve-favicon": "~2.3.0",
     "validator": "~4.5.1"
+  },
+  "devDependencies": {
+    "mocha": "^2.4.5",
+    "should": "^8.2.2",
+    "supertest": "^1.2.0"
   }
 }

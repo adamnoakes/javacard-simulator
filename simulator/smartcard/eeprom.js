@@ -6,12 +6,12 @@ module.exports = {
 	EEPROM: function(cardName) {
 		this.cardName = cardName;
 		this.packages = [];
+		this.heap = [0xA0,0x00];
 		this.installedApplets = [{'AID': [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01], 'appletRef': -1}];
 		this.selectedApplet = {'AID': undefined, 'appletRef': undefined, 'CAP': undefined};
 		this.objectheap = [];
 	},
-	//if (!transaction_flag) {//need to fix this later, add transaction flag and asyncState etc.
-			//asyncState = false;
+
 	/**
 	 * @param  {EEPROM} EEPROM
 	 * @return {string}
@@ -27,18 +27,13 @@ module.exports = {
 	 * @param  {array/object} arr
 	 */
 	appendObjectHeap: function(EEPROM, arr) {
-		//if (!transaction_flag) {//need to fix this later, add transaction flag and asyncState etc.
-			//asyncState = false;
 		if(arr.constructor === Array){//aprox 3 times quicker than instance of array
 			EEPROM.objectheap.push.apply(EEPROM.heap, arr);
 		} else {
 			EEPROM.objectheap.push(arr);
 		}
-			//this.heap = value.split(','); //need to check
-		//} else {
-		//	transaction_buffer.push(value);
-		//}
 	},
+	
 	getAppletCAP: function(EEPROM, appletAID){
 		for(var i = 0; i<EEPROM.packages.length; i++){
 			for(var j = 0; j<EEPROM.packages[i].COMPONENT_Applet.applets.length; j++){
@@ -83,7 +78,21 @@ module.exports = {
 		}
 	},
 
+	setHeap: function(smartcard, pos, val){
+		if(!smartcard.processor.transaction_flag){
+			smartcard.EEPROM.heap[pos] = val;
+		} else {
+			smartcard.RAM.transaction_buffer.push([pos, val]);
+		}
+	},
 
+	pushToHeap: function(smartcard, val){
+		if(!smartcard.processor.transaction_flag){
+			smartcard.EEPROM.heap.push(val);
+		} else {
+			smartcard.RAM.transaction_buffer.push(val);
+		}
+	},
 
 	getObjectHeap: function(EEPROM){ return EEPROM.objectheap;},
 	getObjectHeapValue: function(EEPROM, ref){ return EEPROM.objectheap[ref];}

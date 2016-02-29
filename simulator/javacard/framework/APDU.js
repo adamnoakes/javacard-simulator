@@ -24,7 +24,7 @@ var e = require('./Exceptions.js');
 
 var STATE_INITIAL = 0;
 var STATE_PARTIAL_INCOMING = 1;
-var STATE_FULL_INCOMING = 2; 
+var STATE_FULL_INCOMING = 2;
 var STATE_OUTGOING = 3;
 var STATE_OUTGOING_LENGTH_KNOWN = 4;
 var STATE_PARTIAL_OUTGOING = 5;
@@ -53,7 +53,7 @@ var cls = 10;
 module.exports = {
     /**
      * Handles javacard.framework.APDU api calls.
-     * 
+     *
      * @param  {Number} method The method token
      * @param  {Number} type   The method type token
      * @param  {Array}  param  Popped from operand stack
@@ -72,8 +72,6 @@ module.exports = {
     },
     /**
      * Called on new keyword and sets initial values.
-     * 
-     * @constructor
      */
     APDU: function() {
         this.state = STATE_INITIAL;
@@ -93,7 +91,7 @@ module.exports = {
      * The processor uses this constructor to initialise an APDU
      * instance encapsulating the specified APDU bytes and setting up the
      * various variables.
-     * 
+     *
      * @param  {APDU}   apdu    The AID object
      * @param  {Array}  bArray  The byte array containing the APDU bytes
      */
@@ -159,7 +157,7 @@ module.exports = {
             apdu.outgoingLength = 0;
         }
     },
-    setArray: function(APDU, arr, index, value) { 
+    setArray: function(APDU, arr, index, value) {
         if (arr == 1) {
             APDU.buffer[index] = value;
         }
@@ -182,7 +180,7 @@ module.exports = {
 
 /**
  * Handles object javacard.framework.APDU api calls.
- * 
+ *
  * @param  {Number} method The method token
  * @param  {Array}  param  Popped from operand stack
  * @param  {AID}    obj    The APDU object
@@ -233,7 +231,7 @@ function runObjectMethod(method, param, obj){
 
 /**
  * Handles static javacard.framework.APDU api calls.
- * 
+ *
  * @param  {Number} method The method token
  * @param  {Array}  param  Popped from operand stack
  * @param  {AID}    obj    The APDU object
@@ -272,7 +270,7 @@ function runStaticMethod(method, param, obj){
 function getInLengths(apdu){
     var temp = [];
     if(apdu._buffer[ISO7816.get('OFFSET_LC')] === 0){
-        temp[0] = apdu._buffer[ISO7816.get('OFFSET_LC') + 1] * 256 + 
+        temp[0] = apdu._buffer[ISO7816.get('OFFSET_LC') + 1] * 256 +
         apdu._buffer[ISO7816.get('OFFSET_LC') + 2];
         temp[1] = 3;
     } else {
@@ -286,7 +284,7 @@ function getOutLengths(apdu, length){
     length -= 1;
     if(apdu._buffer[length] === 0){
         if(length !== ISO7816.get('OFFSET_LC') &&
-            apdu._buffer[ISO7816.get('OFFSET_LC')] === 0 && 
+            apdu._buffer[ISO7816.get('OFFSET_LC')] === 0 &&
             apdu._buffer[length -1 ] === 0){
             return [65536, 2];
         }
@@ -303,7 +301,7 @@ function getOutLengths(apdu, length){
 
 /**
  * Returns the APDU buffer byte array.
- * 
+ *
  * @param  {APDU} apdu The APDU object.
  * @return {Array}     APDU buffer byte Array.
  */
@@ -343,7 +341,7 @@ function getNAD(){
 /**
  * This method is used to set the data transfer direction to outbound and to
  * obtain the expected length of response (le).
- * 
+ *
  * @param {APDU} apdu The APDU object.
  */
 function setOutgoing(apdu){
@@ -365,10 +363,10 @@ function setOutgoingNoChaining() {
 }
 
 /**
- * Sets the actual length of response data. If a length of 0 is specified, no 
+ * Sets the actual length of response data. If a length of 0 is specified, no
  * data will be output.
- * 
- * @param {APDU}   apdu   The APDU object.  
+ *
+ * @param {APDU}   apdu   The APDU object.
  * @param {Number} length The length of response data
  */
 function setOutgoingLength(apdu, length){
@@ -389,7 +387,7 @@ function setOutgoingLength(apdu, length){
 /**
  * Gets as many data bytes as will fit without APDU buffer overflow, at the
  * specified offset bOff.
- * 
+ *
  * @param  {APDU}   apdu  The APDU object.
  * @param  {Number} bOffs The offset into APDU buffer
  * @return {Number}       Number of bytes read.
@@ -420,7 +418,7 @@ function receiveBytes(apdu, bOffs){
 /**
  * This is the primary receive method. Calling this method indicates that this
  * APDU has incoming data.
- * 
+ *
  * @param {APDU} apdu The APDU object.
  * @return            Number of data bytes read.
  */
@@ -452,7 +450,7 @@ function setIncomingAndReceive(apdu){
 
 /**
  * Sends length more bytes from APDU buffer at specified offset bOff.
- * 
+ *
  * @param  {APDU}   apdu   The APDU object.
  * @param  {Number} bOffs  The offset into APDU buffer.
  * @param  {Number} length The length of the data in bytes to send.
@@ -481,7 +479,7 @@ function sendBytes(apdu, bOffs, length){
 /**
  * Sends length more bytes from outData byte array starting at specified
  * offset bOff.
- * 
+ *
  * @param  {APDU}    apdu    The APDU object.
  * @param  {Array}   outData The source data byte array
  * @param  {Array}   bOffs   The offset into OutData array
@@ -510,7 +508,7 @@ function sendBytesLong(apdu, outData, bOffs, length){
  * This is the "convenience" send method. It provides for the most efficient
  * way to send a short response which fits in the buffer and needs the least
  * protocol overhead.
- * 
+ *
  * @param {APDU}   apdu   The APDU object.
  * @param {Array}  bOffs  The offset into APDU buffer.
  * @param {Number} length The bytelength of the data to send.
@@ -530,7 +528,7 @@ function setOutgoingAndSend(apdu, bOffs, length){
 
 /**
  * This method returns the current processing state of the APDU object.
- * 
+ *
  * @param  {APDU} apdu The APDU Object.
  * @return {Number}    The current processing state of the APDU.
  */
@@ -542,7 +540,7 @@ function getCurrentState(apdu){
  * Static methods
  *
  * Minimal support for these functions.
- * 
+ *
  * @static
  */
 
@@ -569,7 +567,7 @@ function waitExtension() {
 /**
  * Returns whether the current APDU command is the first or part of a
  * command chain.
- * 
+ *
  * @param  {APDU}   apdu The APDU object.
  * @return {boolean}
  */
@@ -584,7 +582,7 @@ function isCommandChainingCLA(apdu) {
 /**
  * Returns true if the encoding of the current APDU command based on the CLA
  * byte indicates secure messaging.
- * 
+ *
  * @param  {APDU}    APDU The APDU
  * @return {boolean}
  */
@@ -606,7 +604,7 @@ function isSecureMessagingCLA(apdu) {
 /**
  * Returns whether the current APDU command CLA byte corresponds to an
  * interindustry command as defined in ISO 7816-4:2013 specification.
- * 
+ *
  * @param  {APDU}    APDU The APDU Object.
  * @return {boolean}
  */
@@ -620,7 +618,7 @@ function sISOInterindustryCLA(apdu) {
 
 /**
  * Returns the incoming data length (Lc).
- * 
+ *
  * @param  {APDU}    apdu The APDU object.
  * @return {Numbner}
  */
@@ -633,7 +631,7 @@ function getIncomingLength(apdu) {
 
 /**
  * Returns the offset within the APDU buffer for incoming command data.
- * 
+ *
  * @param  {APDU}   APDU The APDU object
  * @return {[type]}      [description]
  */

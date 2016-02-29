@@ -1,4 +1,4 @@
-﻿/*!
+/*!
  * Util
  * @author Adam Noakes
  * University of Southamption
@@ -58,16 +58,16 @@ function arrayCompare(src, srcOff, dest, destOff, length) {
 
 
 function arrayCopy(src, srcOff, dest, destOff, length, smartcard) {
-    JCSystem.beginTransaction();
+    JCSystem.beginTransaction(smartcard);
     try {
         for (var j = 0; j < length; j++) {
             dest[destOff + j] = src[srcOff + j];
         }
     } catch (err) {
-        JCSystem.abortTransaction();
+        JCSystem.abortTransaction(smartcard);
         //throw "ArrayOutofBoundsException";
     }
-    JCSystem.commitTransaction();
+    JCSystem.commitTransaction(smartcard);
 }
 
 function arrayCopyNonAtomic(src, srcOff, dest, destOff, length) {
@@ -99,7 +99,7 @@ function getShort(bArray, bOff) {
 }
 
 function makeShort(b1, b2) {
-    return (((b1 << 8) & 0xFF00) | (b2 & 0xFF))
+    return (((b1 << 8) & 0xFF00) | (b2 & 0xFF));
 }
 
 function setShort(bArray, bOff, sValue) {

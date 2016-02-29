@@ -41,14 +41,15 @@ module.exports = {
         smartcard.EEPROM.objectheap[0] = tmpApdu; //maybe object heap should be stored in RAM?
 
         //Reset variables
-        smartcard.RAM.asyncState = false; //no idea what this is for
         smartcard.RAM.transaction_buffer = [];
-        smartcard.processor.transaction_flag = false; //probably should be stored in the processor? ->done
+        smartcard.processor.transaction_flag = false;
         smartcard.RAM.select_statement_flag = 0;
 
         //If select applet command
         if (buffer.slice(0,4).join() === [0x00, 0xA4, 0x04, 0x00].join()) {
             return this.selectApplet(smartcard, buffer.slice(5,5+lc), cb);
+        } else if(!smartcard.EEPROM.selectedApplet.AID){
+          return cb(undefined, '0x6A82');
         }
 
         //If the selected applet is the installer and an install command has been sent, process by installer module
@@ -92,7 +93,7 @@ module.exports = {
 
             for(var j = 0; j < smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.count; j++) {
                 if(smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.packages[j].AID.join() === opcodes.jframework.join()) {
-                    smartcard.RAM.heap[0] = 160 + (j*256) + 10;
+                    eeprom.setHeap(smartcard, 0, 160 + (j*256) + 10);
                     break;
                 }
             }
@@ -125,44 +126,6 @@ module.exports = {
             //@adam no applet found
             cb(new Error(), "0x6A82");
         }
-    },
-    /*
-     *  JCSystem Functions
-     */
-    abortTransaction: function (smartcard) {
-
-        if (!smartcard.Processor.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
-        else {
-            smartcard.Processor.transaction_flag = false;
-            smartcard.RAM.transaction_buffer = [];
-        }
-
-        return;
-    },//00
-
-    beginTransaction: function (smartcard) {
-        if (smartcard.Processor.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 1); }
-        else { smartcard.Processor.transaction_flag = true; }
-
-        return;
-    },//01
-    commitTransaction: function (smartcard) {//TODO --> Execution handler convert to hex array for jframework
-        if (!smartcard.Processor.transaction_flag) { jcvm.executeBytecode.exception_handler(opcodes.jframework, 14, 2); }
-        else {
-            smartcard.Processor.transaction_flag = false;
-            var len = smartcard.RAM.transaction_buffer.length;
-            for (var j = 0; j < len; j++) {
-                var spl = smartcard.RAM.transaction_buffer[j].split(";");//why split on ;
-                if (spl.length == 1) {
-                    eeprom.newHeap(smartcard.EEPROM, spl[0]);
-                } else {
-                    eeprom.setHeap(smartcard.EEPROM, Number(spl[0]), Number(spl[1]));
-                }
-
-            }
-            smartcard.RAM.transaction_buffer = [];
-        }
-        return;
     }
-    //02
+
 };
