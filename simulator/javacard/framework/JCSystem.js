@@ -6,12 +6,22 @@
  * environment.
  *
  * @author Adam Noakes
- * University of Southamption
+ * University of Southampton
+ */
+
+/**
+ * Module depedencies
+ * @private
  */
 
 var opcodes = require('../../utilities/opcodes.js');
 var processor = require('../../smartcard/processor.js');
 var e = require('./Exceptions.js');
+
+/**
+ * Module exports
+ * @public
+ */
 
 module.exports = {
     ARRAY_TYPE_BOOLEAN: 1,

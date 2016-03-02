@@ -1,7 +1,7 @@
 /*!
  * security
  * @author Adam Noakes
- * University of Southamption
+ * University of Southampton
  */
 
 /**
@@ -15,6 +15,7 @@ var rsaPrivateCrtKey = require('../javacard/security/rsa-private-crt-key.js');
 var rsaPublicKey = require('../javacard/security/rsa-public-key.js');
 var keyBuilder = require('../javacard/security/key-builder.js');
 var keyPair = require('../javacard/security/key-pair.js');
+var messageDigest = require('../javacard/security/message-digest.js');
 /**
  * Module exports.
  * @public
@@ -45,6 +46,7 @@ module.exports = {
             	return rsaPublicKey.run(obj, method, type, param);
             case 10://javacard/security/DESKey
             case 11://javacard/security/MessageDigest
+							return messageDigest.run(obj, method, type, param);
             case 12://javacard/security/CryptoException
            		return new Error('Unsupported class');
             case 13://javacard/security/KeyBuilder
