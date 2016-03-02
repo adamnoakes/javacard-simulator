@@ -6,7 +6,7 @@
  * update the PIN and thus owner functionality.
 
  * @author Adam Noakes
- * University of Southamption
+ * University of Southampton
  */
 
 /**

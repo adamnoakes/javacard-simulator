@@ -1,7 +1,7 @@
 /*!
  * keys
  * @author Adam Noakes
- * University of Southamption
+ * University of Southampton
  */
 
 //TODO: should import s1
@@ -76,8 +76,8 @@ module.exports = {
 		Key(privateKey, typ, size);
 		privateKey.private = true;
 	},
-	
-    /* 
+
+    /*
      * Used to transform long to Array
      * >>> longToArray(25)
      * [25]

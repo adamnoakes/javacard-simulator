@@ -1,7 +1,7 @@
 /*!
  * key-pair
  * @author Adam Noakes
- * University of Southamption
+ * University of Southampton
  */
 
 var keyBuilder = require('./key-builder.js');

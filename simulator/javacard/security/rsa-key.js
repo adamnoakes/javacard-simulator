@@ -2,7 +2,7 @@
  * rsa-key
  * Contains functins that can be performed on an RSAKey (Public or Private)
  * @author Adam Noakes
- * University of Southamption
+ * University of Southampton
  */
 
 /**

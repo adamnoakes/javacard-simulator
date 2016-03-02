@@ -1,7 +1,7 @@
 /*!
  * key-builder
  * @author Adam Noakes
- * University of Southamption
+ * University of Southampton
  */
 
 /**

@@ -7,7 +7,7 @@
  * in ISO specification 7816-4.
 
  * @author Adam Noakes
- * University of Southamption
+ * University of Southampton
  */
 
 /**

@@ -1,7 +1,7 @@
 ﻿/*!
  * Applet
  * @author Robin Williams
- * University of Southamption
+ * University of Southampton
  */
 
 /**

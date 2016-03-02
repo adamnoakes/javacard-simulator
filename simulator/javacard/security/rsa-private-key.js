@@ -1,7 +1,7 @@
 /*!
  * rsa-private-key
  * @author Adam Noakes
- * University of Southamption
+ * University of Southampton
  */
 
 /**

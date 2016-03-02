@@ -6,7 +6,7 @@
  * and 16 bytes in length.
  *
  * @author Adam Noakes
- * University of Southamption
+ * University of Southampton
  */
 
 /**
