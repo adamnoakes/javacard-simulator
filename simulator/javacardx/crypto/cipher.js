@@ -11,7 +11,7 @@
 
 
 var keys = require('../../javacard/security/keys.js');
-
+var rsaCipher = require('./rsa-cipher.js');
 /**
  * Module exports.
  * @public
@@ -74,7 +74,7 @@ module.exports = {
 			case this.ALG_RSA_ISO14888:
 				return unsupportedAlgorithm('ALG_RSA_ISO14888');
 			case this.ALG_RSA_PKCS1:
-				return unsupportedAlgorithm('ALG_RSA_PKCS1');
+				return rsaCipher.run(method, methodType, param, cipher);
 			case this.ALG_RSA_ISO9796:
 				return unsupportedAlgorithm('ALG_RSA_ISO9796');
 			case this.ALG_RSA_NOPAD:
@@ -82,7 +82,6 @@ module.exports = {
 			case this.ALG_AES_BLOCK_128_CBC_NOPAD:
 				return unsupportedAlgorithm('ALG_AES_BLOCK_128_CBC_NOPAD');
 			case this.ALG_RSA_PKCS1_OAEP:
-				var rsaCipher = require('./rsa-cipher.js');
 				return rsaCipher.run(method, methodType, param, cipher);
 			case this.ALG_KOREAN_SEED_ECB_NOPAD:
 				return unsupportedAlgorithm('ALG_KOREAN_SEED_ECB_NOPAD');
@@ -141,7 +140,7 @@ module.exports = {
 			case this.ALG_RSA_ISO14888:
 				return unsupportedAlgorithm('ALG_RSA_ISO14888');
 			case this.ALG_RSA_PKCS1:
-				return unsupportedAlgorithm('ALG_RSA_PKCS1');
+				return new rsaCipher.RSACipher(algorithm);
 			case this.ALG_RSA_ISO9796:
 				return unsupportedAlgorithm('ALG_RSA_ISO9796');
 			case this.ALG_RSA_NOPAD:
@@ -149,7 +148,6 @@ module.exports = {
 			case this.ALG_AES_BLOCK_128_CBC_NOPAD:
 				return unsupportedAlgorithm('ALG_AES_BLOCK_128_CBC_NOPAD');
 			case this.ALG_RSA_PKCS1_OAEP:
-				var rsaCipher = require('./rsa-cipher.js');
 				return new rsaCipher.RSACipher(algorithm);
 			case this.ALG_KOREAN_SEED_ECB_NOPAD:
 				return unsupportedAlgorithm('ALG_KOREAN_SEED_ECB_NOPAD');

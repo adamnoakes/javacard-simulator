@@ -8,16 +8,15 @@
  * Module dependencies.
  * @private
  */
-var NodeRSA = require('node-rsa');
 var keys = require('./keys.js');
 var rsaKey = require('./rsa-key.js');
 
 //cannot be saved like this in DB, but be exported on saving and then imported on load
-function importKey(RSAPrivateKey){
-	var nodeRSAKey = new NodeRSA();
+function createKey(RSAPrivateKey, algorithm){
+	var nodeRSAKey = rsaKey.getNodeRSA(RSAPrivateKey, algorithm);
 	nodeRSAKey.importKey({
-		e: new Buffer(exponent),
-		n: new Buffer(modulus)
+		e: new Buffer(RSAPrivateKey.exponent),
+		n: new Buffer(RSAPrivateKey.modulus)
 	});
 	return nodeRSAKey;
 }
@@ -86,6 +85,19 @@ module.exports = {
 		this.modulus = undefined;
 		this.key = null;
 	},
+	/**
+	 * @param {RSAKey} 	RSAKey
+	 * @param {Array} 	buffer
+	 * @param {Number} 	offset
+	 */
+	getNodeRSA: function(RSAPrivateKey, algorithm){
+		if(RSAPrivateKey.initialized === 1){
+			return createKey(RSAPrivateKey, algorithm);
+		} else {
+			return new Error('Key not initialized');
+		}
+	},
+
 	/**
 	 * @param {RSAKey} 	RSAKey
 	 * @param {Array} 	buffer

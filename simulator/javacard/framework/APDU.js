@@ -153,7 +153,6 @@ module.exports = {
             //if((4 + apdu.lcLength + apdu.leLength + apdu.lc) !== bArray.length){
             //    apdu.broken = false;
             //}
-
             apdu.outgoingLength = 0;
         }
     },
@@ -305,6 +304,7 @@ function getOutLengths(apdu, length){
  * @param  {APDU} apdu The APDU object.
  * @return {Array}     APDU buffer byte Array.
  */
+//TODO -> instead return something else (memory address) to stop heap building up
 function getBuffer(apdu) {
     return apdu.buffer;
 }
@@ -465,8 +465,8 @@ function sendBytes(apdu, bOffs, length){
     if(length < 0 || apdu.currentOutgoingLength + length > OUT_BLOCKSIZE){
         return e.getAPDUException(2);//BUFFER_BOUNDS
     }
-    for(var i = bOffs; i < bOffs + length; i++){
-        apdu._buffer[apdu.currentOutgoingLength + i] = apdu.buffer[bOffs + i];
+    for(var i = 0; i < length; i++){
+        apdu._buffer[apdu.currentOutgoingLength + i] = outData[bOffs + i];
     }
     apdu.currentOutgoingLength += length;
     if (apdu.currentOutgoingLength < apdu.outGoingLength){
@@ -485,7 +485,9 @@ function sendBytes(apdu, bOffs, length){
  * @param  {Array}   bOffs   The offset into OutData array
  * @param  {Number} length  The byte length of the data to send
  */
+//apdu.sendBytesLong(baAPDUBuffer, ISO7816.OFFSET_CDATA, sLc);
 function sendBytesLong(apdu, outData, bOffs, length){
+    apdu._buffer.pop();//remove length
     if(STATE_PARTIAL_OUTGOING < apdu.state &&
         apdu.state < STATE_OUTGOING_LENGTH_KNOWN){
         return e.getAPDUException(1);//ILLEAGAL_USE
@@ -493,7 +495,7 @@ function sendBytesLong(apdu, outData, bOffs, length){
     if(length < 0 || apdu.currentOutgoingLength + length > OUT_BLOCKSIZE){
         return e.getAPDUException(2);//BUFFER_BOUNDS
     }
-    for(var i = bOffs; i < bOffs + length; i++){
+    for(var i = 0; i < length; i++){
         apdu._buffer[apdu.currentOutgoingLength + i] = outData[bOffs + i];
     }
     apdu.currentOutgoingLength += length;

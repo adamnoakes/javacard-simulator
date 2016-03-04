@@ -9,7 +9,6 @@
  * @private
  */
 
-var cipher = require('./cipher.js');
 var Util = require('../../javacard/framework/Util.js');
 var keys = require('../../javacard/security/keys.js');
 var rsaPublicKey = require('../../javacard/security/rsa-public-key.js');
@@ -60,6 +59,7 @@ module.exports = {
 	 * @param  {Number} algorithm The desired algorithm code (see cipher.js)
 	 */
 	RSACipher: function(algorithm){
+		var cipher = require('./cipher.js');
 		//RSACipher extends Cipher
 		cipher.Cipher(this, algorithm);
 	},
@@ -74,6 +74,7 @@ module.exports = {
 	 * @return {Error}						Can return if error occurs
 	 */
 	init: function(cipherObj, rsaKey, mode){
+		var cipher = require('./cipher.js');
 		//if theKey is not isinstance of RSAPrivateKey/ RSAPublicKey/ RSAPrivateCRTKey
         //raise CryptoException(CryptoException.ILLEGAL_VALUE)
         if(!keys.isInitialized(rsaKey)){
@@ -97,6 +98,7 @@ module.exports = {
 	 * @return {Number | Error}   Number of bytes output in outBuff or an Error
 	 */
 	doFinal: function(cipherObj, inBuff, inOffset, inLength, outBuff, outOffset){
+		var cipher = require('./cipher.js');
 		if(!cipherObj.initialized){
 			return new Error('CryptoException.INVALID_INT');
 		}
@@ -113,7 +115,7 @@ module.exports = {
 			//Using private key
 			if (cipherObj.key.private) {
 				//Generates NodeRSA object from javacard key.
-				nodeRSA = rsaPrivateCrtKey.getNodeRSA(cipherObj.key);
+				nodeRSA = rsaPrivateCrtKey.getNodeRSA(cipherObj.key, cipherObj.algorithm);
 				if (cipherObj.mode === cipher.MODE_ENCRYPT) {
 					//Perform encryption
 					result = Array.prototype.slice.call(nodeRSA.encryptPrivate(new Buffer(data)), 0);
@@ -124,7 +126,7 @@ module.exports = {
 			//Using public key
 			} else {
 				//Generates NodeRSA object from javacard key.
-				nodeRSA = rsaPublicKey.getNodeRSA(cipherObj.key);
+				nodeRSA = rsaPublicKey.getNodeRSA(cipherObj.key, cipherObj.algorithm);
 				if (cipherObj.mode === cipher.MODE_ENCRYPT) {
 					//Perform encryption
 					result = Array.prototype.slice.call(nodeRSA.encrypt(new Buffer(data)), 0);
@@ -133,18 +135,12 @@ module.exports = {
 					result = Array.prototype.slice.call(nodeRSA.decryptPublic(new Buffer(data)), 0);
 				}
 			}
-			//Reset output buffer
-			outBuff.length = outOffset + result.length;
-			for (var i = 0; i < outOffset; i++) {
-				outBuff[i] = 0;
-			}
-
 			//Copy data to output buffer
 			Util.arrayCopyNonAtomic(result, 0, outBuff, outOffset, result.length);
 			return result.length;
 		} catch(err){
 			//Likely because NodeRSA method failed
-			return new Error('doFinal() failed for RSA.');
+			return new Error('doFinal() failed for Cipher algorithm RSA. \n' + err);
 		}
 	}
 };

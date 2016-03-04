@@ -14,13 +14,13 @@
 
 var messageDigest = require('./message-digest.js');
 var util = require('../framework/Util.js');
-var crpyt = require('crypt');
+var crypt = require('crypt');
 
 /**
  * Module exports.
  * @public
  */
-
+var ALG_SHA = 1;
 module.exports = {
   /**
    * Handles javacard.security.MessageDigest api calls for SHA algorithm.
@@ -47,10 +47,11 @@ module.exports = {
   },
 
   SHAMessageDigest: function(externalAccess){
-    this.algorithm = messageDigest.ALG_SHA;
+    this.algorithm = ALG_SHA
+    console.log('algorithm: ' + this.algorithm);
     this.hashLength = 20;
     this.externalAccess = externalAccess;
-    this.unprocessed = '';
+    this.unprocessed = [];
   }
 };
 
@@ -71,8 +72,9 @@ module.exports = {
  */
 function doFinal(shaMessageDigest, inBuff, inOffset, inLength, outBuff, outOffset){
   update(shaMessageDigest, inBuff, inOffset, inLength);
+  console.log(shaMessageDigest.unprocessed);
   var m  = crypt.bytesToWords(shaMessageDigest.unprocessed),
-        l  = message.length * 8,
+        l  = shaMessageDigest.unprocessed.length * 8,
         w  = [],
         H0 =  1732584193,
         H1 = -271733879,
@@ -119,9 +121,9 @@ function doFinal(shaMessageDigest, inBuff, inOffset, inLength, outBuff, outOffse
       H3 += d;
       H4 += e;
     }
-    var result = crypt.wordsToBytes([h0,h1,h2,h3,h4]);
-    Util.arrayCopyNonAtomic(result, 0, outBuff, outOffset, result.length);
-
+    var result = crypt.wordsToBytes([H0,H1,H2,H3,H4]);
+    util.arrayCopyNonAtomic(result, 0, outBuff, outOffset, shaMessageDigest.hashLength);
+    reset(shaMessageDigest);
     return result.length;
 }
 
@@ -151,7 +153,7 @@ function getLength(shaMessageDigest){
  * @param {SHAMessageDigest} shaMessageDigest The SHAMessageDigest object.
  */
 function reset(shaMessageDigest){
-  shaMessageDigest.unprocessed = '';
+  shaMessageDigest.unprocessed = [];
 }
 
 /**
@@ -167,5 +169,8 @@ function reset(shaMessageDigest){
  * @param  {Number} inLength  The byte length to hash
  */
 function update(shaMessageDigest, inBuff, inOffset, inLength){
-  shaMessageDigest.unprocessed += inBuff.slice(inOffset, inOffset + inLength);
+  Array.prototype.push.apply(
+    shaMessageDigest.unprocessed,
+    inBuff.slice(inOffset, inOffset + inLength)
+  );
 }

@@ -61,7 +61,11 @@ function arrayCopy(src, srcOff, dest, destOff, length, smartcard) {
     JCSystem.beginTransaction(smartcard);
     try {
         for (var j = 0; j < length; j++) {
-            dest[destOff + j] = src[srcOff + j];
+            if(src[srcOff + j]){
+                dest[destOff + j] = src[srcOff + j];
+            } else {
+                dest[destOff + j] = 0x00;
+            }
         }
     } catch (err) {
         JCSystem.abortTransaction(smartcard);
@@ -73,7 +77,11 @@ function arrayCopy(src, srcOff, dest, destOff, length, smartcard) {
 function arrayCopyNonAtomic(src, srcOff, dest, destOff, length) {
     try {
         for (var j = 0; j < length; j++) {
-            dest[destOff + j] = src[srcOff + j];
+            if(src[srcOff + j]){
+                dest[destOff + j] = src[srcOff + j];
+            } else {
+                dest[destOff + j] = 0;
+            }            
         }
     } catch (err) {
         //throw "ArrayOutofBoundsException";

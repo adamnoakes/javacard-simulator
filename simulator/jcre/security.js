@@ -46,7 +46,7 @@ module.exports = {
             	return rsaPublicKey.run(obj, method, type, param);
             case 10://javacard/security/DESKey
             case 11://javacard/security/MessageDigest
-							return messageDigest.run(obj, method, type, param);
+				return messageDigest.run(obj, method, type, param);
             case 12://javacard/security/CryptoException
            		return new Error('Unsupported class');
             case 13://javacard/security/KeyBuilder

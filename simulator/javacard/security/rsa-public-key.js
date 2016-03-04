@@ -8,12 +8,12 @@
  * Module dependencies.
  * @private
  */
-var NodeRSA = require('node-rsa');
 var keys = require('./keys.js');
-
+var rsaKey = require('./rsa-key.js');
 //cannot be saved like this in DB, but be exported on saving and then imported on load
-function createKey(RSAPublicKey){
-	var nodeRSAKey = new NodeRSA();
+function createKey(RSAPublicKey, algorithm){
+	var nodeRSAKey = rsaKey.getNodeRSA(RSAPrivateCrtKey, algorithm);
+
 	nodeRSAKey.importKey({
 		e: new Buffer(RSAPublicKey.exponent),
 		n: new Buffer(RSAPublicKey.modulus)
@@ -47,7 +47,7 @@ function setModulus(RSAKey, buffer, offset, length){
 function getterDecorator(f){
 	function get(){
 		if(arguments[0].initialized !== 1){
-			return CryptoException(CryptoException.UNINITIALIZED_KEY)
+			return CryptoException(CryptoException.UNINITIALIZED_KEY);
 		} else {
 			return f.apply(this, arguments);
 		}
@@ -106,9 +106,9 @@ module.exports = {
 		this.modulus;
 		this.key = null;
 	},
-	getNodeRSA: function(RSAPublicKey){
+	getNodeRSA: function(RSAPublicKey, algorithm){
 		if(RSAPublicKey.initialized === 1){
-			return createKey(RSAPublicKey);
+			return createKey(RSAPublicKey, algorithm);
 		} else {
 			return new Error('Key not initialized');
 		}

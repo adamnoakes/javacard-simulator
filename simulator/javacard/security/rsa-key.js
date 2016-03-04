@@ -10,6 +10,7 @@
  * @private
  */
 var keys = require('./keys.js');
+var NodeRSA = require('node-rsa');
 var Util = require('../framework/Util.js');
 
 /**
@@ -31,5 +32,18 @@ module.exports = {
 		RSAKey.key = theKey;
 		RSAKey.exponent = key.longToArray(theKey.e);
 		RSAKey.modulus = key.longToArray(theKey.n);
+	},
+
+	getNodeRSA: function(RSAKey, algorithm){
+		var es; //encryptionScheme
+		switch (algorithm) {
+			case 10://PKCS1
+				es = 'pkcs1';
+				break;
+			case 15://pkcs1_oaep
+				es = 'pkcs1_oaep';
+				break;
+		}
+		return new NodeRSA({}, {encryptionScheme: es});
 	}
 };

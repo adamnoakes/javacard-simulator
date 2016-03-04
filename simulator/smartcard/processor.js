@@ -56,7 +56,7 @@ module.exports = {
         if((smartcard.EEPROM.selectedApplet.AID.join() === installer.AID.join()) && (cla == 0x80)){
             return installer.process(smartcard, buffer, cb);
         }
-
+        
         jcvm.process(smartcard, [0], function(err, res){
             if(err){
                 cb(err, res);
@@ -64,8 +64,12 @@ module.exports = {
                 var output = "";
                 var apdu = smartcard.EEPROM.objectheap[0];
                 if (apdu.state >= 3) {
-                    for (var k = 0; k < apdu.buffer.length; k++) {
-                        output += util.addX(util.addpad(apdu.buffer[k])) + " ";
+                    for (var k = 0; k < apdu._buffer.length ; k++) {
+                        if(apdu._buffer[k]){
+                            output += util.addX(util.addpad(apdu._buffer[k])) + " ";
+                        } else {
+                            output += "0x00 ";
+                        }
                     }
                 }
                 cb(undefined, output + res);

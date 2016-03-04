@@ -210,6 +210,9 @@ module.exports = {
 		var param0 = params[0] - 128;
 		var packageAID = capFile.COMPONENT_Import.packages[param0].AID;
 		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], 3);
+		if(numOfArgs instanceof Error){
+			return numOfArgs;
+		}
 		var args = [];
 		var found = false;
 
@@ -292,6 +295,9 @@ module.exports = {
 		var param0 = params[0] - 128;
 		var packageAID = capFile.COMPONENT_Import.packages[param0].AID;
 		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], 6);
+		if(numOfArgs instanceof Error){
+			return numOfArgs;
+		}
 		var args = [];
 		var found = false;
 
@@ -362,6 +368,9 @@ module.exports = {
 		var param0 = params[0] - 128;
 		var packageAID = capFile.COMPONENT_Import.packages[param0].AID;
 		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], 6);
+		if(numOfArgs instanceof Error){
+			return numOfArgs;
+		}
 		var args = [];
 		if(numOfArgs > 0) {
 			args = operandStack.slice(-numOfArgs);

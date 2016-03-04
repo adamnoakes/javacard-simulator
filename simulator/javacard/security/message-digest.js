@@ -31,38 +31,30 @@ module.exports = {
    */
   run: function(obj, method, accessFlags, param){
     switch (accessFlags) {
-      case 0x04:
-        return runProtected(obj, method, param);
-      case 0x19://public static final
-        return runPublicStaticFinal(obj, method, param);
-      case 0x41://public abstract
-        return runPublicAbstract(obj, method, param);
+      case 3://CONSTANT_VirtualMethodref
+        return this.runVirtual(obj, method, param);
+      case 6://CONSTANT_StaticMethodref
+        return this.runStatic(obj, method, param);
     }
+    return new Error('Access flags used for MessageDigest not supported.');
   },
 
-  runProtected: function(obj, method, param){
-    switch (method){
-      case 1:
-        return init(obj, param[0], param[1]);
-    }
-    return new Error('Protected method ' + method + ' not supported for MessageDigest.');
-  },
-
-  runPublicSaticFinal: function(obj, method, param){
+  runStatic: function(obj, method, param){
     switch (method) {
       case 0://getInstance
-        return getInstance(param[0], param[1]);
+        return this.getInstance(param[0], param[1]);
       case 1://getInitializedMessageDigestInstance
         return getInitializedMessageDigestInstance(param[0], parm[1]);
     }
+    return new Error('Static method ' + method + ' not supported for MessageDigest.');
   },
 
-  runSubClassMethod: function(obj, method, accessFlags, param){
+  runVirtual: function(obj, method, accessFlags, param){
     switch (obj.algorithm) {
       case this.ALG_SHA:
         return shaMessageDigest.run(obj, method, accessFlags, param);
     }
-    return new Error('CryptoException.NO_SUCH_ALGORITHM');
+    return new Error('CryptoException.NO_SUCH_ALGORITHM: ' + obj.algorithm);
   },
   /**
    * Creates a MessageDigest object instance of the selected algorithm.
@@ -70,26 +62,28 @@ module.exports = {
   MessageDigest: function(){
     this.algorithm = 0;
     this.externalAccess = false;
+  },
+
+  /**
+   * Creates a MessageDigest object instance of the selected algorithm.
+   *
+   * @param  {Number} algorithm       the desired message digest algorithm.
+   *                                  Valid codes listed in ALG_* constants above,
+   *                                  for example,ALG_SHA
+   * @param  {Boolean} externalAccess Support not implemented.
+   * @return {MessageDigest}          the MessageDigest object instance of the
+   *                                  requested algorithm.
+   */
+  getInstance: function(algorithm, externalAccess){
+    switch (algorithm) {
+      case this.ALG_SHA:
+        return new shaMessageDigest.SHAMessageDigest();
+    }
+    return new Error('CryptoException.NO_SUCH_ALGORITHM: ' + algorithm + this.ALG_SHA);
   }
 };
 
-/**
- * Creates a MessageDigest object instance of the selected algorithm.
- *
- * @param  {Number} algorithm       the desired message digest algorithm.
- *                                  Valid codes listed in ALG_* constants above,
- *                                  for example,ALG_SHA
- * @param  {Boolean} externalAccess Support not implemented.
- * @return {MessageDigest}          the MessageDigest object instance of the
- *                                  requested algorithm.
- */
-function getInstance(algorithm, externalAccess){
-  switch (algorithm) {
-    case this.ALG_SHA:
-      return new shaMessageDigest.SHAMessageDigest();
-  }
-  return new Error('CryptoException.NO_SUCH_ALGORITHM');
-}
+
 
 /**
  * !NOT IMPLMENTED
