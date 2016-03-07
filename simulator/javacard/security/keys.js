@@ -4,8 +4,6 @@
  * University of Southampton
  */
 
-//TODO: should import s1
-
 /**
  * Private functions.
  */
@@ -26,12 +24,19 @@ function Key(key, type, size){
 	key.type = type;
 }
 
-
 /**
  * Module exports.
  */
-
 module.exports = {
+	/**
+     * Handles javacard.security.Key api calls.
+     * 
+     * @param  {Key} 	 key    	The Key object
+     * @param  {Number}  method     The method token
+     * @param  {Number}  methodType The method type token
+     * @param  {Array}   param      Popped from operand stack
+     * @return  Error or the result of called function.
+     */
 	run: function(key, method, methodType, param){
 		switch(method){
 			case 0://void
@@ -117,14 +122,6 @@ module.exports = {
 			l += bytes[i];
 		}
 		return l;
-	},
-
-	binaryToarray: function(bytes){
-		//incomplete
-	},
-
-	arrayTobinary: function(array){
-		//incomplete
 	},
 
 	isInitialized: function(key){

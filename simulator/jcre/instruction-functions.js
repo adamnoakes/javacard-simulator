@@ -243,7 +243,7 @@ module.exports = {
 	            }
 	        }
 
-	        object = eeprom.getObjectHeapValue(smartcard.EEPROM, heap[object]);
+	        object = smartcard.EEPROM.objectheap[heap[object]];
 	    }
 	    var apiresult = api.run(packageAID, params[1], params[2], 3, args, object, smartcard);
 
@@ -326,7 +326,7 @@ module.exports = {
                 }
             }
 
-            object = eeprom.getObjectHeapValue(smartcard.EEPROM, heap[object]);
+            object = smartcard.EEPROM.objectheap[heap[object]];
 	    }
 	    var apiresult = api.run(packageAID, params[1], params[2], 6, args, object, smartcard);
 	    if(apiresult instanceof Error){

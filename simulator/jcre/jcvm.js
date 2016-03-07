@@ -918,7 +918,7 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                     var clsno = ((info[0] - 128) << 8) + info[1];
                     //hv += ",A"+clsno+","+objectheap.length;
                     eeprom.pushToHeap(smartcard, 160+clsno);
-                    eeprom.pushToHeap(smartcard, eeprom.getObjectHeap(smartcard.EEPROM).length);
+                    eeprom.pushToHeap(smartcard, smartcard.EEPROM.objectheap.length);
                     if ((info[1] == 3) && (capFile.COMPONENT_Import.packages[info[0] - 128].AID.join() === mnemonics.jframework.join())) {
                         ram.setGRef(smartcard.RAM, ref);
                     }
@@ -991,7 +991,7 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                     var clsno = ((info[0] - 128) << 8) + info[1];
                     //tv += ",A" + clsno + "," + objectheap.length;
                     tv.push(160+clsno);
-                    tv.push(eeprom.getObjectHeap(smartcard.EEPROM).length);
+                    tv.push(smartcard.EEPROM.objectheap.length);
                     if ((info[1] == 3) && (capFile.COMPONENT_Import.packages[info[0] - 128].AID.join() === mnemonics.jframework.join())) { ram.setGRef(smartcard.RAM, ref); }
 
                     eeprom.appendObjectHeap(smartcard.EEPROM, api.newObject(capFile.COMPONENT_Import.packages[info[0] - 128].AID, info[1]));

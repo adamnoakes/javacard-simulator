@@ -15,6 +15,17 @@ var le = require('../java/lang/exceptions.js');
  * @private
  */
 module.exports = {
+
+    /**
+     * Handles java.lang api calls.
+     *
+     * @param  {Number}    classToken The class token.
+     * @param  {Number}    method     The method token.
+     * @param  {Number}    type       The method type token.
+     * @param  {Array}     param      Params popped from operand stack.
+     * @param  {Object}    obj        The javacard.framework object.
+     * @return             Error or the result of called function.
+     */
 	run: function(classToken, method, type, param, obj){
 		switch (classToken) {
             case 0:  //Object
@@ -30,9 +41,9 @@ module.exports = {
             case 9:  //ArithmeticException
             case 10:  //SecurityException
             case 11:  //ArrayStoreException
-							return new Error('Unsupported Method');
+				return new Error('Unsupported Method');
             default:
-              return new Error('Unsupported Method');
+                return new Error('Unsupported Method');
         }
 	},
     newObject: function(classToken){

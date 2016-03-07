@@ -117,5 +117,9 @@ module.exports = {
 	getModulus: getterDecorator(getModulus),
 	setExponent: setterDecorator(setExponent),
 	setModulus: setterDecorator(setModulus),
-	setKey: setterDecorator(require('./rsa-key.js').setKey)
+	setKey: setterDecorator(function(RSAKey, theKey){
+		RSAKey.key = theKey;
+		RSAKey.exponent = key.longToArray(theKey.e);
+		RSAKey.modulus = key.longToArray(theKey.n);
+	})
 };

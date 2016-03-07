@@ -57,7 +57,7 @@ module.exports = function () {
 	                        req.session.smartcard = newcard._id;
 	                        res.send({
 	                            'result': true,
-	                            'cardName': eeprom.getCardName(newcard.EEPROM)
+	                            'cardName': newcard.EEPROM.cardName
 	                        });
 	                    }
 	                });

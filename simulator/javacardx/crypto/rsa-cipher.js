@@ -8,7 +8,6 @@
  * Module dependencies.
  * @private
  */
-
 var Util = require('../../javacard/framework/Util.js');
 var keys = require('../../javacard/security/keys.js');
 var rsaPublicKey = require('../../javacard/security/rsa-public-key.js');
@@ -18,7 +17,6 @@ var rsaPrivateCrtKey = require('../../javacard/security/rsa-private-crt-key.js')
  * Module exports.
  * @public
  */
-
 module.exports = {
 	/**
 	 * Handles javacardx.crypto.cipher api calls for rsa algorithms.

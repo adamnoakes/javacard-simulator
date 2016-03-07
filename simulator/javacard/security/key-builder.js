@@ -1,5 +1,8 @@
 /*!
  * key-builder
+ * 
+ * The KeyBuilder class is a key object factory.
+ * 
  * @author Adam Noakes
  * University of Southampton
  */
@@ -16,7 +19,6 @@ var RSAPrivateCrtKey = require('./rsa-private-crt-key.js').RSAPrivateCrtKey;
  * Module exports.
  * @public
  */
-
 module.exports = {
 
 	/**
@@ -76,6 +78,15 @@ module.exports = {
 	LENGTH_HMAC_SHA_384_BLOCK_128: 128,
 	LENGTH_HMAC_SHA_512_BLOCK_128: 128,
 
+	/**
+     * Handles javacard.security.KeyBuilder api calls.
+     * 
+     * @param  {KeyBuilder} keyBuilder The KeyBuilder object
+     * @param  {Number} 	method 	   The method token
+     * @param  {Number} 	methodType The method type token
+     * @param  {Array}  	param      Popped from operand stack
+     * @return  Error or the result of called function.
+     */
 	run: function(keyBuilder, method, methodType, param){
 		switch(method){
 			case 0:
@@ -83,17 +94,18 @@ module.exports = {
 					return new Error('KeyBuilder.equals() not implemented.');
                 }
 				return this.buildKey(param[0], param[1], param[2]);
-			default:
-				return new Error('Method ' + method + ' not defined for RSAPrivateKey');
-				//throw error, cannot perform method method, methodType methodType
 		}
+		return new Error('Method ' + method + ' not defined for RSAPrivateKey');
 	},
 
 	/**
-	 * @param  {Number} keyType
-	 * @param  {Number} keyLength
-	 * @param  {Boolean} keyEncryption
-	 * @return {Key}
+	 * Creates uninitialized cryptographic keys for signature and cipher
+	 * algorithms.
+	 * 
+	 * @param  {Number} keyType   		The type of key to be generated.
+	 * @param  {Number} keyLength   	The key size in bits.
+	 * @param  {Boolean} keyEncryption	Not implemented.
+	 * @return 							The key object.
 	 */
 	buildKey: function(keyType, keyLength, keyEncryption){
 		//not implemented functions show throw exceptions
@@ -114,8 +126,7 @@ module.exports = {
 		        return new RSAPrivateKey(keyLength);
 		    case this.TYPE_RSA_CRT_PRIVATE:
 		        return new RSAPrivateCrtKey(keyLength);
-		    default:
-		        return new Error('CryptoException.NO_SUCH_ALGORITHM');
 		}
+		return new Error('CryptoException.NO_SUCH_ALGORITHM');
 	}
 };

@@ -1,19 +1,30 @@
 /*!
  * key-pair
+ *
+ * This class is a container for a key pair (a public key and a private key).
+ * 
  * @author Adam Noakes
  * University of Southampton
  */
 
+/**
+ * Module dependencies.
+ * @private
+ */
 var keyBuilder = require('./key-builder.js');
 var keys = require('./keys.js');
 var rsaPublicKey = require('./rsa-public-key.js');
+var rsaPrivateKey = require('./rsa-private-key.js');
+var rsaPrivateCrtKey = require('./rsa-private-crt-key.js');
 var NodeRSA = require('node-rsa');
 
-
+/**
+ * Module exports.
+ * @public
+ */
 module.exports = {
 	/**
 	 * Constants
-	 * @type {Number}
 	 */
 	ALG_RSA: 1,
     ALG_RSA_CRT: 2,
@@ -21,6 +32,15 @@ module.exports = {
     ALG_EC_F2M: 4,
     ALG_EC_FP: 5,
 
+    /**
+     * Handles javacard.security.KeyPair api calls.
+     * 
+     * @param  {KeyPair} keyPair    The KeyPair object
+     * @param  {Number}  method     The method token
+     * @param  {Number}  methodType The method type token
+     * @param  {Array}   param      Popped from operand stack
+     * @return  Error or the result of called function.
+     */
     run: function(keyPair, method, methodType, param){
         switch(method){
             case 0:
@@ -44,60 +64,82 @@ module.exports = {
     },
 
     /**
-     * [KeyPair description]
-     * @param {Number} param1 - Number represents algorithm type
-     * @param {Number} param2 - Number represents 
+     * Called on new keyword and sets initial values.
      */
     KeyPair: function(){
     	//to be used by genKeyPair
-    	this.algorithm;
-    	this.keyLength;
+    	this.algorithm = 0;
+    	this.keyLength = 0;
     	//needs to catch an exception
     	//CryptoException.NO_SUCH_ALGORITHM
-    	this.publicKey;
-		this.privateKey;
+    	this.publicKey = null;
+		this.privateKey = null;
     },
     
-    init: function(KeyPair, algorithm, keyLength){
+    /**
+     * Constructs a KeyPair instance for the specified algorithm and keylength.
+     * 
+     * @param  {KeyPair} keyPair   The KeyPair object.
+     * @param  {Number}  algorithm The type of algorithm whose key pair needs
+     *                             to be generated.
+     * @param  {Number}  keyLength The key size in bits.
+     * @return {Error}
+     */
+    init: function(keyPair, algorithm, keyLength){
         //to be used by genKeyPair
-        KeyPair.algorithm = algorithm;
-        KeyPair.keyLength = keyLength;
-        //needs to catch an exception
-        //CryptoException.NO_SUCH_ALGORITHM
-        var result = keyBuilder.buildKey(algorithm, KeyPair.keyLength);
-        if(result instanceof Error){
+        keyPair.algorithm = algorithm;
+        keyPair.keyLength = keyLength;
+        
+        var result = keyBuilder.buildKey(algorithm, keyPair.keyLength);
+        if(result instanceof Error){//CryptoException.NO_SUCH_ALGORITHM
             return result;
         }
-        KeyPair.publicKey = result;
-        result = keyBuilder.buildKey(algorithm, KeyPair.keyLength);
-        if(result instanceof Error){
+        keyPair.publicKey = result;
+        result = keyBuilder.buildKey(algorithm, keyPair.keyLength);
+        if(result instanceof Error){//CryptoException.NO_SUCH_ALGORITHM
             return result;
         }
-        KeyPair.privateKey = result;
+        keyPair.privateKey = result;
     },
 
-    initFromPair: function(KeyPair, publicKey, privateKey){
-    	//Should possibly validate publicKey and privateKey and throw exception
-    	//for invalid values. CryptoException.ILLEGAL_VALUE
-    	KeyPair.publicKey = publicKey;
-    	KeyPair.privateKey = privateKey;
+    /**
+     * Constructs a new KeyPair object containing the specified public key
+     * and private key.
+     * 
+     * @param  {KeyPair}    keyPair    The KeyPair object.
+     * @param  {PublicKey}  publicKey  The public key.
+     * @param  {PrivateKey} privateKey The private key.
+     */
+    initFromPair: function(keyPair, publicKey, privateKey){
+        if(publicKey.algorithm !== privateKey.algorithm ||
+            publicKey.keyLength !== privateKey.keyLength){
+            return new Error('CryptoException.ILLEGAL_VALUE');
+        }
+    	keyPair.publicKey = publicKey;
+    	keyPair.privateKey = privateKey;
     },
 
+    /**
+     * (Re)Initializes the key objects encapsulated in this KeyPair
+     * instance with new key values.
+     * 
+     * @param  {KeyPair} keyPair The KeyPair object.
+     */
     genKeyPair: function(keyPair){
     	var tmpKey;
-    	if(keyPair.publicKey.initialized || keyPair.privateKey.initialized){
-    		return new Error('CryptoException.ILLEGAL_VALUE');
-    	} else {
-    		switch(keyPair.algorithm){
-                //should set crt variables and otherss
-    			case this.ALG_RSA:
-                case this.ALG_RSA_CRT:
-    				tmpKey = new NodeRSA({b: keyPair.keyLength});
-    				rsaPublicKey.setKey(keyPair.publicKey, tmpKey);
-    				rsaPublicKey.setKey(keyPair.privateKey, tmpKey);
-    				break;
-    		}
-    	}
+		switch(keyPair.algorithm){
+            //should set crt variables and otherss
+			case this.ALG_RSA:
+                tmpKey = new NodeRSA({b: keyPair.keyLength});
+                rsaPublicKey.setKey(keyPair.publicKey, tmpKey);
+                rsaPrivateKey.setKey(keyPair.privateKey, tmpKey);
+                break;
+            case this.ALG_RSA_CRT:
+				tmpKey = new NodeRSA({b: keyPair.keyLength});
+				rsaPublicKey.setKey(keyPair.publicKey, tmpKey);
+				rsaPrivateCrtKey.setKey(keyPair.privateKey, tmpKey);
+				break;
+		}
     }
 };
 

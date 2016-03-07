@@ -23,16 +23,6 @@ module.exports = {
 		RSAKey.modulus = undefined;
 		RSAKey.key = undefined;
 	},
-	/**
-	 * [setKey description]
-	 * @param {RSAPublicKey/RSAPrivateKey} RSAKey
-	 * @param {NodeRSA} theKey [description]
-	 */
-	setKey: function(RSAKey, theKey){
-		RSAKey.key = theKey;
-		RSAKey.exponent = key.longToArray(theKey.e);
-		RSAKey.modulus = key.longToArray(theKey.n);
-	},
 
 	getNodeRSA: function(RSAKey, algorithm){
 		var es; //encryptionScheme

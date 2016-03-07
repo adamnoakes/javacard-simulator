@@ -60,7 +60,8 @@ function process(smartcard, buffer, cb) {
     this[0xBA] = function(cb){
     	//End Package (write package)
         //gcardname = cardname;
-        eeprom.writePackage(smartcard.EEPROM, new capJS.CAPfile(ram.getTempComponents(smartcard.RAM)));
+        eeprom.writePackage(smartcard.EEPROM, new capJS.CAPfile(smartcard.RAM.tempComponents));
+        ram.tempComponents = [];
         //PageMethods.endPackage(gcardname; Result_Method);
         //gpID = Number(Result);
         //clear tempcomponents

@@ -39,6 +39,14 @@ module.exports = {
     return new Error('Access flags used for MessageDigest not supported.');
   },
 
+  /**
+   * Handles javacard.security.MessageDigest static method calls.
+   * @param  {Number}        method The method token.
+   * @param  {Number}        type   The method type token.
+   * @param  {Array}         param  Popped from operand stack.
+   * @param  {MessageDigest} obj    The MessageDigest object.
+   * @return                        Error or the result of called function.
+   */
   runStatic: function(obj, method, param){
     switch (method) {
       case 0://getInstance
@@ -49,6 +57,14 @@ module.exports = {
     return new Error('Static method ' + method + ' not supported for MessageDigest.');
   },
 
+  /**
+   * Handles javacard.security.MessageDigest virtual method calls.
+   * @param  {Number}        method The method token.
+   * @param  {Number}        type   The method type token.
+   * @param  {Array}         param  Popped from operand stack.
+   * @param  {MessageDigest} obj    The MessageDigest object.
+   * @return                        Error or the result of called function.
+   */
   runVirtual: function(obj, method, accessFlags, param){
     switch (obj.algorithm) {
       case this.ALG_SHA:
@@ -56,6 +72,7 @@ module.exports = {
     }
     return new Error('CryptoException.NO_SUCH_ALGORITHM: ' + obj.algorithm);
   },
+  
   /**
    * Creates a MessageDigest object instance of the selected algorithm.
    */

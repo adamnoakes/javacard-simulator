@@ -165,5 +165,7 @@ module.exports = {
 	setPQ: setterDecorator(function(RSAPrivateCrtKey, buffer, offset, length){
 		RSAPrivateCrtKey.PQ = buffer.slice(offset, offset + length);
 	}),
-	setKey: setterDecorator(rsaKey.setKey)
+	setKey: setterDecorator(function(){
+
+	})
 };

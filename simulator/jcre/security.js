@@ -22,9 +22,17 @@ var messageDigest = require('../javacard/security/message-digest.js');
  */
 
 module.exports = {
+    
 	/**
-	 * Handles javacard.security api calls.
-	 */
+     * Handles javacard.security api calls.
+     *
+     * @param  {Number}    classToken The class token.
+     * @param  {Number}    method     The method token.
+     * @param  {Number}    type       The method type token.
+     * @param  {Array}     param      Params popped from operand stack.
+     * @param  {Object}    obj        The javacard.framework object.
+     * @return             Error or the result of called function.
+     */
 	run: function(classToken, method, type, param, obj){
 		switch(classToken){
 			case 0://javacard/security/Key

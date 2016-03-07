@@ -24,7 +24,6 @@ module.exports = {
     setInstallingAppletAID: function(RAM, aid){RAM.installingAppletAID = aid;},
     setCurrentComponent: function(RAM, val){RAM.currentComponent = val;},
     getCurrentComponent: function(RAM){return RAM.currentComponent;},
-    getTempComponents: function(RAM){return RAM.tempComponents;},
     getTempComponent: function(RAM, pos){return RAM.tempComponents[pos];},
     setTempComponent: function(RAM, pos, val){RAM.tempComponents[pos] = val;},
     resetTempComponents: function(RAM){RAM.tempComponents = [];},

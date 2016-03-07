@@ -8,15 +8,13 @@
  * Module dependencies.
  * @private
  */
-
-
 var keys = require('../../javacard/security/keys.js');
 var rsaCipher = require('./rsa-cipher.js');
+
 /**
  * Module exports.
  * @public
  */
-
 module.exports = {
 
 	/**
@@ -44,13 +42,13 @@ module.exports = {
 	MODE_ENCRYPT: 2,
 
 	/**
-	 * Handles javacardx.crypto.cipher api calls
+	 * Handles javacardx.crypto.Cipher api calls
 	 *
 	 * @param  {Number} method     The method token.
 	 * @param  {Number} methodType The method type token.
 	 * @param  {Array}  param      Popped from operand stack.
 	 * @param  {Cipher} cipher     The cipher object.
-	 * @return            				 Error or the result of called function.
+	 * @return          Error or the result of called function.
 	 */
 	run: function(method, methodType, param, cipher){
 		var algorithm = (cipher !== null ? cipher.algorithm : param[0]);
