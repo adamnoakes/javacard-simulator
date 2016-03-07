@@ -15,7 +15,6 @@ var bignum = require('bignum');
 //cannot be saved like this in DB, but be exported on saving and then imported on load
 function createKey(RSAPrivateCrtKey, algorithm){
 	var nodeRSAKey = rsaKey.getNodeRSA(RSAPrivateCrtKey, algorithm);
-
 	nodeRSAKey.importKey({
 		n: getModulus(RSAPrivateCrtKey.P,RSAPrivateCrtKey.Q),
 		e: 65537,//[0x01, 0x00, 0x01];

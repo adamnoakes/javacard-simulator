@@ -25,6 +25,9 @@ module.exports = {
 }
 
 function processScript(smartcard, apduScript, cb){
+	if(!(apduScript instanceof Array)){
+		return cb(new Error('Unrecognised APDU format'), '0x6FFF');
+	}
 	processor.process(smartcard, apduScript.shift(), function(err, res){
 		if(err){
 			setImmediate(function() {

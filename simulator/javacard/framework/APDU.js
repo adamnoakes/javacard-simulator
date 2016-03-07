@@ -456,6 +456,7 @@ function setIncomingAndReceive(apdu){
  * @param  {Number} length The length of the data in bytes to send.
  */
 function sendBytes(apdu, bOffs, length){
+    apdu._buffer.pop();//remove length
     if(apdu.state < 0){
         return e.getAPDUException(4);//IO_ERROR
     }
@@ -466,7 +467,7 @@ function sendBytes(apdu, bOffs, length){
         return e.getAPDUException(2);//BUFFER_BOUNDS
     }
     for(var i = 0; i < length; i++){
-        apdu._buffer[apdu.currentOutgoingLength + i] = outData[bOffs + i];
+        apdu._buffer[apdu.currentOutgoingLength + i] = apdu.buffer[bOffs + i];
     }
     apdu.currentOutgoingLength += length;
     if (apdu.currentOutgoingLength < apdu.outGoingLength){

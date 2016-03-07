@@ -14,7 +14,9 @@ var supertest = require('supertest');
 var server = supertest.agent("http://localhost:3000");
 
 var calculatorApplet = require('./applets/calculator.js');
-var rsaDecryptApplet = require('./applets/rsa-decrypt.js');
+var rsaDecryptPKCS1_OAEPApplet = require('./applets/rsa-decrypt-pkcs1-oaep.js');
+var rsaDecryptPKCS1Applet = require('./applets/rsa-decrypt-pkcs1.js');
+var shaDigest = require('./applets/sha1-digest.js');
 
 /**
  * Card Manager Tests
@@ -43,8 +45,6 @@ describe('Card Manager', function(){
       done();
     });
   });
-  //TODO -> should list cards
-  it('Should list installed cards');
   it('Should delete smartcards', function(done){
     server.del('/simulator/smartcards/' + smartcard.cardName)
     .end(function(err, res){
@@ -106,33 +106,76 @@ describe('Applet', function(){
   /**
    * RSA Decrypt Tests
    */
-  describe('RSA Decrypt', appletTests(rsaDecryptApplet, function(){
+  describe(rsaDecryptPKCS1Applet.name, appletTests(rsaDecryptPKCS1Applet, function(){
     describe('Sending Private Key', function(){
       it('Should set P value', sendAPDU(
-        rsaDecryptApplet.sendP
+        rsaDecryptPKCS1Applet.sendP
       ));
 
       it('Should set Q value', sendAPDU(
-        rsaDecryptApplet.sendQ
+        rsaDecryptPKCS1Applet.sendQ
       ));
 
       it('Should set DP1 value', sendAPDU(
-        rsaDecryptApplet.sendDP1
+        rsaDecryptPKCS1Applet.sendDP1
       ));
 
       it('Should set DQ1 value', sendAPDU(
-        rsaDecryptApplet.sendDQ1
+        rsaDecryptPKCS1Applet.sendDQ1
       ));
 
       it('Should set PQ value', sendAPDU(
-        rsaDecryptApplet.sendPQ
+        rsaDecryptPKCS1Applet.sendPQ
+      ));
+    });
+
+    describe('Decryption', function(){
+      it('Should decrypt "hello world"', sendAPDU(
+        rsaDecryptPKCS1Applet.sendEncrypted,
+        rsaDecryptPKCS1Applet.encryptedResponse
+      ));
+    });
+  }));
+
+  describe(rsaDecryptPKCS1_OAEPApplet.name, appletTests(rsaDecryptPKCS1_OAEPApplet, function(){
+    describe('Sending Private Key', function(){
+      it('Should set P value', sendAPDU(
+        rsaDecryptPKCS1_OAEPApplet.sendP
+      ));
+
+      it('Should set Q value', sendAPDU(
+        rsaDecryptPKCS1_OAEPApplet.sendQ
+      ));
+
+      it('Should set DP1 value', sendAPDU(
+        rsaDecryptPKCS1_OAEPApplet.sendDP1
+      ));
+
+      it('Should set DQ1 value', sendAPDU(
+        rsaDecryptPKCS1_OAEPApplet.sendDQ1
+      ));
+
+      it('Should set PQ value', sendAPDU(
+        rsaDecryptPKCS1_OAEPApplet.sendPQ
       ));
     });
 
     describe('Decryption', function(){
       it('Should decrypt "Hello World!"', sendAPDU(
-        rsaDecryptApplet.sendEncrypted,
-        '0x00 0x00 0x00 0x00 0x00 0x48 0x65 0x6c 0x6c 0x6f 0x20 0x57 0x6f 0x72 0x6c 0x64 0x21 0x9000'
+        rsaDecryptPKCS1_OAEPApplet.sendEncrypted,
+        rsaDecryptPKCS1_OAEPApplet.encryptedResponse
+      ));
+    });
+  }));
+
+  /**
+   * SHA Digest Tests
+   */
+  describe(shaDigest.name, appletTests(shaDigest, function(){
+    describe('Digest', function(){
+      it('Should digest abc', sendAPDU(
+        shaDigest.digestabc,
+        shaDigest.expectedDigested
       ));
     });
   }));
@@ -195,8 +238,10 @@ function appletTests(applet, tests){
   };
 }
 
-function sendAPDU(apdu, expectedResponse){
+function sendAPDU(apdu, expectedResponse, timeout){
   return function(done){
+    if(timeout)
+      this.timeout(timeout)
     server.post('/simulator/apdu').send({'APDU': apdu})
     .end(function(err, res){
       if(err){

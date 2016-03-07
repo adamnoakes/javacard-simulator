@@ -98,6 +98,7 @@ module.exports = {
 	 * @return {Number | Error}   Number of bytes output in outBuff or an Error
 	 */
 	doFinal: function(cipherObj, inBuff, inOffset, inLength, outBuff, outOffset){
+		
 		var cipher = require('./cipher.js');
 		if(!cipherObj.initialized){
 			return new Error('CryptoException.INVALID_INT');
@@ -137,6 +138,7 @@ module.exports = {
 			}
 			//Copy data to output buffer
 			Util.arrayCopyNonAtomic(result, 0, outBuff, outOffset, result.length);
+			
 			return result.length;
 		} catch(err){
 			//Likely because NodeRSA method failed

@@ -44,6 +44,6 @@ module.exports = {
 				es = 'pkcs1_oaep';
 				break;
 		}
-		return new NodeRSA({}, {encryptionScheme: es});
+		return new NodeRSA(undefined, {encryptionScheme: es});
 	}
 };
