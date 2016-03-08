@@ -82,48 +82,6 @@ module.exports = {
 		privateKey.private = true;
 	},
 
-    /*
-     * Used to transform long to Array
-     * >>> longToArray(25)
-     * [25]
-     * >>> longToArray(4867)
-     * [3, 19]
-     */
-	longToArray: function(long){
-		var s = long.toString(16);
-		if ((s.length % 2) !== 0){
-		    s = '0' + s;
-		}
-		var out = [];
-		for(var i= s.length; i>0; i = i - 2){
-		    out.push(parseInt(s.substr(i-2, 2), 16));
-		}
-	},
-	//http://stackoverflow.com/questions/8609289/convert-a-binary-nodejs-buffer-to-javascript-arraybuffer
-	toArrayBuffer: function(buffer) {
-	    var ab = new ArrayBuffer(buffer.length);
-	    var view = new Uint8Array(ab);
-	    for (var i = 0; i < buffer.length; ++i) {
-	        view[i] = buffer[i];
-	    }
-	    return view;
-	},
-	/*
-     * make a long from an Array
-     * >>> arrayTolong([25])
-     * 25
-     * >>> arrayTolong([3, 19])
-     * 4867
-     */
-	arrayToLong: function(bytes){
-		var l;
-		for(var i = bytes.length-1; i > -1; i--){
-			l = l << 8;
-			l += bytes[i];
-		}
-		return l;
-	},
-
 	isInitialized: function(key){
 		return key.initialized;
 	},
@@ -149,8 +107,7 @@ module.exports = {
 		    	var rsaPublicKey = require('./rsa-public-key.js');
 		    	return rsaPublicKey.clearKey(key);
 		    case this.TYPE_RSA_PRIVATE:
-		    	var rsaPrivateKey = require('./rsa-private-key.js');
-		        return rsaPrivateKey.clearKey(key);
+		    	return new Error('TYPE_RSA_PRIVATE not implmeneted');
 		    case this.TYPE_RSA_CRT_PRIVATE:
 		    	var rsaPrivateCrtKey = require('./rsa-private-crt-key.js');
 		        return rsaPrivateCrtKey.clearKey(key);

@@ -13,17 +13,25 @@ module.exports = {
     },
 
     /**
-     * Takes an array of APDU commands and sends them to the processor
-     * one by one to be processed.
-     * @param  {SmartCard}   smartcard  [description]
-     * @param  {Array}   apduScript [description]
-     * @param  {Function} cb         [description]
-     */
+	 * Wrapper function for processScript.
+	 *
+	 * @param  {SmartCard} smartcard  The SmartCard object.
+	 * @param  {Array}     apduScript An array of apdu commands.
+	 * @param  {Function}  cb         The callback function
+	 */
     process: function(smartcard, apduScript, cb){
 		processScript(smartcard, apduScript, cb);
     }
 }
 
+/**
+ * Takes an array of APDU commands and sends them to the processor
+ * one by one to be processed.
+ *
+ * @param  {SmartCard} smartcard  The SmartCard object.
+ * @param  {Array}     apduScript An array of apdu commands.
+ * @param  {Function}  cb         The callback function
+ */
 function processScript(smartcard, apduScript, cb){
 	if(!(apduScript instanceof Array)){
 		return cb(new Error('Unrecognised APDU format'), '0x6FFF');

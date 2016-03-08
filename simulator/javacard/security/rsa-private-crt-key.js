@@ -1,5 +1,5 @@
 /*!
- * rsa-private-key
+ * rsa-private-crt-key
  * @author Adam Noakes
  * University of Southampton
  */
@@ -166,6 +166,11 @@ module.exports = {
 		RSAPrivateCrtKey.PQ = buffer.slice(offset, offset + length);
 	}),
 	setKey: setterDecorator(function(){
-
+		var components = theKey.exportKey('components-private');
+		RSAKey.P = components.p.toJSON().data;
+		RSAKey.Q = components.q.toJSON().data;
+		RSAKey.DP1 = components.dmp1.toJSON().data;
+		RSAKey.DQ1 = components.dmq1.toJSON().data;
+		RSAKey.PQ = components.coeff.toJSON().data;
 	})
 };

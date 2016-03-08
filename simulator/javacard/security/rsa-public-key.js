@@ -13,7 +13,6 @@ var rsaKey = require('./rsa-key.js');
 //cannot be saved like this in DB, but be exported on saving and then imported on load
 function createKey(RSAPublicKey, algorithm){
 	var nodeRSAKey = rsaKey.getNodeRSA(RSAPrivateCrtKey, algorithm);
-
 	nodeRSAKey.importKey({
 		e: new Buffer(RSAPublicKey.exponent),
 		n: new Buffer(RSAPublicKey.modulus)
@@ -118,8 +117,8 @@ module.exports = {
 	setExponent: setterDecorator(setExponent),
 	setModulus: setterDecorator(setModulus),
 	setKey: setterDecorator(function(RSAKey, theKey){
-		RSAKey.key = theKey;
-		RSAKey.exponent = key.longToArray(theKey.e);
-		RSAKey.modulus = key.longToArray(theKey.n);
+		var components = theKey.exportKey('components-public');
+		RSAKey.exponent = components.e.toJSON().data;
+		RSAKey.modulus = components.n.toJSON().data;
 	})
 };

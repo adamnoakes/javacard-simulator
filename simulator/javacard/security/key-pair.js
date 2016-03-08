@@ -14,7 +14,6 @@
 var keyBuilder = require('./key-builder.js');
 var keys = require('./keys.js');
 var rsaPublicKey = require('./rsa-public-key.js');
-var rsaPrivateKey = require('./rsa-private-key.js');
 var rsaPrivateCrtKey = require('./rsa-private-crt-key.js');
 var NodeRSA = require('node-rsa');
 
@@ -130,16 +129,14 @@ module.exports = {
 		switch(keyPair.algorithm){
             //should set crt variables and otherss
 			case this.ALG_RSA:
-                tmpKey = new NodeRSA({b: keyPair.keyLength});
-                rsaPublicKey.setKey(keyPair.publicKey, tmpKey);
-                rsaPrivateKey.setKey(keyPair.privateKey, tmpKey);
                 break;
             case this.ALG_RSA_CRT:
 				tmpKey = new NodeRSA({b: keyPair.keyLength});
 				rsaPublicKey.setKey(keyPair.publicKey, tmpKey);
 				rsaPrivateCrtKey.setKey(keyPair.privateKey, tmpKey);
-				break;
+				return;
 		}
+        return new Error('CryptoException.NO_SUCH_ALGORITHM');
     }
 };
 

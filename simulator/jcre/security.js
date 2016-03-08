@@ -10,7 +10,6 @@
  */
 
 var keys = require('../javacard/security/keys.js');
-var rsaPrivateKey = require('../javacard/security/rsa-private-key.js');
 var rsaPrivateCrtKey = require('../javacard/security/rsa-private-crt-key.js');
 var rsaPublicKey = require('../javacard/security/rsa-public-key.js');
 var keyBuilder = require('../javacard/security/key-builder.js');
@@ -49,7 +48,7 @@ module.exports = {
             case 7://javacard/security/RSAPrivateCrtKey
             	return rsaPrivateCrtKey.run(obj, method, type, param);
             case 8://javacard/security/RSAPrivateKey
-            	return rsaPrivateKey.run(obj, method, type, param);
+            	return new Error('Unsupported class');
             case 9://javacard/security/RSAPublicKey
             	return rsaPublicKey.run(obj, method, type, param);
             case 10://javacard/security/DESKey

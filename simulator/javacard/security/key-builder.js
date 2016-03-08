@@ -12,7 +12,6 @@
  * @private
  */
 var RSAPublicKey = require('./rsa-public-key.js').RSAPublicKey;
-var RSAPrivateKey = require('./rsa-private-key.js').RSAPrivateKey;
 var RSAPrivateCrtKey = require('./rsa-private-crt-key.js').RSAPrivateCrtKey;
 
 /**
@@ -123,7 +122,8 @@ module.exports = {
 		    case this.TYPE_RSA_PUBLIC:
 		    	return new RSAPublicKey(keyLength);
 		    case this.TYPE_RSA_PRIVATE:
-		        return new RSAPrivateKey(keyLength);
+		        //not implmeneted
+		        break;
 		    case this.TYPE_RSA_CRT_PRIVATE:
 		        return new RSAPrivateCrtKey(keyLength);
 		}
