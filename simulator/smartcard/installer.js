@@ -9,102 +9,99 @@ var eeprom = require('./eeprom.js');
  * @param  {function} cb
  */
 function process(smartcard, buffer, cb) {
+
     /**
-     * Create a new package
+     * Create a new package.
+     * 
+     * @param  {Function} cb Callback function
      */
 	this[0xB0] = function(cb){
 		ram.setCurrentComponent(smartcard.RAM, null);
         ram.resetTempComponents(smartcard.RAM);
-        return cb(undefined, "0x9000");
+        cb(undefined, "0x9000");
 	};
     /**
      * Set current component to P1, used to prepare the smartcard for writing
      * the component data.
+     *
+     * @param  {Function} cb Callback function
      */
 	this[0xB2] = function (cb){
         ram.setCurrentComponent(smartcard.RAM, buffer[2]);//p1
         ram.setTempComponent(smartcard.RAM,
             ram.getCurrentComponent(smartcard.RAM), []);
-        //AppletManager.CurrentComponent = P1;
-        //PageMethods.startComponent(cardname; P1);
-        return cb(undefined, "0x9000");
+        cb(undefined, "0x9000");
 	};
     /**
      * Write data in buffer to current component.
+     *
+     * @param  {Function} cb     Callback function
+     * @param  {Array}    buffer The buffer array
      */
 	this[0xB4] = function(cb, buffer){
 		//Component Data
         var data = buffer.slice(5, 5 + buffer[4]);//LC
-        //this.asyncState = false;
-        //why get current component from variable and not from parameter?
-        //PageMethods.writeComponent(cardname; AppletManager.CurrentComponent; data; Result_Method);
-        //response = Result;
-        //this.tempComponents[this.currentComponent] = [null];
         ram.getTempComponent(smartcard.RAM, ram.getCurrentComponent(smartcard.RAM)).push.apply(ram.getTempComponent(smartcard.RAM, ram.getCurrentComponent(smartcard.RAM)), data);
-        return cb(undefined, "0x9000");
-        //if (response == 0) { gSW = "0x9000" } else { gSW = "0x" + response.toString(16); PageMethods.abortPackage(cardname); installation_failed = true;};
+        cb(undefined, "0x9000");
     };
     /**
      * End component, called when we are finished writing to the current
      * component.
+     *
+     * @param  {Function} cb Callback function
      */
     this[0xBC] = function(cb){
     	//End Component
         ram.setCurrentComponent(smartcard.RAM, null);
-        return cb(undefined, "0x9000");
+        cb(undefined, "0x9000");
     };
     /**
      * End package, called when we are finished writing the current package.
      * This writes the package as a CAPfile to the EEPROM.
+     *
+     * @param  {Function} cb Callback function
      */
     this[0xBA] = function(cb){
     	//End Package (write package)
-        //gcardname = cardname;
         eeprom.writePackage(smartcard.EEPROM, new capJS.CAPfile(smartcard.RAM.tempComponents));
         ram.tempComponents = [];
-        //PageMethods.endPackage(gcardname; Result_Method);
-        //gpID = Number(Result);
-        //clear tempcomponents
-        //var CAP = getCAP(cardname; gpID);
-
-        //setupStaticFields(CAP; gpID);
-        return cb(undefined, "0x9000");
+        cb(undefined, "0x9000");
     };
     /**
      * Creates an instance of a package on the smart card.
+     *
+     * @param  {Function} cb Callback function
      */
     this[0xB8] = function(cb, buffer){
         var AIDLength = buffer[5];
         var createAID = buffer.slice(6, 6+AIDLength);
-        console.log("creating aid:");
-        console.log(createAID);
+        var appletAID = buffer.slice(6, 6+buffer[4] - 1);
+
         var params;
+        var applets;
         //get the cap
         var packageToCreate = eeprom.getPackage(smartcard.EEPROM, createAID);
         //if the package does not exists the we can't create an instance --> fail.
         if(!packageToCreate){
             cb(undefined, "0x6443");
         } else {
-            //console.log(packageToCreate.COMPONENT_Applet.applets);
-
-            //For every applet in the package; we are going to create an instance of it
-            //normally only one applet
-            for(var i=0; i < packageToCreate.COMPONENT_Applet.applets.length; i++){//TODO --> change from 0
-                ram.setInstallingAppletAID(smartcard.RAM, packageToCreate.COMPONENT_Applet.applets[i].AID);
-                params =[];
-                params[0] = buffer;
-                params[1] = AIDLength + 7;
-                params[2] = buffer[AIDLength + 1];
-                //execute the install code
-                jcvm.createInstance(smartcard, packageToCreate, params, i, cb);
+            applets = packageToCreate.COMPONENT_Applet.applets;
+            for(var i=0; i < applets.length; i++){
+                if(applets[i].AID.join() === appletAID.join()){
+                    ram.setInstallingAppletAID(smartcard.RAM, applets[i].AID);
+                    params =[];
+                    params[0] = buffer;
+                    params[1] = 5;
+                    params[2] = buffer[AIDLength + 1];
+                    //execute the install code
+                    jcvm.createInstance(smartcard, packageToCreate, params, i, cb);
+                }
             }
-            //return "0x9000";
         }
 
     };
 
     //Call the relevant function and return result
-    //return
     this[buffer[1]](cb, buffer);
 }
 

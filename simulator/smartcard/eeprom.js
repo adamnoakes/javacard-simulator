@@ -1,5 +1,5 @@
 /*!
- * eeprom
+ * EEPROM
  *
  * Contains the EEPROM structure and methods used to modify
  * values in the EEPROM.
@@ -17,9 +17,10 @@ module.exports = {
 	 */
 	EEPROM: function(cardName) {
 		this.cardName = cardName;
-		this.packages = [];
+		this.packages = {};
 		this.heap = [0xA0,0x00];//@private
-		this.installedApplets = [{'AID': [0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01], 'appletRef': -1}];
+		this.installedApplets = {};
+		this.installedApplets[[0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01]] = -1;
 		this.selectedApplet = {'AID': undefined, 'appletRef': undefined, 'CAP': undefined};
 		this.objectheap = [];
 	},
@@ -63,15 +64,10 @@ module.exports = {
 	 * @param  {Array}  appletAID The applet's AID.
 	 */
 	setSelectedApplet: function(EEPROM, appletAID){
-		for(var i = 0; i<EEPROM.installedApplets.length; i++){
-			if(EEPROM.installedApplets[i].AID.join() === appletAID.join()) {
-				EEPROM.selectedApplet.AID =  EEPROM.installedApplets[i].AID;
-				EEPROM.selectedApplet.appletRef = EEPROM.installedApplets[i].appletRef;
-				EEPROM.selectedApplet.CAP = this.getAppletCAP(EEPROM, appletAID);
-				return true;
-			}
-		}
-		return false;
+		EEPROM.selectedApplet.AID = appletAID;
+		EEPROM.selectedApplet.CAP = this.getPackage(EEPROM, appletAID.slice(0, appletAID.length-1));
+		EEPROM.selectedApplet.appletRef = EEPROM.installedApplets[appletAID];
+		return (EEPROM.selectedApplet.appletRef !== undefined);
 	},
 
 	/**
@@ -81,20 +77,29 @@ module.exports = {
 	 * @param  {CAPfile} capfile
 	 */
 	writePackage: function(EEPROM, capfile){
-		console.log('CAPfile:');
-		console.log(capfile);
-		EEPROM.packages[EEPROM.packages.length] = capfile;
+		EEPROM.packages[capfile.COMPONENT_Header.AID] = capfile;
 	},
 
+	/**
+	 * Finds package with given AID in the EEPROM.
+	 * 
+	 * @param  {EEPROM} EEPROM The smartcards EEPROM
+	 * @param  {AID} 	AID    The package's AID
+	 * @return {CAPfile}       The package's CAPfile
+	 */
 	getPackage: function(EEPROM, AID){
 		//find the package with given AID and return it.
-		for(var i = 0; i < EEPROM.packages.length; i++){
-			if(EEPROM.packages[i].COMPONENT_Header.AID.join() === AID.join()){
-				return EEPROM.packages[i];
-			}
-		}
+		return EEPROM.packages[AID];
 	},
 
+	/**
+	 * Sets a value on the heap. If transaction is in progress,
+	 * the change will be applied when the transaction is finished.
+	 * 
+	 * @param {SmartCard} smartcard The SmartCard object.
+	 * @param {Number} pos       	The position in the heap.
+	 * @param {Number} val       	The value to set to.
+	 */
 	setHeap: function(smartcard, pos, val){
 		if(!smartcard.processor.transaction_flag){
 			smartcard.EEPROM.heap[pos] = val;
@@ -103,6 +108,13 @@ module.exports = {
 		}
 	},
 
+	/**
+	 * Pushes a value onto the heap. If transaction is in progress,
+	 * the change will be applied when the transaction is finished.
+	 * 
+	 * @param {SmartCard} smartcard The SmartCard object.
+	 * @param {Number} val       	The value to set to.
+	 */
 	pushToHeap: function(smartcard, val){
 		if(!smartcard.processor.transaction_flag){
 			smartcard.EEPROM.heap.push(val);

@@ -38,12 +38,16 @@ module.exports = {
                 return new Error('Applet.equals() not implemented.');
             case 1:
                 //if(param){//public static install(BSB)
+                console.log('install:');
+                console.log(param);
                     return addInstalledApplet(smartcard);
                 //}
                 //protected final register()
                 //not implmented
 
             case 2://protected final register(BSB)
+                console.log('Register:');
+                console.log(param);
                 //TODO-> register should use parameters.
                 return addInstalledApplet(smartcard);//ISSUE
                 //obj.register(param[0], param[1], param[2]);
@@ -64,8 +68,8 @@ module.exports = {
 function addInstalledApplet(smartcard){
   var appletAID = smartcard.RAM.installingAppletAID;
   var gRef = smartcard.RAM.gRef;
-	var installedApplets = smartcard.EEPROM.installedApplets;
-  installedApplets.push({'AID': appletAID, 'appletRef': gRef, 'heap': smartcard.RAM.heap});
+  var installedApplets = smartcard.EEPROM.installedApplets;
+  installedApplets[appletAID] = gRef;
 }
 /**
  * ADAM'S CODE ENDS HERE
