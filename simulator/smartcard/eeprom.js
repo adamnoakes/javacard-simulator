@@ -21,7 +21,6 @@ module.exports = {
 		this.heap = [0xA0,0x00];//@private
 		this.installedApplets = {};
 		this.installedApplets[[0xA0,0x00,0x00,0x00,0x62,0x03,0x01,0x08,0x01]] = -1;
-		this.selectedApplet = {'AID': undefined, 'appletRef': undefined, 'CAP': undefined};
 		this.objectheap = [];
 	},
 
@@ -37,37 +36,6 @@ module.exports = {
 		} else {
 			EEPROM.objectheap.push(obj);
 		}
-	},
-	
-	/**
-	 * Returns the CAP file for an applet specified by it's AID.
-	 * 
-	 * @param  {EEPROM} EEPROM    The EEPROM object.
-	 * @param  {Array}  appletAID The applet's AID.
-	 * @return {CAPfile}          The CAPfile for the applet.
-	 */
-	getAppletCAP: function(EEPROM, appletAID){
-		for(var i = 0; i<EEPROM.packages.length; i++){
-			for(var j = 0; j<EEPROM.packages[i].COMPONENT_Applet.applets.length; j++){
-				if(EEPROM.packages[i].COMPONENT_Applet.applets[j].AID.join() === appletAID.join()){
-					return EEPROM.packages[i];
-				}
-			}
-		}
-		return undefined;
-	},
-
-	/**
-	 * Sets references in EEPROM for the specified applet AID.
-	 * 
-	 * @param  {EEPROM} EEPROM    The EEPROM object.
-	 * @param  {Array}  appletAID The applet's AID.
-	 */
-	setSelectedApplet: function(EEPROM, appletAID){
-		EEPROM.selectedApplet.AID = appletAID;
-		EEPROM.selectedApplet.CAP = this.getPackage(EEPROM, appletAID.slice(0, appletAID.length-1));
-		EEPROM.selectedApplet.appletRef = EEPROM.installedApplets[appletAID];
-		return (EEPROM.selectedApplet.appletRef !== undefined);
 	},
 
 	/**

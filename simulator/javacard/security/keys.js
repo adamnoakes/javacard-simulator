@@ -15,13 +15,13 @@
  * @param {Number} type
  * @param {Number} size
  */
-function Key(key, type, size){
-	if (this.constructor === this.PublicKey) {
+function Key(type, size){
+	if (this.constructor === this.Key) {
   		return new Error("Can't instantiate abstract class!");
 	}
-	key.initialized = 0;
-	key.size = size;
-	key.type = type;
+	this.initialized = 0;
+	this.size = size;
+	this.type = type;
 }
 
 /**
@@ -64,7 +64,7 @@ module.exports = {
       		return new Error("Can't instantiate abstract class: PublicKey");
     	}
 		//public key extends key
-		Key(publicKey, typ, size);
+		Key.call(publicKey, typ, size);
 	},
 	/**
 	 * @constructor
@@ -78,7 +78,7 @@ module.exports = {
       		return new Error("Can't instantiate abstract class: PrivateKey");
     	}
 		//public key extends key
-		Key(privateKey, typ, size);
+		Key.call(privateKey, typ, size);
 		privateKey.private = true;
 	},
 

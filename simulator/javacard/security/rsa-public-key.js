@@ -101,8 +101,8 @@ module.exports = {
 	RSAPublicKey: function(size){
 		//extends public key
 		keys.PublicKey(this, 4, size);
-		this.exponent;
-		this.modulus;
+		this.exponent = null;
+		this.modulus = null;
 		this.key = null;
 	},
 	getNodeRSA: function(RSAPublicKey, algorithm){

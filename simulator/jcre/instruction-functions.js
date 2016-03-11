@@ -205,55 +205,6 @@ module.exports = {
 	    }
 	    writeStaticField(opstr);
 	},
-
-	invokevirtualExternal: function(smartcard, capFile, heap, operandStack, params){
-		var param0 = params[0] - 128;
-		var packageAID = capFile.COMPONENT_Import.packages[param0].AID;
-		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], 3);
-		if(numOfArgs instanceof Error){
-			return numOfArgs;
-		}
-		var args = [];
-		var found = false;
-
-		if(numOfArgs > 0) {
-			args = operandStack.slice(-numOfArgs);
-			loadAnyArrays(smartcard, args);
-			operandStack.length = operandStack.length - numOfArgs;
-		}
-
-	    var object = operandStack.pop();
-
-	    if(!(object instanceof Object)){
-	    	var ocls = heap[object];
-	    	var clssig = ((param0 << 8) + params[1]);
-
-	        while (!found) {
-	            if (160 + clssig == ocls) {
-	                found = true;
-	                object++;
-	            } else {
-	                for (var j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
-	                    if (capFile.COMPONENT_Class.interface_info[j].start == ocls) {
-	                        object += capFile.COMPONENT_Class.interface_info[j].declared_instance_size + 1;
-	                        ocls = heap[object];
-	                        break;
-	                    }
-	                }
-	            }
-	        }
-
-	        object = smartcard.EEPROM.objectheap[heap[object]];
-	    }
-	    var apiresult = api.run(packageAID, params[1], params[2], 3, args, object, smartcard);
-
-	    if(apiresult instanceof Error){
-	        return apiresult;
-	    } else if (apiresult !== undefined){//if not void
-			operandStack.push(apiresult);
-	    }
-	},
-
 	invokevirtualInternal: function(capFile, opcodes, operandStack, frames, params){
 		var newFrameRef = frames.length;
 		var index;
@@ -282,16 +233,15 @@ module.exports = {
         operandStack.length = operandStack.length - (numOfArgs -1);
 		return offset;
 	},
-
-	invokespecialExternal: function(smartcard, capFile, heap, operandStack, params){
+	//special 6, virtual 3
+	invokeObjectMethod: function(smartcard, capFile, heap, operandStack, params, type){
 		var param0 = params[0] - 128;
 		var packageAID = capFile.COMPONENT_Import.packages[param0].AID;
-		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], 6);
+		var numOfArgs = api.getNumberOfArguments(packageAID, params[1], params[2], type);
 		if(numOfArgs instanceof Error){
 			return numOfArgs;
 		}
 		var args = [];
-		var found = false;
 
 		if(numOfArgs > 0){
 			args = operandStack.slice(- numOfArgs);
@@ -299,33 +249,31 @@ module.exports = {
 			operandStack.length = operandStack.length - numOfArgs;
 		}
 
-	    var object = operandStack.pop();
-	    if(!(object instanceof Object)){
-	    	var ocls = heap[object];
-	    	var clssig = ((param0 << 8) + params[1]);
-	    	while (!found) {
-                if (160 + clssig == ocls) {//clssig + 160 changed from A + clssig
-                    found = true;
-                    object++;
-                } else {
-                    for (var j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
-                        if (capFile.COMPONENT_Class.interface_info[j].start === ocls) {
-                            object += capFile.COMPONENT_Class.interface_info[j].declared_instance_size + 1;
-                            ocls = heap[object];
-                            break;
-                        }
-                    }
-                }
-            }
+		var object = operandStack.pop();
+		if(!(object instanceof Object)){
+			var ocls = heap[object];
+			var clssig = ((param0 << 8) + params[1]);
+			for (var j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
+				if (capFile.COMPONENT_Class.interface_info[j].start === ocls) {
+					object += capFile.COMPONENT_Class.interface_info[j].declared_instance_size + 1;
+					ocls = heap[object];
+					break;
+				}
+			}
+			if(160 + clssig === ocls){
+				object++;
+			} else {
+				return new Error('Could not find interface');
+			}
 
-            object = smartcard.EEPROM.objectheap[heap[object]];
-	    }
-	    var apiresult = api.run(packageAID, params[1], params[2], 6, args, object, smartcard);
-	    if(apiresult instanceof Error){
-            return apiresult;
-        } else if (apiresult !== undefined){//if not void
+			object = smartcard.EEPROM.objectheap[heap[object]];
+		}
+		var apiresult = api.run(packageAID, params[1], params[2], type, args, object, smartcard);
+		if(apiresult instanceof Error){
+			return apiresult;
+		} else if (apiresult !== undefined){//if not void
 			operandStack.push(apiresult);
-	    }
+		}
 	},
 	invokespecialInternal: function(opcodes, operandStack, frames, params){
 		var offset = (params[1] << 8) + params[2] - 1;

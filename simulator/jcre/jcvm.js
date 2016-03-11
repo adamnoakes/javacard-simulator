@@ -19,9 +19,9 @@ module.exports = {
      * @param  {Function}  cb       Called by executeBytecode
      */
     process: function(smartcard, params, cb){
-        var capFile = smartcard.EEPROM.selectedApplet.CAP;
-        var appletReference = smartcard.EEPROM.selectedApplet.appletRef;
-        var i = cap.getStartCode(capFile, smartcard.EEPROM.selectedApplet.AID, 7) - 1;
+        var capFile = smartcard.RAM.selectedApplet.CAP;
+        var appletReference = smartcard.RAM.selectedApplet.appletRef;
+        var i = cap.getStartCode(capFile, smartcard.RAM.selectedApplet.AID, 7) - 1;
         var opcodes = capFile.COMPONENT_Method.method_info;
         if (opcodes[i] > 127) {
             i += 4;
@@ -49,9 +49,9 @@ module.exports = {
      * @param  {Function}  cb        Called by executeBytecode.
      */
     selectApplet: function(smartcard, cb){
-        var capFile = smartcard.EEPROM.selectedApplet.CAP;
-        var appletReference = smartcard.EEPROM.selectedApplet.appletRef;
-        var i = cap.getStartCode(capFile, smartcard.EEPROM.selectedApplet.AID, 6) - 1;
+        var capFile = smartcard.RAM.selectedApplet.CAP;
+        var appletReference = smartcard.RAM.selectedApplet.appletRef;
+        var i = cap.getStartCode(capFile, smartcard.RAM.selectedApplet.AID, 6) - 1;
         var opcodes = capFile.COMPONENT_Method.method_info;
         if (opcodes[i] > 127) {
             i += 4;
@@ -824,8 +824,8 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
             frames[currentFrame].return_pointer = i + 3;
             if(params[0] >= 128){
-                apiresult = ins.invokevirtualExternal(smartcard, capFile, heap,
-                  operandStack, params);
+                apiresult = ins.invokeObjectMethod(smartcard, capFile, heap,
+                  operandStack, params, 3);
                 if(apiresult instanceof Error){
                     return apiError(apiresult, cb);
                 }
@@ -841,8 +841,8 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             params = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);//info
             frames[currentFrame].return_pointer = i + 3;
             if(params[0] >= 128){
-                apiresult = ins.invokespecialExternal(smartcard, capFile, heap,
-                  operandStack, params);
+                apiresult = ins.invokeObjectMethod(smartcard, capFile, heap,
+                  operandStack, params, 6);
                 if(apiresult instanceof Error){
                     return apiError(apiresult, cb);
                 }

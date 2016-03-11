@@ -250,8 +250,6 @@ function runStaticMethod(method, param, obj){
             return waitExtension();
         case 4:
             return getCurrentAPDU();
-        case 3://array
-            return getBuffer(obj);// adam maybe need to be stored in ram APDU.getCurrentAPDUBuffer();
         case 5://normal
             return getCLAChannel(obj);
         default:
@@ -561,7 +559,7 @@ function getCLAChannel(apdu) {
 }
 
 function waitExtension() {
-    return;
+
 }
 
 /**

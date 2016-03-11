@@ -29,8 +29,8 @@ module.exports = {
    * @param  {MessageDigest} obj    The MessageDigest object.
    * @return                        Error or the result of called function.
    */
-  run: function(obj, method, accessFlags, param){
-    switch (accessFlags) {
+  run: function(obj, method, type, param){
+    switch (type) {
       case 3://CONSTANT_VirtualMethodref
         return this.runVirtual(obj, method, param);
       case 6://CONSTANT_StaticMethodref
@@ -65,10 +65,10 @@ module.exports = {
    * @param  {MessageDigest} obj    The MessageDigest object.
    * @return                        Error or the result of called function.
    */
-  runVirtual: function(obj, method, accessFlags, param){
+  runVirtual: function(obj, method, type, param){
     switch (obj.algorithm) {
       case this.ALG_SHA:
-        return shaMessageDigest.run(obj, method, accessFlags, param);
+        return shaMessageDigest.run(obj, method, type, param);
     }
     return new Error('CryptoException.NO_SUCH_ALGORITHM: ' + obj.algorithm);
   },

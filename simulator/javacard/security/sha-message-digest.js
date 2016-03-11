@@ -47,7 +47,7 @@ module.exports = {
   },
 
   SHAMessageDigest: function(externalAccess){
-    this.algorithm = ALG_SHA
+    this.algorithm = ALG_SHA;
     console.log('algorithm: ' + this.algorithm);
     this.hashLength = 20;
     this.externalAccess = externalAccess;

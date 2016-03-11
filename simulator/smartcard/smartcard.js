@@ -22,7 +22,7 @@ module.exports = {
     process: function(smartcard, apduScript, cb){
 		processScript(smartcard, apduScript, cb);
     }
-}
+};
 
 /**
  * Takes an array of APDU commands and sends them to the processor
@@ -41,8 +41,8 @@ function processScript(smartcard, apduScript, cb){
 			setImmediate(function() {
 				cb(err, res);
 			});
-		} else if(apduScript.length > 0 && apduScript[0].constructor === Array
-			&& apduScript[0][0] != null && apduScript[0][0] !== undefined){
+		} else if(apduScript.length > 0 && apduScript[0].constructor === Array &&
+			apduScript[0][0] !== null && apduScript[0][0] !== undefined){
 			processScript(smartcard, apduScript, cb);
 		} else {
 			setImmediate(function() {

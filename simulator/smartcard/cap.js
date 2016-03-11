@@ -55,7 +55,7 @@ module.exports = {
     /**
      * Returns the install offset for the specified applet
      * @param  {CAPfile}    CAP
-     * @param  {array}      appletAID
+     * @param  {Array}      appletAID
      * @return {[type]}
      */
     getInstallOfset: function(CAP, appletAID){
@@ -67,7 +67,7 @@ module.exports = {
     },
     /**
      * @param  {CAPfile}    CAP       [description]
-     * @param  {array}      appletAID [description]
+     * @param  {Array}      appletAID [description]
      * @param  {Number}     token     [description]
      * @return {[type]}
      */

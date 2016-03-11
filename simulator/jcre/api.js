@@ -13,7 +13,7 @@ var framework = require('./framework.js');
 var lang = require('./lang.js');
 var security = require('./security.js');
 var crypto = require('./crypto.js');
-var opcodes = require('../utilities/opcodes.js');
+var mnemonics = require('../utilities/mnemonics.js');
 
 /**
  * Module exports.
@@ -35,13 +35,13 @@ module.exports = {
 	 */
 	run: function(packageAID, classToken, method, type, param, obj, smartcard){
 		switch (packageAID.join()) {
-			case opcodes.jlang.join():
+			case mnemonics.jlang.join():
 				return lang.run(classToken, method, type, param, obj);
-			case opcodes.jframework.join():
+			case mnemonics.jframework.join():
 				return framework.run(classToken, method, type, param, obj, smartcard);
-			case opcodes.jsecurity.join():
+			case mnemonics.jsecurity.join():
 				return security.run(classToken, method, type, param, obj);
-			case opcodes.jxcrypto.join():
+			case mnemonics.jxcrypto.join():
 				return crypto.run(classToken, method, type, param, obj);
 			default:
 				return new Error('Unsupported package');
@@ -49,13 +49,13 @@ module.exports = {
 	},
 	newObject: function(packageAID, classToken){
 		switch (packageAID.join()) {
-			case opcodes.jlang.join():
+			case mnemonics.jlang.join():
 				return lang.newObject(classToken);
-			case opcodes.jframework.join():
+			case mnemonics.jframework.join():
 				return framework.newObject(classToken);
-			case opcodes.jsecurity.join():
+			case mnemonics.jsecurity.join():
 
-			case opcodes.jxcrypto.join():
+			case mnemonics.jxcrypto.join():
 				return new Error('Unsupported package');
 			default:
 				return new Error('Unsupported package');
@@ -70,7 +70,7 @@ module.exports = {
 	    var obj;
 	    //Framework
 	    switch (packageAID.join()) {
-	        case opcodes.jlang.join(): //lang
+	        case mnemonics.jlang.join(): //lang
 	          	switch (classToken) {
 					case 0:  //Object
 					case 1:  //Throwable
@@ -87,7 +87,7 @@ module.exports = {
               			return 0;
 	            }
 	            return new Error('Unsupported class');
-	        case opcodes.jframework.join(): //Framework
+	        case mnemonics.jframework.join(): //Framework
 	            switch (classToken) {
 	              	case 3:  //Applet
 						switch (method) {
@@ -201,7 +201,7 @@ module.exports = {
 						break;
 	            }
 	            break;
-	        case opcodes.jsecurity.join():
+	        case mnemonics.jsecurity.join():
 	        	switch(classToken){
 					case 0://javacard/security/Key
 					case 2://javacard/security/PrivateKey
@@ -286,7 +286,7 @@ module.exports = {
 						break;
 				}
 				break;
-	        case opcodes.jxcrypto.join():
+	        case mnemonics.jxcrypto.join():
 	        	switch(classToken){
 					case 1://javacard/crypto/Cipher
 		            	switch(method) {

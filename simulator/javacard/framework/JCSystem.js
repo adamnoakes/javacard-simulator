@@ -14,7 +14,6 @@
  * @private
  */
 
-var opcodes = require('../../utilities/opcodes.js');
 var processor = require('../../smartcard/processor.js');
 var e = require('./Exceptions.js');
 
@@ -59,7 +58,7 @@ module.exports = {
             case 13://makeTransientByteArray
             case 14://makeTransientObjectArray
             case 15://makeTransientShortArray
-                return {transientArray: true, array: Array.apply(null, Array(param[0])).map(Number.prototype.valueOf,0)};
+                return {transientArray: true, array: Array.apply(null, new Array(param[0])).map(Number.prototype.valueOf,0)};
             default:
                 return new Error('Method ' + method + ' not defined for JCSystem');
         }

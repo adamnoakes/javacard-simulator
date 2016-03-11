@@ -1,7 +1,7 @@
 var apdu = require('../javacard/framework/APDU.js');
 var eeprom = require('./eeprom.js');
 var installer = require('./installer.js');
-var opcodes = require('../utilities/opcodes.js');
+var mnemonics = require('../utilities/mnemonics.js');
 var jcvm = require('../jcre/jcvm.js');
 var cap = require('./cap.js');
 var util = require('../utilities/utilities.js');
@@ -12,11 +12,9 @@ module.exports = {
      * @constructor
      */
     Processor: function(){
-        this.response = undefined;
         this.buffer = [];
         this.transaction_flag = false;
-        this.selectedAID = undefined;
-        this.appletInstance = undefined;
+        this.selectStatementFlag = 0;
     },
 
     /**
@@ -27,9 +25,6 @@ module.exports = {
      */
     process: function(smartcard, buffer, cb){
         var cla = buffer[0];    //@adam class of instruction, category
-        var ins = buffer[1];    //@adam instruction
-        var p1 = buffer[2];     //@adam parameter 1
-        var p2 = buffer[3];     //@adam parameter 2
         var lc = buffer[4];     //@adam length of command data
         var tmpApdu = new apdu.APDU(); //contruct an APDU objects
         apdu.constr(tmpApdu, buffer);
@@ -43,22 +38,20 @@ module.exports = {
         //Reset variables
         smartcard.RAM.transaction_buffer = [];
         smartcard.processor.transaction_flag = false;
-        smartcard.RAM.select_statement_flag = 0;
+        smartcard.processor.selectStatementFlag = 0;
 
         //If select applet command
         if (buffer.slice(0,4).join() === [0x00, 0xA4, 0x04, 0x00].join()) {
             return this.selectApplet(smartcard, buffer.slice(5,5+lc), cb);
-        } else if(!smartcard.EEPROM.selectedApplet.AID){
+        } else if(!smartcard.RAM.selectedApplet.AID){
           return cb(new Error('No Applet Selected'), '0x6A82');
         }
 
         //If the selected applet is the installer and an install command has been sent, process by installer module
-        if((smartcard.EEPROM.selectedApplet.AID.join() === installer.AID.join()) && (cla == 0x80)){
+        if((smartcard.RAM.selectedApplet.AID.join() === installer.AID.join()) && (cla == 0x80)){
             return installer.process(smartcard, buffer, cb);
         }
-        var heapSize = smartcard.EEPROM.heap.length;
         jcvm.process(smartcard, [0], function(err, res){
-            smartcard.EEPROM.heap.length = heapSize;
             if(err){
                 cb(err, res);
             } else {
@@ -84,35 +77,35 @@ module.exports = {
      * @param  {Array} appletAID
      * @param  {Function} cb
      */
-    selectApplet: function (smartcard, appletAID, cb){
+    selectApplet: function (smartcard, appletAID, cb) {
         smartcard.RAM.transient_data = [];
-        smartcard.RAM.select_statement_flag = 1;
+        smartcard.processor.selectStatementFlag = 1;
         smartcard.processor.selectedAID = []; //not the way to deselect, see code below
 
         //set applet aid and cap file in eeprom
-        if(eeprom.setSelectedApplet(smartcard.EEPROM, appletAID)){
-            if(smartcard.EEPROM.selectedApplet.AID.join() === installer.AID.join()){
+        if (setSelectedApplet(smartcard, appletAID)) {
+            if (smartcard.RAM.selectedApplet.AID.join() === installer.AID.join()) {
                 return cb(undefined, "0x9000");
             }
 
-            for(var j = 0; j < smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.count; j++) {
-                if(smartcard.EEPROM.selectedApplet.CAP.COMPONENT_Import.packages[j].AID.join() === opcodes.jframework.join()) {
-                    eeprom.setHeap(smartcard, 0, 160 + (j*256) + 10);
+            for (var j = 0; j < smartcard.RAM.selectedApplet.CAP.COMPONENT_Import.count; j++) {
+                if (smartcard.RAM.selectedApplet.CAP.COMPONENT_Import.packages[j].AID.join() === mnemonics.jframework.join()) {
+                    eeprom.setHeap(smartcard, 0, 160 + (j * 256) + 10);
                     break;
                 }
             }
 
-            var startcode = cap.getStartCode(smartcard.EEPROM.selectedApplet.CAP, appletAID, 6);
+            var startcode = cap.getStartCode(smartcard.RAM.selectedApplet.CAP, appletAID, 6);
             var params = [];
 
-            var processSelect = function(err, res){
-                if(err){
+            var processSelect = function (err, res) {
+                if (err) {
                     return cb(err, res);
                 }
                 params[0] = 0;
-                jcvm.process(smartcard, params, function(err, res){
-                    if(err) {
-                        smartcard.EEPROM.selectedApplet = null;
+                jcvm.process(smartcard, params, function (err, res) {
+                    if (err) {
+                        smartcard.RAM.selectedApplet = null;
                         return cb(err, res);
                     }
                     return cb(undefined, res);
@@ -133,3 +126,17 @@ module.exports = {
     }
 
 };
+
+/**
+ * Sets references in EEPROM for the specified applet AID.
+ *
+ * @param  {EEPROM} EEPROM    The EEPROM object.
+ * @param  {Array}  appletAID The applet's AID.
+ */
+function setSelectedApplet(smartcard, appletAID){
+    smartcard.RAM.selectedApplet.AID = appletAID;
+    smartcard.RAM.selectedApplet.CAP = eeprom.getPackage(smartcard.EEPROM,
+        appletAID.slice(0, appletAID.length-1));
+    smartcard.RAM.selectedApplet.appletRef = smartcard.EEPROM.installedApplets[appletAID];
+    return (smartcard.RAM.selectedApplet.appletRef !== undefined);
+}

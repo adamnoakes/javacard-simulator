@@ -72,7 +72,7 @@ module.exports = {
             case 23://javacard/security/HMACKey
             case 24://javacard/security/KoreanSEEDKey
             case 25://javacard/security/SignatureMessageRecovery
-            case 25://javacard/security/InitializedMessageDigest
+            case 26://javacard/security/InitializedMessageDigest
             	return new Error('Unsupported class');
 			default:
 				return new Error('Unsupported class');

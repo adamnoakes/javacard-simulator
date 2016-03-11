@@ -151,10 +151,10 @@ module.exports = {
     /**
      * Called to get part of the AID bytes encapsulated within the AID object
      * starting at the specified offset for the specified length.
-     * @param  {[type]} aidOffset [description]
-     * @param  {[type]} dest      [description]
-     * @param  {[type]} oOffset   [description]
-     * @param  {[type]} oLength   [description]
+     * @param  {Number} aidOffset [description]
+     * @param  {Array} dest      [description]
+     * @param  {Number} oOffset   [description]
+     * @param  {Number} oLength   [description]
      * @return {[type]}           [description]
      */
     //TODO -> does not work

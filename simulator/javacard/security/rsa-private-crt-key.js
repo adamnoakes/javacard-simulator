@@ -29,15 +29,15 @@ function createKey(RSAPrivateCrtKey, algorithm){
 }
 
 function getModulus(p,q){
-	var p = new bignum.fromBuffer(new Buffer(p));
-	var q = new bignum.fromBuffer(new Buffer(q));
+	p = new bignum.fromBuffer(new Buffer(p));
+	q = new bignum.fromBuffer(new Buffer(q));
 	return p.mul(q).toBuffer();
 }
 //derived from http://stackoverflow.com/questions/34142666/java-card-rsaprivatecrtkey-private-exponent-d
 function getPrivateExponent(p, q) {
     var e = new bignum(65537, 10);
-    var p = new bignum(p, 16);
-    var q = new bignum(q, 16);
+    p = new bignum(p, 16);
+	q = new bignum(q, 16);
 
     var pSub1 = p.sub(1);
     var qSub1 = q.sub(1);
@@ -113,11 +113,7 @@ module.exports = {
 		this.PQ = undefined;
 		this.key = null;
 	},
-	/**
-	 * @param {RSAKey} 	RSAKey
-	 * @param {Array} 	buffer
-	 * @param {Number} 	offset
-	 */
+
 	getNodeRSA: function(RSAPrivateCrtKey, algorithm){
 		if(RSAPrivateCrtKey.initialized === 1){
 			return createKey(RSAPrivateCrtKey, algorithm);

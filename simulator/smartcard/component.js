@@ -1,3 +1,7 @@
+
+
+
+
 /**
  * Mostly untouched
  */
@@ -151,14 +155,17 @@ function COMPONENT(inputData) {
 
                 if (this.signature_pool_length > 0) {
                     for (i = 0; i < this.signature_pool_length; i++) {
-                        signature_pool[i] = new function () {
-                            this.nibble_count = Data[pointer];
-                            arcount = Math.floor((this.nibble_count + 1) / 2);
-                            type = "";
-                            if (arcount > 0) { Data.slice(pointer + 1, pointer + arcount + 1); }
-                            pointer += (arcount + 1);
+                        signature_pool[i] = {
+                            nibble_count: Data[pointer],
+                            arcount: Math.floor((this.nibble_count + 1) / 2),
+                            type: ""
+
                         };
-                    }
+                        if (arcount > 0) {
+                                Data.slice(pointer + 1, pointer + arcount + 1);
+                            }
+                            pointer += (arcount + 1);
+                        }
                 }
 
                 this.signature_pool = signature_pool;
@@ -254,7 +261,7 @@ function COMPONENT(inputData) {
                             }
                             this.interfaces = interfaces;
 
-                            var remote_interfaces = new function () {
+                            var remote_interfaces = function () {
 
                                 if (this.flag_remote) {
                                     this.remote_methods_count = Data[pointer];
@@ -288,7 +295,7 @@ function COMPONENT(inputData) {
                                     this.r_interfaces = r_interfaces;
                                 }
                             };
-                            this.remote_interfaces = remote_interfaces;
+                            this.remote_interfaces = new remote_interfaces();
 
                         }
 
