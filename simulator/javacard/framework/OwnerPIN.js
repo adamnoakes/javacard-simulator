@@ -139,7 +139,7 @@ function getTriesRemaining(ownerPIN){
  * @return {boolean}           validated flag.
  */
 function getValidatedFlag(ownerPIN){
-  return validatedFlag;
+  return ownerPIN.validatedFlag;
 }
 
 /**

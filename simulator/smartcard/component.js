@@ -44,8 +44,6 @@ function COMPONENT(inputData) {
         this.Tag = Tag;
         this.Size = (inputData[1] << 8) + inputData[2];
         Data = inputData.slice(3);
-        //console.log("inputData:");
-        //console.log(inputData);
         switch (Tag) {
             case 1:
                 //Header
@@ -71,7 +69,6 @@ function COMPONENT(inputData) {
                     name = "";
                     for (i = 0; i < this.package_namelength; i++) { name = name + Data[11 + this.AID_length + i].toString(16); }
                     this.package_name = name;
-                    console.log(this.package_name);
                 }
 
                 break;

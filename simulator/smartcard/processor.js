@@ -78,53 +78,77 @@ module.exports = {
      * @param  {Function} cb
      */
     selectApplet: function (smartcard, appletAID, cb) {
-        smartcard.RAM.transient_data = [];
-        smartcard.processor.selectStatementFlag = 1;
-        smartcard.processor.selectedAID = []; //not the way to deselect, see code below
-
-        //set applet aid and cap file in eeprom
-        if (setSelectedApplet(smartcard, appletAID)) {
-            if (smartcard.RAM.selectedApplet.AID.join() === installer.AID.join()) {
-                return cb(undefined, "0x9000");
+        this.deselectApplet(smartcard, appletAID, function(err, res){
+            if(err){
+                return cb(err, res);
             }
+            smartcard.RAM.transient_data = [];
+            smartcard.processor.selectStatementFlag = 1;
+            smartcard.processor.selectedAID = []; //not the way to deselect, see code below
 
-            for (var j = 0; j < smartcard.RAM.selectedApplet.CAP.COMPONENT_Import.count; j++) {
-                if (smartcard.RAM.selectedApplet.CAP.COMPONENT_Import.packages[j].AID.join() === mnemonics.jframework.join()) {
-                    eeprom.setHeap(smartcard, 0, 160 + (j * 256) + 10);
-                    break;
+            //set applet aid and cap file in eeprom
+            if (setSelectedApplet(smartcard, appletAID)) {
+                if (smartcard.RAM.selectedApplet.AID.join() === installer.AID.join()) {
+                    return cb(undefined, "0x9000");
                 }
+
+                for (var j = 0; j < smartcard.RAM.selectedApplet.CAP.COMPONENT_Import.count; j++) {
+                    if (smartcard.RAM.selectedApplet.CAP.COMPONENT_Import.packages[j].AID.join() === mnemonics.jframework.join()) {
+                        eeprom.setHeap(smartcard, 0, 160 + (j * 256) + 10);
+                        break;
+                    }
+                }
+
+                var startcode = cap.getStartCode(smartcard.RAM.selectedApplet.CAP, appletAID, 6);
+                var params = [];
+
+                var processSelect = function (err, res) {
+                    if (err) {
+                        return cb(err, res);
+                    }
+                    params[0] = 0;
+                    jcvm.process(smartcard, params, function (err, res) {
+                        if (err) {
+                            smartcard.RAM.selectedApplet = null;
+                            return cb(err, res);
+                        }
+                        return cb(undefined, res);
+                    });
+                };
+
+                //if the applet has an install method, run it.
+                if (startcode > 0) {
+                    jcvm.selectApplet(smartcard, startcode, processSelect);
+                } else {
+                    processSelect();
+                }
+
+            } else {
+                //@adam no applet found
+                cb(new Error('Applet Not Found'), "0x6A82");
             }
+        });
+    },
 
-            var startcode = cap.getStartCode(smartcard.RAM.selectedApplet.CAP, appletAID, 6);
-            var params = [];
-
-            var processSelect = function (err, res) {
-                if (err) {
-                    return cb(err, res);
-                }
-                params[0] = 0;
-                jcvm.process(smartcard, params, function (err, res) {
+    deselectApplet: function(smartcard, appletAID, cb){
+        var startcode;
+        if(smartcard.RAM.selectedApplet.appletRef !== null &&
+            smartcard.RAM.selectedApplet.appletRef >= 0){
+            console.log('selected');
+            startcode = cap.getStartCode(smartcard.RAM.selectedApplet.CAP, appletAID, 4);
+            if (startcode > 0) {
+                jcvm.selectApplet(smartcard, startcode, function (err, res) {
                     if (err) {
                         smartcard.RAM.selectedApplet = null;
-                        return cb(err, res);
+                        return cb(err);
                     }
                     return cb(undefined, res);
                 });
-            };
-
-            //if the applet has an install method, run it.
-            if (startcode > 0) {
-                jcvm.selectApplet(smartcard, processSelect);
-            } else {
-                processSelect();
             }
-
         } else {
-            //@adam no applet found
-            cb(new Error('Applet Not Found'), "0x6A82");
+            return cb(undefined, undefined);
         }
     }
-
 };
 
 /**

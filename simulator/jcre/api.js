@@ -248,7 +248,6 @@ module.exports = {
 						}
 						break;
 					case 11:
-						console.log('type ' + type);
 						switch(type){
 					  		case 6://CONSTANT_StaticMethodref
 					    		return 2;

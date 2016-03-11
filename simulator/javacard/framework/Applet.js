@@ -42,8 +42,6 @@ module.exports = {
                 }
                 return;
             case 2://protected final register(BSB)
-                console.log('Register:');
-                console.log(param);
                 //TODO-> register should use parameters.
                 return register(param[0], param[1], param[2], smartcard);//ISSUE
             case 3://protected final selectingApplet() -> boolean

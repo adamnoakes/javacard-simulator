@@ -94,10 +94,10 @@ function process(smartcard, buffer, cb) {
                     params[1] = 5;//7 + AIDLength;
                     params[2] = buffer[4];//buffer[AIDLength + 6];
                     //execute the install code
-                    jcvm.createInstance(smartcard, packageToCreate, params, i, cb);
+                    return jcvm.createInstance(smartcard, packageToCreate, params, i, cb);
                 }
             }
-            //should return undefined here
+            cb(new Error('Could not find applet.'), '0x6A82');
         }
 
     };

@@ -52,7 +52,6 @@ module.exports = function () {
                 } else {
                     //success
                     req.session.smartcards[req.body.cardName] = newcard._id;
-                    console.log(req.session);
                     res.send({
                         'result': true,
                         'cardName': newcard.EEPROM.cardName
@@ -118,7 +117,10 @@ module.exports = function () {
 	router.post('/apdu', function(req, res){
 	    if(!req.session.loadedCard){
 	    	//no card selected apdu
-	        res.send({'APDU': "0x6A82"});
+	        res.send({
+	        	'APDU': "0x6A82",
+	        	'error': 'No smartcard currently loaded.'
+	        });
 	    } else {
 	        //Load the smartcard from the user's session
 	        req.db.collection('smartcards').findOne(
@@ -127,12 +129,13 @@ module.exports = function () {
 	        		//Check smartcard was loaded successfully
 		        	if(err || !loadedCard){
 		        		console.log(err);
-		        		res.send({'APDU': "0x6A82"});
+		        		res.send({
+		        			'APDU': "0x6A82",
+		        			'error': 'Could not find smartcard'
+		        		});
 		        	} else {
-                		console.log(req.body);
 		        		smartcard.process(loadedCard, req.body.APDU, function(executionError, apduResponse){
 		        			//Update the smartcard object
-		        			//
 		        			req.db.collection('smartcards').update(
 								{ _id: require('mongodb').ObjectID(req.session.loadedCard) },
 								loadedCard,

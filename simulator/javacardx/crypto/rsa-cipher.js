@@ -107,7 +107,6 @@ module.exports = {
 		data = Array.apply(null, new Array(inLength)).map(Number.prototype.valueOf,0);
 		Util.arrayCopyNonAtomic(inBuff, inOffset, data, 0, inLength);
 		if(data.length != Math.floor(cipherObj.key.size / 8)){
-			console.log(data.length);
 			return new Error('CryptoException.ILLEGAL_VALUE');
 		}
 		try {

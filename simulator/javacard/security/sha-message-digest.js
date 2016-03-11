@@ -48,7 +48,6 @@ module.exports = {
 
   SHAMessageDigest: function(externalAccess){
     this.algorithm = ALG_SHA;
-    console.log('algorithm: ' + this.algorithm);
     this.hashLength = 20;
     this.externalAccess = externalAccess;
     this.unprocessed = [];
@@ -72,7 +71,6 @@ module.exports = {
  */
 function doFinal(shaMessageDigest, inBuff, inOffset, inLength, outBuff, outOffset){
   update(shaMessageDigest, inBuff, inOffset, inLength);
-  console.log(shaMessageDigest.unprocessed);
   var m  = crypt.bytesToWords(shaMessageDigest.unprocessed),
         l  = shaMessageDigest.unprocessed.length * 8,
         w  = [],

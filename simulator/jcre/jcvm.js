@@ -48,10 +48,10 @@ module.exports = {
      * @param  {Array}     params
      * @param  {Function}  cb        Called by executeBytecode.
      */
-    selectApplet: function(smartcard, cb){
+    selectApplet: function(smartcard, startcode, cb){
         var capFile = smartcard.RAM.selectedApplet.CAP;
         var appletReference = smartcard.RAM.selectedApplet.appletRef;
-        var i = cap.getStartCode(capFile, smartcard.RAM.selectedApplet.AID, 6) - 1;
+        var i = startcode - 1;
         var opcodes = capFile.COMPONENT_Method.method_info;
         if (opcodes[i] > 127) {
             i += 4;
