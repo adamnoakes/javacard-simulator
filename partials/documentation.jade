@@ -22,6 +22,8 @@
             a(href='#Calculator') Calculator
           li
             a(href='#RSADecrypt') RSA Decrypt
+          li
+            a(href='#SHA1Digest') SHA-1 Digest
   // Main Content
   .col-xs-9#Overview
     section
@@ -276,3 +278,41 @@
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendEncrypted)') Execute
+      #SHA1Digest
+        h4 SHA-1 Digest
+        table.table.table-bordered.table-striped
+          thead
+            tr
+              th Step
+              th Function
+              th Source
+              th Link
+          tbody
+            tr
+              td 1.
+              td Create a new virtual card "sha1digest".
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(sha1DigestCommands.newCard)') Execute
+            tr
+              td 2.
+              td Send SHA-1 Digest applet APDU script.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(sha1DigestCommands.sendApplet)') Execute
+            tr
+              td 3.
+              td Select SHA-1 Digest applet.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(sha1DigestCommands.selectApplet)') Execute
+            tr
+              td 4.
+              td Digest abc.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(sha1DigestCommands.digestabc)') Execute
