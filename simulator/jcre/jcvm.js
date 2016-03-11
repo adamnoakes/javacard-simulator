@@ -90,10 +90,7 @@ module.exports = {
         var frames = [];
         frames[currentFrame] = new this.Frame();
 
-        var address = smartcard.EEPROM.heap.length;
-        //stores buffer on the heap
-        eeprom.pushToHeap(smartcard, params[0]);
-        frames[currentFrame].local_vars.push("#H" + address);
+        frames[currentFrame].local_vars.push(params[0]);
         frames[currentFrame].local_vars.push(params[1]);
         frames[currentFrame].local_vars.push(params[2]);
 
@@ -1020,14 +1017,10 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             i += 3;
             break;
         case mnemonics.arraylength: //0x92
-            var arref = operandStack.pop();
+            var arr = operandStack.pop();
             if (arref === null) { executeBytecode.exception_handler(mnemonics.jlang,6,""); }
-            var ar = heap[arref];
-            if (ar.slice(0, 2) == "#H") {
-                ar = heap[Number(ar.split("#H")[1])].length;
-            }
 
-            operandStack.push(ar);
+            operandStack.push(arr.length);
             i++; break;
         case mnemonics.athrow: //0x93
             objref = operandStack.pop();

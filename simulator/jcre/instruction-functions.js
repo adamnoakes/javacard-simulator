@@ -360,10 +360,7 @@ function loadArray(smartcard, parameter){
     var references;
     if(typeof parameter == 'string' ||
         parameter instanceof String){
-        if (parameter.toString().slice(0, 2) == "#H") {
-            references = parameter.split('#H');
-            return smartcard.EEPROM.heap[Number(references[1])];
-        } else if (parameter.toString().slice(0, 1) == "T"){
+		if (parameter.toString().slice(0, 1) == "T"){
             references = parameter.slice(1).split("#");
             if(smartcard.RAM.transient_data[Number(references[0])] === undefined){
                 smartcard.RAM.transient_data[Number(references[0])] = [];
