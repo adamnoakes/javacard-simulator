@@ -16,7 +16,7 @@ module.exports = function () {
     /* GET smartcards -> Return available smart cards. */
 	router.get('/smartcards', function(req, res){
 		if(!req.session.smartcards){
-			req.session.smartcards = [];
+			req.session.smartcards = {};
 		}
 	    res.send(Object.keys(req.session.smartcards));
 	});
@@ -64,7 +64,7 @@ module.exports = function () {
 	/* GET  smartcards/:cardName -> Load smart card, specified by cardName */
 	router.get('/smartcards/:cardName', function(req, res){
 		if(!req.session.smartcards){
-			req.session.smartcards = [];
+			req.session.smartcards = {};
 		}
 		if(req.session.smartcards[req.params.cardName]){
 			req.session.loadedCard = req.session.smartcards[req.params.cardName];
@@ -83,7 +83,7 @@ module.exports = function () {
 	/* DELETE  smartcards/:cardName -> Delete smart card, specified by cardName */
 	router.delete('/smartcards/:cardName', function(req, res){
 		if(!req.session.smartcards){
-			req.session.smartcards = [];
+			req.session.smartcards = {};
 		}
 		var smartcardId = req.session.smartcards[req.params.cardName];
 		if(smartcardId){
