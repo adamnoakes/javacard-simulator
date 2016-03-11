@@ -37,20 +37,14 @@ module.exports = {
                 //public equals()
                 return new Error('Applet.equals() not implemented.');
             case 1:
-                //if(param){//public static install(BSB)
-                console.log('install:');
-                console.log(param);
-                    return addInstalledApplet(smartcard);
-                //}
-                //protected final register()
-                //not implmented
-
+                if(type === 3){
+                    return registerJCPN(smartcard);
+                }
             case 2://protected final register(BSB)
                 console.log('Register:');
                 console.log(param);
                 //TODO-> register should use parameters.
-                return addInstalledApplet(smartcard);//ISSUE
-                //obj.register(param[0], param[1], param[2]);
+                return register(param[0], param[1], param[2], smartcard);//ISSUE
             case 3://protected final selectingApplet() -> boolean
                 return ram.getSelectStatementFlag(smartcard.RAM);//obj.selectingApplet();
             case 4://public deselect()
@@ -65,11 +59,21 @@ module.exports = {
     Applet: Applet
 };
 
-function addInstalledApplet(smartcard){
-  var appletAID = smartcard.RAM.installingAppletAID;
-  var gRef = smartcard.RAM.gRef;
+function register(bArray, bOffs, length, smartcard){
+  var appletAID = bArray.slice(bOffs, bOffs + length);//smartcard.RAM.installingAppletAID;
   var installedApplets = smartcard.EEPROM.installedApplets;
-  installedApplets[appletAID] = gRef;
+  installedApplets[appletAID] = smartcard.RAM.gRef;
+}
+
+/**
+ * Register from Java Card Platform Name
+ *
+ * @param smartcard
+ */
+function registerJCPN(smartcard){
+    var appletAID = smartcard.RAM.installingAppletAID;//smartcard.RAM.installingAppletAID;
+    var installedApplets = smartcard.EEPROM.installedApplets;
+    installedApplets[appletAID] = smartcard.RAM.gRef;
 }
 /**
  * ADAM'S CODE ENDS HERE

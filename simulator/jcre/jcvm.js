@@ -621,10 +621,10 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             else { operandStack.push(0); }
             i++; break;
         case mnemonics.ifeq: //0x60
-            i += (operandStack.pop() === 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
+            i += (operandStack.pop() == 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
             break;
         case mnemonics.ifne: //0x61
-            i += (operandStack.pop() !== 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
+            i += (operandStack.pop() != 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
             break;
         case mnemonics.iflt: //0x62 //iflt, branch
             i += (operandStack.pop() < 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
@@ -704,7 +704,7 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                 currentFrame = invoker;
                 i = frames[currentFrame].return_pointer;
             } else if(val === 0){
-                return cb(new Error(),"0x6999");
+                return cb(new Error('SW_APPLET_SELECT_FAILED'),"0x6999");
             } else {
                 return cb(undefined, "0x9000");
             }

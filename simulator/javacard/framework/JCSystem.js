@@ -92,7 +92,7 @@ module.exports = {
         else {
             smartcard.processor.transaction_flag = false;
             var transaction;
-            for (var j = 0; j < len; j++) {
+            for (var j = 0; j < smartcard.RAM.transaction_buffer.length; j++) {
               transaction = smartcard.RAM.transaction_buffer[j];
               //if it's a set heap instruction
               if(transaction.constructor === Array){

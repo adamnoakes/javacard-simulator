@@ -219,6 +219,7 @@ function runObjectMethod(method, param, obj){
             return isSecureMessagingCLA(obj);
         case 14:
             return isISOInterindustryCLA(obj);
+
         case 15:
             return getIncomingLength(obj);
         case 16:
@@ -611,7 +612,7 @@ function isSecureMessagingCLA(apdu) {
  * @param  {APDU}    APDU The APDU Object.
  * @return {boolean}
  */
-function sISOInterindustryCLA(apdu) {
+function isISOInterindustryCLA(apdu) {
     if((apdu._buffer[0] & 0x80) === 0x00) {
         return 1;
     } else {

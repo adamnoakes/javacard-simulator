@@ -112,7 +112,7 @@ module.exports = function () {
 
 	/* POST apdu -> Send APDU to card's processor for execution. */
 	router.post('/apdu', function(req, res){
-    console.log('smartcard id:' + req.session.smartcard);
+    	console.log('smartcard id:' + req.session.smartcard);
 	    if(!req.session.smartcard){
 	    	//no card selected apdu
 	        res.send({'APDU': "0x6A82"});
@@ -129,27 +129,26 @@ module.exports = function () {
 		        		console.log(err);
 		        		res.send({'APDU': "0x6A82"});
 		        	} else {
-                console.log(req.body);
+                		console.log(req.body);
 		        		smartcard.process(loadedCard, req.body.APDU, function(executionError, apduResponse){
 		        			//Update the smartcard object
-		        			if(executionError){
-		        				res.send({
-		        					'APDU': apduResponse,
-		        					'error': executionError.message
-		        				});
-		        			} else {
-		        				req.db.collection('smartcards').update(
-									{ _id: require('mongodb').ObjectID(req.session.smartcard) },
-									loadedCard,
-									{ upsert: true }, function(err, result){
-										if (err) {
-											//TODO -> send error
-					                   		console.log(err);
-					                	}
+		        			//
+		        			req.db.collection('smartcards').update(
+								{ _id: require('mongodb').ObjectID(req.session.smartcard) },
+								loadedCard,
+								{ upsert: true }, function(err, result){
+									if (err) {
+				                   		console.log(err);
+				                	} else if(executionError){
+				        				res.send({
+				        					'APDU': apduResponse,
+				        					'error': executionError.message
+				        				});
+		        					} else {
 					                	res.send({'APDU': apduResponse});
 									}
-								);
-		        			}
+		        				}
+							);
 		        		});
 		        	}
         		}

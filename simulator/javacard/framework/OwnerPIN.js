@@ -31,7 +31,7 @@ module.exports ={
    * @param  {OwnerPIN} obj    The OwnerPIN object.
    * @return                   Error or the result of called function.
    */
-  run: function(method, type, param, obj){
+  run: function(method, type, param, obj, smartcard){
     switch(method){
       case 0://init
         return init(obj, param[0], param[1]);
@@ -50,7 +50,7 @@ module.exports ={
       case 7://setValidatedFlag
         return setValidatedFlag(obj, param[0]);
       case 8://update
-        return update(obj, param[0], param[1], param[3]);
+        return update(obj, param[0], param[1], param[2], smartcard);
       default:
         return new Error('Method ' + method + ' not defined for OwnerPIN');
     }
@@ -88,32 +88,35 @@ function init(ownerPIN, tryLimit, maxPINSize){
  * it sets the validated flag and resets the try counter to its maximum.
  *
  * @param  {OwnerPIN} ownerPIN The OwnerPIN object.
- * @param  {Array}    pin      The byte array containing the PIN being checked.
+ * @param  {Array}    pinArray      The byte array containing the PIN being checked.
  * @param  {Number}   offset   The starting offset in the pin array.
  * @param  {Number}   length   The length of pin.
  * @return {boolean}           true if the PIN value matches; false otherwise.
  */
-function check(ownerPIN, pin, offset, length){
-  if(pin.length < offset + length || offset < 0 || length < 0){
+function check(ownerPIN, pinArray, offset, length){
+  if(pinArray.length < offset + length || offset < 0 || length < 0){
     logAttempt(ownerPIN);
     return le.getArrayIndexOutOfBounds();
   }
-  if(pin || pin.constructor !== Array){
+  if(!pinArray || pinArray.constructor !== Array){
     logAttempt(ownerPIN);
     return le.getNullPointer();
   }
-  if(ownerPIN.blocked || ownerPIN.pin.length !== pin.length){
+  if(ownerPIN.blocked){
+    return false;
+  }
+  if(ownerPIN.pin.length !== length){
     logAttempt(ownerPIN);
     return false;
   }
-  for(var i = 0; i < pin.length; i++){
-    if(pin[i] !== ownerPIN.pin[i]){
+  for(var i = 0; i < length; i++){
+    if(pinArray[i + offset] !== ownerPIN.pin[i]){
       logAttempt(ownerPIN);
       return false;
     }
   }
   ownerPIN.validatedFlag = true;
-  ownerPIN.triesLeft = ownerPIN.tryLimit;
+  ownerPIN.triesRemaining = ownerPIN.tryLimit;
   return true;
 }
 
@@ -172,9 +175,9 @@ function reset(ownerPIN){
  * @param  {Number}   offset   The starting offset in the pin array.
  * @param  {Number}   length   The length of pin.
  */
-function update(ownerPIN, pin, offset, length){
+function update(ownerPIN, pin, offset, length, smartcard){
   var err;
-  if(pin.length > ownerPIN.maxPINSize){
+  if(length > ownerPIN.maxPINSize){
     return e.getPINException(1);
   }
 
@@ -209,8 +212,8 @@ function resetAndUnblock(ownerPIN){
  * Helper functions
  */
 function logAttempt(ownerPIN){
-  ownerPIN.triesLeft --;
-  if(ownerPIN.triesLeft === 0){
+  ownerPIN.triesRemaining = ownerPIN.triesRemaining - 1;
+  if(ownerPIN.triesRemaining === 0){
     ownerPIN.blocked = true;
   }
 }

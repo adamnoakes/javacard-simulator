@@ -49,15 +49,16 @@ module.exports = {
         if (buffer.slice(0,4).join() === [0x00, 0xA4, 0x04, 0x00].join()) {
             return this.selectApplet(smartcard, buffer.slice(5,5+lc), cb);
         } else if(!smartcard.EEPROM.selectedApplet.AID){
-          return cb(undefined, '0x6A82');
+          return cb(new Error('No Applet Selected'), '0x6A82');
         }
 
         //If the selected applet is the installer and an install command has been sent, process by installer module
         if((smartcard.EEPROM.selectedApplet.AID.join() === installer.AID.join()) && (cla == 0x80)){
             return installer.process(smartcard, buffer, cb);
         }
-        
+        var heapSize = smartcard.EEPROM.heap.length;
         jcvm.process(smartcard, [0], function(err, res){
+            smartcard.EEPROM.heap.length = heapSize;
             if(err){
                 cb(err, res);
             } else {
@@ -86,9 +87,8 @@ module.exports = {
     selectApplet: function (smartcard, appletAID, cb){
         smartcard.RAM.transient_data = [];
         smartcard.RAM.select_statement_flag = 1;
-
-        //delect curent applet
         smartcard.processor.selectedAID = []; //not the way to deselect, see code below
+
         //set applet aid and cap file in eeprom
         if(eeprom.setSelectedApplet(smartcard.EEPROM, appletAID)){
             if(smartcard.EEPROM.selectedApplet.AID.join() === installer.AID.join()){
@@ -107,13 +107,13 @@ module.exports = {
 
             var processSelect = function(err, res){
                 if(err){
-                    return cb(new Error(), res);
+                    return cb(err, res);
                 }
                 params[0] = 0;
                 jcvm.process(smartcard, params, function(err, res){
                     if(err) {
                         smartcard.EEPROM.selectedApplet = null;
-                        return cb(new Error(), res);
+                        return cb(err, res);
                     }
                     return cb(undefined, res);
                 });
@@ -128,7 +128,7 @@ module.exports = {
 
         } else {
             //@adam no applet found
-            cb(new Error(), "0x6A82");
+            cb(new Error('Applet Not Found'), "0x6A82");
         }
     }
 

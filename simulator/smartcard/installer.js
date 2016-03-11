@@ -74,8 +74,8 @@ function process(smartcard, buffer, cb) {
      */
     this[0xB8] = function(cb, buffer){
         var AIDLength = buffer[5];
-        var createAID = buffer.slice(6, 6+AIDLength);
-        var appletAID = buffer.slice(6, 6+buffer[4] - 1);
+        var createAID = buffer.slice(6, 6+AIDLength -1);
+        var appletAID = buffer.slice(6, 6+AIDLength);
 
         var params;
         var applets;
@@ -91,18 +91,23 @@ function process(smartcard, buffer, cb) {
                     ram.setInstallingAppletAID(smartcard.RAM, applets[i].AID);
                     params =[];
                     params[0] = buffer;
-                    params[1] = 5;
-                    params[2] = buffer[AIDLength + 1];
+                    params[1] = 5;//7 + AIDLength;
+                    params[2] = buffer[4];//buffer[AIDLength + 6];
                     //execute the install code
                     jcvm.createInstance(smartcard, packageToCreate, params, i, cb);
                 }
             }
+            //should return undefined here
         }
 
     };
-
     //Call the relevant function and return result
-    this[buffer[1]](cb, buffer);
+    try{
+        this[buffer[1]](cb, buffer);
+    } catch (err){
+        cb(new Error('SW_INS_NOT_SUPPORTED'), '0x6D00');
+    }
+
 }
 
 exports.process = process;
