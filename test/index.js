@@ -198,10 +198,18 @@ function appletTests(applet, tests){
         }
         res.status.should.equal(200);
         res.body.result.should.equal(true);
-        sendAPDU(
+        server.get('/simulator/smartcards/testcard')
+        .end(function(err, res){
+          if(err){
+            throw err;
+          }
+          res.status.should.equal(200);
+          res.body.result.should.equal(true);
+          sendAPDU(
           [[0x00, 0xA4, 0x04, 0x00, 0x09, 0xA0, 0x00, 0x00, 0x00, 0x62, 0x03,
               0x01, 0x08, 0x01, 0x7F]]
-        )(done);
+          )(done);
+        });
       });
     });
 

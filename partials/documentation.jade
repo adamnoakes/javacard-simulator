@@ -127,20 +127,27 @@
                 a.btn.btn-danger(href='#') Execute
             tr.incomplete
               td 2.
-              td Send Hello World! applet APDU script.
+              td Load virtual card.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-danger(href='#') Execute
             tr.incomplete
               td 3.
-              td Send invalid command to smart card.
+              td Send Hello World! applet APDU script.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-danger(href='#') Execute
             tr.incomplete
               td 4.
+              td Send invalid command to smart card.
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-danger(href='#') Execute
+            tr.incomplete
+              td 5.
               td Send hello command to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
@@ -165,41 +172,48 @@
                 a.btn.btn-success(onclick='executeButton(calculatorCommands.newCard)') Execute
             tr
               td 2.
+              td Load virtual card "calculator".
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(calculatorCommands.loadCard)') Execute
+            tr
+              td 3.
               td Send Calculator applet APDU script.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(calculatorCommands.sendApplet)') Execute
             tr
-              td 3.
+              td 4.
               td Select Calculator applet.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(calculatorCommands.selectApplet)') Execute
             tr
-              td 4.
+              td 5.
               td Send digit "3" to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(calculatorCommands.sendThree)') Execute
             tr
-              td 5.
+              td 6.
               td Send opcode "+" to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(calculatorCommands.sendAddition)') Execute
             tr
-              td 6.
+              td 7.
               td Send digit "2" to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(calculatorCommands.sendTwo)') Execute
             tr
-              td 7.
+              td 8.
               td Send opcode "=" to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
@@ -224,55 +238,62 @@
                 a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.newCard)') Execute
             tr
               td 2.
+              td Load virtual card "rsadecrypt".
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.loadCard)') Execute
+            tr
+              td 3.
               td Send RSA Decrypt applet APDU script.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendApplet)') Execute
             tr
-              td 3.
+              td 4.
               td Select RSA-Decrypt applet.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.selectApplet)') Execute
             tr
-              td 4.
+              td 5.
               td Send "P" to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendP)') Execute
             tr
-              td 5.
+              td 6.
               td Send "Q" to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendQ)') Execute
             tr
-              td 6.
+              td 7.
               td Send "DP1" to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendDP1)') Execute
             tr
-              td 7.
+              td 8.
               td Send "DQ1" to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendDQ1)') Execute
             tr
-              td 7.
+              td 9.
               td Send "PQ" to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(rsaDecryptCommands.sendPQ)') Execute
             tr
-              td 7.
+              td 10.
               td Send Encrypted text to smart card.
               td
                 a.btn.btn-link.incomplete(href='#') View
@@ -297,20 +318,27 @@
                 a.btn.btn-success(onclick='executeButton(sha1DigestCommands.newCard)') Execute
             tr
               td 2.
+              td Load virtual card "sha1digest".
+              td
+                a.btn.btn-link.incomplete(href='#') View
+              td
+                a.btn.btn-success(onclick='executeButton(sha1DigestCommands.loadCard)') Execute
+            tr
+              td 3.
               td Send SHA-1 Digest applet APDU script.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(sha1DigestCommands.sendApplet)') Execute
             tr
-              td 3.
+              td 4.
               td Select SHA-1 Digest applet.
               td
                 a.btn.btn-link.incomplete(href='#') View
               td
                 a.btn.btn-success(onclick='executeButton(sha1DigestCommands.selectApplet)') Execute
             tr
-              td 4.
+              td 5.
               td Digest abc.
               td
                 a.btn.btn-link.incomplete(href='#') View
