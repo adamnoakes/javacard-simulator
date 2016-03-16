@@ -43,7 +43,7 @@ module.exports = {
   	 * @param  {Number}    type       The method type token.
   	 * @param  {Array}     param      Params popped from operand stack.
   	 * @param  {JCSystem}  obj        The JCSystem object.
-  	 * @param  {SmartCard} smartcard  The smartcard objet.
+  	 * @param  {Smartcard} smartcard  The smartcard objet.
   	 * @return 						            Error or the result of called function.
   	 */
     run: function(method, type, param, obj, smartcard){
@@ -65,31 +65,31 @@ module.exports = {
     },
 
     abortTransaction: function (smartcard) {
-        if (!smartcard.processor.transaction_flag) {
+        if (!smartcard.processor.transactionFlag) {
           return e.getTransactionException(2);
         }
         else {
-            smartcard.processor.transaction_flag = false;
+            smartcard.processor.transactionFlag = false;
             smartcard.RAM.transaction_buffer = [];
         }
     },//00
 
     beginTransaction: function (smartcard) {
-        if (smartcard.processor.transaction_flag) {
+        if (smartcard.processor.transactionFlag) {
           return e.getTransactionException(1);
         }
         else {
-          smartcard.processor.transaction_flag = true;
+          smartcard.processor.transactionFlag = true;
         }
     },//01
 
     //not sure that this is correct (from robin william's code)
     commitTransaction: function (smartcard) {
-        if (!smartcard.processor.transaction_flag) {
+        if (!smartcard.processor.transactionFlag) {
           return e.getTransactionException(2);
         }
         else {
-            smartcard.processor.transaction_flag = false;
+            smartcard.processor.transactionFlag = false;
             var transaction;
             for (var j = 0; j < smartcard.RAM.transaction_buffer.length; j++) {
               transaction = smartcard.RAM.transaction_buffer[j];

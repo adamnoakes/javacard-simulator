@@ -30,7 +30,7 @@ module.exports = {
 	 * @param  {Number} type          The method type token.
 	 * @param  {Array}  param         Parameters popped from operand stack.
 	 * @param  {Object} obj           The object if the method is being caleld on an object.
-	 * @param  {SmartCard} smartcard  The smartcard object required for JCSystem
+	 * @param  {Smartcard} smartcard  The smartcard object required for JCSystem
 	 * @return 											  Error or the result of called function.
 	 */
 	run: function(packageAID, classToken, method, type, param, obj, smartcard){

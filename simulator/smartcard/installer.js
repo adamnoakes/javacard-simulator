@@ -5,7 +5,7 @@ var eeprom = require('./eeprom.js');
 
 /**
  * Process an install command
- * @param  {SmartCard}  smartcard
+ * @param  {Smartcard}  smartcard
  * @param  {function} cb
  */
 function process(smartcard, buffer, cb) {

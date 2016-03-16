@@ -64,12 +64,12 @@ module.exports = {
 	 * Sets a value on the heap. If transaction is in progress,
 	 * the change will be applied when the transaction is finished.
 	 * 
-	 * @param {SmartCard} smartcard The SmartCard object.
+	 * @param {Smartcard} smartcard The Smartcard object.
 	 * @param {Number} pos       	The position in the heap.
 	 * @param {Number} val       	The value to set to.
 	 */
 	setHeap: function(smartcard, pos, val){
-		if(!smartcard.processor.transaction_flag){
+		if(!smartcard.processor.transactionFlag){
 			smartcard.EEPROM.heap[pos] = val;
 		} else {
 			smartcard.RAM.transaction_buffer.push([pos, val]);
@@ -80,11 +80,11 @@ module.exports = {
 	 * Pushes a value onto the heap. If transaction is in progress,
 	 * the change will be applied when the transaction is finished.
 	 * 
-	 * @param {SmartCard} smartcard The SmartCard object.
+	 * @param {Smartcard} smartcard The Smartcard object.
 	 * @param {Number} val       	The value to set to.
 	 */
 	pushToHeap: function(smartcard, val){
-		if(!smartcard.processor.transaction_flag){
+		if(!smartcard.processor.transactionFlag){
 			smartcard.EEPROM.heap.push(val);
 		} else {
 			smartcard.RAM.transaction_buffer.push(val);

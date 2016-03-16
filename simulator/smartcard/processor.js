@@ -13,13 +13,13 @@ module.exports = {
      */
     Processor: function(){
         this.buffer = [];
-        this.transaction_flag = false;
+        this.transactionFlag = false;
         this.selectStatementFlag = 0;
     },
 
     /**
      * Process a single APDU command with smartcard
-     * @param  {SmartCard} smartcard
+     * @param  {Smartcard} smartcard
      * @param  {Array} buffer
      * @param  {Function} cb;
      */
@@ -37,7 +37,7 @@ module.exports = {
 
         //Reset variables
         smartcard.RAM.transaction_buffer = [];
-        smartcard.processor.transaction_flag = false;
+        smartcard.processor.transactionFlag = false;
         smartcard.processor.selectStatementFlag = 0;
 
         //If select applet command
@@ -73,7 +73,7 @@ module.exports = {
 
     /**
      * Called by process, to select an applet
-     * @param  {SmartCard} smartcard
+     * @param  {Smartcard} smartcard
      * @param  {Array} appletAID
      * @param  {Function} cb
      */
@@ -82,7 +82,7 @@ module.exports = {
             if(err){
                 return cb(err, res);
             }
-            smartcard.RAM.transient_data = [];
+            smartcard.RAM.transientData = [];
             smartcard.processor.selectStatementFlag = 1;
             smartcard.processor.selectedAID = []; //not the way to deselect, see code below
 

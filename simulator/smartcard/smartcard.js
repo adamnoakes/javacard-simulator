@@ -4,7 +4,7 @@ var processor = require('./processor.js');
 
 module.exports = {
 	/* The virtual smart card object */
-    SmartCard: function(cardName, cb){
+    Smartcard: function(cardName, cb){
         this.EEPROM = new eeprom.EEPROM();
         this.RAM = new ram.RAM();
         this.processor = new processor.Processor();
@@ -15,7 +15,7 @@ module.exports = {
     /**
 	 * Wrapper function for processScript.
 	 *
-	 * @param  {SmartCard} smartcard  The SmartCard object.
+	 * @param  {Smartcard} smartcard  The Smartcard object.
 	 * @param  {Array}     apduScript An array of apdu commands.
 	 * @param  {Function}  cb         The callback function
 	 */
@@ -28,7 +28,7 @@ module.exports = {
  * Takes an array of APDU commands and sends them to the processor
  * one by one to be processed.
  *
- * @param  {SmartCard} smartcard  The SmartCard object.
+ * @param  {Smartcard} smartcard  The Smartcard object.
  * @param  {Array}     apduScript An array of apdu commands.
  * @param  {Function}  cb         The callback function
  */

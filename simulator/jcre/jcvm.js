@@ -14,7 +14,7 @@ module.exports = {
      * Sets up execution environment for standard APDU command and pushes
      * executeBytecode function call onto event loop.
      *
-     * @param  {SmartCard} smartcard The SmartCard object.
+     * @param  {Smartcard} smartcard The Smartcard object.
      * @param  {Array}     params
      * @param  {Function}  cb       Called by executeBytecode
      */
@@ -44,7 +44,7 @@ module.exports = {
      * Sets up execution environment for select applet APDU command and pushes
      * executeBytecode function call onto event loop.
      *
-     * @param  {SmartCard} smartcard The SmartCard object.
+     * @param  {Smartcard} smartcard The Smartcard object.
      * @param  {Array}     params
      * @param  {Function}  cb        Called by executeBytecode.
      */
@@ -72,7 +72,7 @@ module.exports = {
      * Sets up execution environment for create instance APDU command and pushes
      * executeBytecode function call onto event loop.
      *
-     * @param  {SmartCard} smartcard The SmartCard object.
+     * @param  {Smartcard} smartcard The Smartcard object.
      * @param  {CAPfile}   capFile   CAPfile of package to creat instance of.
      * @param  {Array}     params
      * @param  {Number}    appletRef
@@ -117,7 +117,7 @@ module.exports = {
  * This function should only be called by wrapping inside setImmediate to
  * ensure that it does not block the event loop.
  *
- * @param  {SmartCard}  smartcard
+ * @param  {Smartcard}  smartcard
  * @param  {CAPfile}    capFile
  * @param  {Number}     i         The instruction pointer
  * @param  {Array}      frames

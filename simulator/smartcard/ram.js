@@ -7,17 +7,16 @@ module.exports = {
      * @constructor
      */
     RAM: function(){
-        this.transient_data = [];
+        this.transientData = [];
         this.gRef = undefined;
         this.transaction_buffer = [];
-        this.objectheap = [];
         this.installingAppletAID = undefined;
         this.selectedApplet = {'AID': undefined, 'appletRef': undefined, 'CAP': undefined};
         this.currentComponent = null;
         this.tempComponents = [];
     },
-    getTransientData: function(RAM){return RAM.transient_data;},
-    pushTransientData: function(RAM, val){RAM.transient_data.push(val);},
+    getTransientData: function(RAM){return RAM.transientData;},
+    pushTransientData: function(RAM, val){RAM.transientData.push(val);},
     setGRef: function(RAM, val){RAM.gRef = val;},
     setInstallingAppletAID: function(RAM, aid){RAM.installingAppletAID = aid;},
     setCurrentComponent: function(RAM, val){RAM.currentComponent = val;},

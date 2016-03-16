@@ -29,7 +29,7 @@ module.exports = {
 	 * Load value of type x from Array.
 	 * Called by a/b/s/iload.
 	 *
-	 * @param  {SmartCard} smartcard
+	 * @param  {Smartcard} smartcard
 	 * @param  {Array}     operandStack
 	 * @return Type depends on instruction that called function.
 	 */
@@ -362,10 +362,10 @@ function loadArray(smartcard, parameter){
         parameter instanceof String){
 		if (parameter.toString().slice(0, 1) == "T"){
             references = parameter.slice(1).split("#");
-            if(smartcard.RAM.transient_data[Number(references[0])] === undefined){
-                smartcard.RAM.transient_data[Number(references[0])] = [];
+            if(smartcard.RAM.transientData[Number(references[0])] === undefined){
+                smartcard.RAM.transientData[Number(references[0])] = [];
             }
-            return smartcard.RAM.transient_data[Number(references[0])];
+            return smartcard.RAM.transientData[Number(references[0])];
         }
     }
     return parameter;

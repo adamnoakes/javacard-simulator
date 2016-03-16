@@ -32,7 +32,7 @@ module.exports = {
 	 * @param  {Number}    type       The method type token.
 	 * @param  {Array}     param      Params popped from operand stack.
 	 * @param  {Object}    obj        The javacard.framework object.
-	 * @param  {SmartCard} smartcard  The smartcard objet.
+	 * @param  {Smartcard} smartcard  The smartcard objet.
 	 * @return 						            Error or the result of called function.
 	 */
 	run: function(classToken, method, type, param, obj, smartcard){

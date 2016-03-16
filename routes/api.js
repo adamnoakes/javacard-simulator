@@ -40,7 +40,7 @@ module.exports = function () {
                 'message': "Virtual smart card with name " + req.body.cardName + " already exists."
             });
 	    } else {
-	    	var newcard = new smartcard.SmartCard(req.body.cardName);
+	    	var newcard = new smartcard.Smartcard(req.body.cardName);
             req.db.collection('smartcards').insert(newcard, function (err, doc) {
                 if (err) {
                 	console.log(err);
