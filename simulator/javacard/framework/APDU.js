@@ -88,7 +88,7 @@ module.exports = {
         this.currentOutgoingLength = 0;
     },
     /**
-     * The processor uses this constructor to initialise an APDU
+     * The applet manager uses this constructor to initialise an APDU
      * instance encapsulating the specified APDU bytes and setting up the
      * various variables.
      *
@@ -98,7 +98,7 @@ module.exports = {
     constr: function(apdu, bArray) {
         apdu._buffer = bArray;
         apdu.buffer = [];//Array.apply(null, Array(255 + 2)).map(Number.prototype.valueOf,0);
-
+        apdu.cla = bArray[0];
         for(var i = 0; i<4; i++){
             apdu.buffer[i] = bArray[i];
         }

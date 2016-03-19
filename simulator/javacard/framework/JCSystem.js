@@ -14,7 +14,6 @@
  * @private
  */
 
-var processor = require('../../smartcard/processor.js');
 var e = require('./Exceptions.js');
 
 /**
@@ -65,31 +64,31 @@ module.exports = {
     },
 
     abortTransaction: function (smartcard) {
-        if (!smartcard.processor.transactionFlag) {
+        if (!smartcard.RAM.transactionFlag) {
           return e.getTransactionException(2);
         }
         else {
-            smartcard.processor.transactionFlag = false;
+            smartcard.RAM.transactionFlag = false;
             smartcard.RAM.transaction_buffer = [];
         }
     },//00
 
     beginTransaction: function (smartcard) {
-        if (smartcard.processor.transactionFlag) {
+        if (smartcard.RAM.transactionFlag) {
           return e.getTransactionException(1);
         }
         else {
-          smartcard.processor.transactionFlag = true;
+          smartcard.RAM.transactionFlag = true;
         }
     },//01
 
     //not sure that this is correct (from robin william's code)
     commitTransaction: function (smartcard) {
-        if (!smartcard.processor.transactionFlag) {
+        if (!smartcard.RAM.transactionFlag) {
           return e.getTransactionException(2);
         }
         else {
-            smartcard.processor.transactionFlag = false;
+            smartcard.RAM.transactionFlag = false;
             var transaction;
             for (var j = 0; j < smartcard.RAM.transaction_buffer.length; j++) {
               transaction = smartcard.RAM.transaction_buffer[j];

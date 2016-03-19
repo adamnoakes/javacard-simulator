@@ -45,7 +45,7 @@ module.exports = {
                 //TODO-> register should use parameters.
                 return register(param[0], param[1], param[2], smartcard);//ISSUE
             case 3://protected final selectingApplet() -> boolean
-                return smartcard.processor.selectStatementFlag;//obj.selectingApplet();
+                return smartcard.RAM.selectStatementFlag;//obj.selectingApplet();
             case 4://public deselect()
             case 5://public getShareableInterfaceObject(clientAID, parameter) -> Shareable
             case 6://public select() -> boolean

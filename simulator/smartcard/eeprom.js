@@ -1,5 +1,5 @@
 /*!
- * EEPROM
+ * eeprom
  *
  * Contains the EEPROM structure and methods used to modify
  * values in the EEPROM.
@@ -69,7 +69,7 @@ module.exports = {
 	 * @param {Number} val       	The value to set to.
 	 */
 	setHeap: function(smartcard, pos, val){
-		if(!smartcard.processor.transactionFlag){
+		if(!smartcard.RAM.transactionFlag){
 			smartcard.EEPROM.heap[pos] = val;
 		} else {
 			smartcard.RAM.transaction_buffer.push([pos, val]);
@@ -84,7 +84,7 @@ module.exports = {
 	 * @param {Number} val       	The value to set to.
 	 */
 	pushToHeap: function(smartcard, val){
-		if(!smartcard.processor.transactionFlag){
+		if(!smartcard.RAM.transactionFlag){
 			smartcard.EEPROM.heap.push(val);
 		} else {
 			smartcard.RAM.transaction_buffer.push(val);

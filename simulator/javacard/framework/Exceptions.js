@@ -16,10 +16,6 @@ var ISO7816 = require('./ISO7816.js');
  * @public
  */
 
-/**
- * NOTE: possible problem with this code returning objects on method 0 instead
- * of void, will have to be checked later.
- */
 module.exports = {
     /**
      * Handles javacard.framework.*Exception api calls.

@@ -7,48 +7,26 @@ var cap = require('./cap.js');
 var util = require('../utilities/utilities.js');
 
 module.exports = {
-    /**
-     * Processor object contructor
-     * @constructor
-     */
-    Processor: function(){
-        this.buffer = [];
-        this.transactionFlag = false;
-        this.selectStatementFlag = 0;
-    },
 
     /**
-     * Process a single APDU command with smartcard
+     * Process a single APDU command with smartcard with the
+     * applet manager.
+     * 
      * @param  {Smartcard} smartcard
      * @param  {Array} buffer
      * @param  {Function} cb;
      */
-    process: function(smartcard, buffer, cb){
-        var cla = buffer[0];    //@adam class of instruction, category
-        var lc = buffer[4];     //@adam length of command data
-        var tmpApdu = new apdu.APDU(); //contruct an APDU objects
-        apdu.constr(tmpApdu, buffer);
-        if(tmpApdu.broken){
-            return cb(new Error("Broken APDU"), "0x6F00");
-        }
-
-        //Set the APDU object on the first position of the object heap
-        smartcard.EEPROM.objectheap[0] = tmpApdu; //maybe object heap should be stored in RAM?
-
-        //Reset variables
-        smartcard.RAM.transaction_buffer = [];
-        smartcard.processor.transactionFlag = false;
-        smartcard.processor.selectStatementFlag = 0;
-
+    process: function(smartcard, theAPDU, cb){
+        var buffer = theAPDU._buffer;
         //If select applet command
         if (buffer.slice(0,4).join() === [0x00, 0xA4, 0x04, 0x00].join()) {
-            return this.selectApplet(smartcard, buffer.slice(5,5+lc), cb);
+            return this.selectApplet(smartcard, buffer.slice(5,5+theAPDU.lc), cb);
         } else if(!smartcard.RAM.selectedApplet.AID){
           return cb(new Error('No Applet Selected'), '0x6A82');
         }
 
         //If the selected applet is the installer and an install command has been sent, process by installer module
-        if((smartcard.RAM.selectedApplet.AID.join() === installer.AID.join()) && (cla == 0x80)){
+        if((smartcard.RAM.selectedApplet.AID.join() === installer.AID.join()) && (theAPDU.cla == 0x80)){
             return installer.process(smartcard, buffer, cb);
         }
         jcvm.process(smartcard, [0], function(err, res){
@@ -83,8 +61,7 @@ module.exports = {
                 return cb(err, res);
             }
             smartcard.RAM.transientData = [];
-            smartcard.processor.selectStatementFlag = 1;
-            smartcard.processor.selectedAID = []; //not the way to deselect, see code below
+            smartcard.RAM.selectStatementFlag = 1;
 
             //set applet aid and cap file in eeprom
             if (setSelectedApplet(smartcard, appletAID)) {

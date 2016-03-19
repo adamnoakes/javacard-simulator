@@ -10,7 +10,7 @@
   */
 
  module.exports = {
-     getNullPointer: function(nullPointer){
+     getNullPointer: function(){
          return new Error('NullPointerException');
      },
      getArrayIndexOutOfBounds: function(){
