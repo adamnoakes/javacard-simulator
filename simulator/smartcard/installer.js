@@ -1,3 +1,17 @@
+/*!
+ * smartcard
+ *
+ * Contains the Smartcard structure and methods used to process
+ * an array of APDU commands.
+ *
+ * @author Adam Noakes
+ * University of Southampton
+ */
+
+/**
+ * Module dependencies.
+ * @private
+ */
 var capJS = require('./cap.js');
 var jcvm = require('../jcre/jcvm.js');
 var ram = require('./ram.js');

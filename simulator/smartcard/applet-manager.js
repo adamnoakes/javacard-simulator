@@ -1,3 +1,18 @@
+/*!
+ * api
+ *
+ * This file simulates the applet manager applet that would be
+ * installed on a smart card by the manufacturer. All APDUs are 
+ * processed by the applet manager first.
+ * 
+ * @author Adam Noakes
+ * University of Southampton
+ */
+
+/**
+ * Module dependencies.
+ * @private
+ */
 var apdu = require('../javacard/framework/APDU.js');
 var eeprom = require('./eeprom.js');
 var installer = require('./installer.js');
@@ -6,11 +21,14 @@ var jcvm = require('../jcre/jcvm.js');
 var cap = require('./cap.js');
 var util = require('../utilities/utilities.js');
 
+/**
+ * Module exports.
+ * @type {Object}
+ */
 module.exports = {
 
     /**
-     * Process a single APDU command with smartcard with the
-     * applet manager.
+     * Process a single APDU command with the applet manager.
      * 
      * @param  {Smartcard} smartcard
      * @param  {Array} buffer
@@ -50,10 +68,11 @@ module.exports = {
     },
 
     /**
-     * Called by process, to select an applet
-     * @param  {Smartcard} smartcard
-     * @param  {Array} appletAID
-     * @param  {Function} cb
+     * Called by process, to select an applet.
+     * 
+     * @param  {Smartcard} smartcard The smartcard objet.
+     * @param  {Array}     appletAID The applet to be deselected.
+     * @param  {Function}  cb        The callback function.
      */
     selectApplet: function (smartcard, appletAID, cb) {
         this.deselectApplet(smartcard, appletAID, function(err, res){
@@ -107,6 +126,14 @@ module.exports = {
         });
     },
 
+    /**
+     * Called when an applet is selected, to ensure the previously
+     * selected applet is deselected correctly first.
+     * 
+     * @param  {Smartcard} smartcard The smartcard objet.
+     * @param  {Array}     appletAID The applet to be deselected.
+     * @param  {Function}  cb        The callback function.
+     */
     deselectApplet: function(smartcard, appletAID, cb){
         var startcode;
         if(smartcard.RAM.selectedApplet.appletRef !== null &&

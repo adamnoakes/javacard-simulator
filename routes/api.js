@@ -1,8 +1,17 @@
-
-/*
- * Handles the requests for the simulator application
+/*!
+ * api
+ *
+ * This is the RESTful api. This file handles all requests for 
+ * the simulator application.
+ *
+ * @author Adam Noakes
+ * University of Southampton
  */
 
+/**
+ * Module dependencies.
+ * @private
+ */
 var express = require('express');
 var validator = require('validator');
 var router = express.Router();
@@ -10,6 +19,10 @@ var smartcard = require('../simulator/smartcard/smartcard.js');
 var eeprom = require('../simulator/smartcard/eeprom.js');
 var smartcard = require('../simulator/smartcard/smartcard.js');
 
+/**
+ * Module exports.
+ * @return {Router}
+ */
 module.exports = function () {
     var router = express.Router();
 
@@ -158,6 +171,5 @@ module.exports = function () {
         	);
 	    }
 	});
-
     return router;
 };

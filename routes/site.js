@@ -1,7 +1,16 @@
-/* 
- * Handles the requests for the static web site
- */ 
+/*!
+ * site
+ *
+ * This file handles the requests for the static web site.
+ * 
+ * @author Adam Noakes
+ * University of Southampton
+ */
 
+/**
+ * Module dependencies.
+ * @private
+ */
 var express = require('express');
 var router = express.Router();
 

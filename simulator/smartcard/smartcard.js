@@ -8,11 +8,19 @@
  * University of Southampton
  */
 
+/**
+ * Module dependencies.
+ * @private
+ */
 var eeprom = require('./eeprom.js');
 var apdu = require('../javacard/framework/APDU.js');
 var ram = require('./ram.js');
 var appletManager = require('./applet-manager.js');
 
+/**
+ * Module exports.
+ * @type {Object}
+ */
 module.exports = {
 	/**
 	 * Represents a a virtual smart card.
@@ -71,10 +79,9 @@ function processScript(smartcard, apduScript, cb){
  * Takes a single APDU commands as an array sends it to the applet manager
  * one by one to be processed.
  * 
- * @param  {[type]}   smartcard [description]
- * @param  {[type]}   apduArray [description]
- * @param  {Function} cb        [description]
- * @return {[type]}             [description]
+ * @param  {Smartcard} smartcard The Smartcard object.
+ * @param  {Array}     apduArray An apdu command as a byte array.
+ * @param  {Function}  cb        The callback function
  */
 function processAPDU(smartcard, apduArray, cb){
     var tmpApdu = new apdu.APDU(); //contruct an APDU objects

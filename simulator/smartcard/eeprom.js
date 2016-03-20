@@ -8,7 +8,10 @@
  * University of Southampton
  */
 
-
+/**
+ * Module exports.
+ * @type {Object}
+ */
 module.exports = {
 	/**
 	 * Represents a smart cards EEPROM memory.
