@@ -96,14 +96,12 @@ module.exports = {
                 }
 
                 var startcode = cap.getStartCode(smartcard.RAM.selectedApplet.CAP, appletAID, 6);
-                var params = [];
 
                 var processSelect = function (err, res) {
                     if (err) {
                         return cb(err, res);
                     }
-                    params[0] = 0;
-                    jcvm.process(smartcard, params, function (err, res) {
+                    jcvm.process(smartcard, [0], function (err, res) {
                         if (err) {
                             smartcard.RAM.selectedApplet = null;
                             return cb(err, res);
@@ -138,7 +136,6 @@ module.exports = {
         var startcode;
         if(smartcard.RAM.selectedApplet.appletRef !== null &&
             smartcard.RAM.selectedApplet.appletRef >= 0){
-            console.log('selected');
             startcode = cap.getStartCode(smartcard.RAM.selectedApplet.CAP, appletAID, 4);
             if (startcode > 0) {
                 jcvm.selectApplet(smartcard, startcode, function (err, res) {

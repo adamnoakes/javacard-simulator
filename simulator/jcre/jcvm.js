@@ -1,4 +1,4 @@
-var api = require('./api.js');
+var api = require('./api-dispatcher.js');
 var mnemonics = require('../utilities/mnemonics.js');
 var eeprom = require('../smartcard/eeprom.js');
 var ram = require('../smartcard/ram.js');
@@ -1458,6 +1458,8 @@ function apiError(apiresult, cb){
     var apdu = ISO7816.get(apiresult.message);
     if(apdu){
         apdu = "0x" + apdu.toString(16);
+    } else if (parseInt(apiresult.message)){
+        apdu = apiresult.message;
     } else {
         apdu = "0x6F00";
     }

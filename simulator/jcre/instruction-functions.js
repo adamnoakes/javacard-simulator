@@ -16,7 +16,7 @@
 var ram = require('../smartcard/ram.js');
 var eeprom = require('../smartcard/eeprom.js');
 var mnemonics = require('../utilities/mnemonics.js');
-var api = require('./api.js');
+var api = require('./api-dispatcher.js');
 var utilities = require('../utilities/utilities.js');
 
 /**

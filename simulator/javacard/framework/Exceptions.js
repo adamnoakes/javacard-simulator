@@ -88,7 +88,7 @@ module.exports = {
     getISOException: function(isoException){
         var reason = (isoException instanceof Object ?
             isoException.reason : isoException);
-        return new Error(ISO7816.search(reason));
+        return new Error(ISO7816.search(reason) || "0x" + reason.toString(16).toUpperCase());
     },
     getAPDUException: function(apduException){
         var reason = (apduException instanceof Object ?
