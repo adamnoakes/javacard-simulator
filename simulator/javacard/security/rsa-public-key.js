@@ -10,7 +10,16 @@
  */
 var keys = require('./keys.js');
 var rsaKey = require('./rsa-key.js');
-//cannot be saved like this in DB, but be exported on saving and then imported on load
+
+/**
+ * Creates a NodeRSA key that can be used to perform encryption and
+ * decryption. This cannot be stored in a database and therefore must be
+ * created each time it is required.
+ * 
+ * @param  {RSAPublicKey} RSAPublicKey The RSAPublicKey object.
+ * @param  {Number}       algorithm    The algorithm token number.
+ * @return {NodeRSA}
+ */
 function createKey(RSAPublicKey, algorithm){
 	var nodeRSAKey = rsaKey.getNodeRSA(RSAPrivateCrtKey, algorithm);
 	nodeRSAKey.importKey({

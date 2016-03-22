@@ -81,6 +81,19 @@ function process(smartcard, buffer, cb) {
         ram.tempComponents = [];
         cb(undefined, "0x9000");
     };
+
+    /**
+     * Aborts the creation of the package.
+     * 
+     * @param  {Function} cb [description]
+     */
+    this[0xBC] = function(cb){
+        ram.setCurrentComponent(smartcard.RAM, null);
+        ram.setInstallingAppletAID(smartcard.RAM, null);
+        ram.resetTempComponents(smartcard.RAM);
+        cb(undefined, "0x9000");
+    };
+
     /**
      * Creates an instance of a package on the smart card.
      *

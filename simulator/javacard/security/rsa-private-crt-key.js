@@ -12,7 +12,15 @@ var keys = require('./keys.js');
 var rsaKey = require('./rsa-key.js');
 var bignum = require('bignum');
 
-//cannot be saved like this in DB, but be exported on saving and then imported on load
+/**
+ * Creates a NodeRSA key that can be used to perform encryption and
+ * decryption. This cannot be stored in a database and therefore must be
+ * created each time it is required.
+ * 
+ * @param  {RSAPrivateCrtKey} RSAPrivateCrtKey The RSAPrivateCrtKey object.
+ * @param  {Number}           algorithm        The algorithm token number.
+ * @return {NodeRSA}
+ */
 function createKey(RSAPrivateCrtKey, algorithm){
 	var nodeRSAKey = rsaKey.getNodeRSA(RSAPrivateCrtKey, algorithm);
 	nodeRSAKey.importKey({
@@ -28,12 +36,26 @@ function createKey(RSAPrivateCrtKey, algorithm){
 	return nodeRSAKey;
 }
 
+/**
+ * Calculates the modulus component for importing into NodeRSA.
+ * 
+ * @param  {Array} p The p component of the RSA Key.
+ * @param  {Array} q The q component of the RSA Key.
+ * @return {Buffer}  The n component of the RSA Key.
+ */
 function getModulus(p,q){
 	p = new bignum.fromBuffer(new Buffer(p));
 	q = new bignum.fromBuffer(new Buffer(q));
 	return p.mul(q).toBuffer();
 }
-//derived from http://stackoverflow.com/questions/34142666/java-card-rsaprivatecrtkey-private-exponent-d
+
+/**
+ * Calculates the private exponent component for importing into NodeRSA
+ * 
+ * @param  {Array} p The p component of the RSA Key.
+ * @param  {Array} q The q component of the RSA Key.
+ * @return {Buffer}  The d component of the RSA Key.
+ */
 function getPrivateExponent(p, q) {
     var e = new bignum(65537, 10);
     p = new bignum(p, 16);
@@ -45,6 +67,13 @@ function getPrivateExponent(p, q) {
     return e.invertm(phi).toBuffer();
 }
 
+/**
+ * When a component is set, this checks if all components are set. If they
+ * are, then the key is set as initialized.
+ * 
+ * @param  {Function} f The setter function for the component being set.
+ * @return {Function}
+ */
 function setterDecorator(f){
 	function set(){
 		f.apply(this, arguments);
@@ -102,7 +131,6 @@ module.exports = {
 	 * @constructor
 	 * @param {Number} size
 	 */
-
 	RSAPrivateCrtKey: function(size){
 		//extends private key
 		keys.PrivateKey(this, 5, size);
