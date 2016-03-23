@@ -87,7 +87,7 @@ function process(smartcard, buffer, cb) {
      * 
      * @param  {Function} cb [description]
      */
-    this[0xBC] = function(cb){
+    this[0xBE] = function(cb){
         ram.setCurrentComponent(smartcard.RAM, null);
         ram.setInstallingAppletAID(smartcard.RAM, null);
         ram.resetTempComponents(smartcard.RAM);
