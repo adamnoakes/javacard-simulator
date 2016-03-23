@@ -141,13 +141,16 @@ module.exports = {
                 jcvm.selectApplet(smartcard, startcode, function (err, res) {
                     if (err) {
                         smartcard.RAM.selectedApplet = null;
-                        return cb(err);
+                        cb(err);
+                    } else {
+                        cb(undefined, res);
                     }
-                    return cb(undefined, res);
                 });
+            } else {
+                cb(undefined, undefined);
             }
         } else {
-            return cb(undefined, undefined);
+            cb(undefined, undefined);
         }
     }
 };
