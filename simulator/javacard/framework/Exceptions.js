@@ -24,58 +24,59 @@ module.exports = {
      * @param  {Number}    method     The method token.
      * @param  {Number}    type       The method type token.
      * @param  {Array}     param      Popped from operand stack.
-     * @param  {Exception} obj        The APDU object.
+     * @param  {Exception} obj        The Exception object.
      * @return                        Error or the result of called function.
      */
     run: function(classToken, method, type, param, obj){
+        if(type === 3){
+            if(method === 1){
+                getReason(obj);
+            } else if (method === 2){
+                setReason(obj, param[0]);
+            }
+        }
         switch(classToken){
             case 4:  //CardException
                  return (method === 0 ? initCardException(obj, param[0]) :
-                    this.getCardException(obj || param[0]));
+                    this.getCardException(param[0]));
             case 5:  //CardRuntimeException
                 return (method === 0 ? initCardRuntimeException(obj, param[0]) :
-                    this.getCardRuntimeException(obj || param[0]));
+                    this.getCardRuntimeException(param[0]));
             case 7:  //ISOException
                 return (method === 0 ? initISOException(obj, param[0]) :
-                    this.getISOException(obj || param[0]));
+                    this.getISOException(param[0]));
             case 11:  //PINException
                 return (method === 0 ? initPINException(obj, param[0]) :
-                    this.getPINException(obj || param[0]));
+                    this.getPINException(param[0]));
             case 12:  //APDUException
                 return (method === 0 ? initAPDUException(obj, param[0]) :
-                    this.getAPDUException(obj || param[0]));
+                    this.getAPDUException(param[0]));
             case 13:  //SystemException
                 return (method === 0 ? initSystemException(obj, param[0]) :
-                    this.getSystemException(obj || param[0]));
+                    this.getSystemException(param[0]));
             case 14:  //TransactionException
                 return (method === 0 ? initTransactionException(obj, param[0]) :
-                    this.getTransactionException(obj || param[0]));
+                    this.getTransactionException(param[0]));
             case 15:  //UserException
                 return (method === 0 ? initUserException(obj, param[0]) :
-                    this.getUserException(obj || param[0]));
+                    this.getUserException(param[0]));
             default:
                 return new Error('classTokens token ' + classToken + ' not implemented in simulator.');
         }
     },
-    getCardException: function(cardException){
-        return new Error('CardException: ' + cardException.reason);
+    getCardException: function(reason){
+        return new Error('CardException: ' + reason);
     },
-    getCardRuntimeException: function(cardRuntimeException){
-        var reason = (cardRuntimeException instanceof Object ?
-            cardRuntimeException.reason : cardRuntimeException);
+    getCardRuntimeException: function(reason){
         return new Error('CardRuntimeException: ' + reason);
     },
-    getPINException: function(pinException){
-        var reason = (pinException instanceof Object ?
-            pinException.reason : pinException);
+    getPINException: function(reason){
         var reasons = [];
         reasons[1] = 'ILLEGAL_VALUE';
         return new Error('PINException: ' + reasons[reason]);
 
     },
-    getSystemException: function(systemException){
-        var reason = (systemException instanceof Object ?
-            systemException.reason : systemException);
+    getSystemException: function(reason){
         var reasons = [];
         reasons[1] = 'ILLEGAL_VALUE';
         reasons[2] = 'NO_TRANSIENT_SPACE';
@@ -85,14 +86,10 @@ module.exports = {
         reasons[6] = 'ILLEGAL_USE';
         return new Error('SystemException: ' + reasons[reason]);
     },
-    getISOException: function(isoException){
-        var reason = (isoException instanceof Object ?
-            isoException.reason : isoException);
+    getISOException: function(reason){
         return new Error(ISO7816.search(reason) || "0x" + reason.toString(16).toUpperCase());
     },
-    getAPDUException: function(apduException){
-        var reason = (apduException instanceof Object ?
-            apduException.reason : apduException);
+    getAPDUException: function(reason){
         var reasons = [];
         reasons[1] = 'ILLEGAL_USE';
         reasons[2] = 'BUFFER_BOUNDS';
@@ -103,19 +100,16 @@ module.exports = {
         reasons[172] = 'NO_T0_REISSUE';
         return new Error('APDUException: ' + reasons[reason]);
     },
-    getTransactionException: function(transactionException){
-        var reason = (transactionException instanceof Object ?
-            transactionException.reason : transactionException);
+    getTransactionException: function(reason){
         var reasons = [];
         reasons[1] = 'IN_PROGRESS';
         reasons[2] = 'NOT_IN_PROGRESS';
         return new Error('TransactionException: ' + reasons[reason]);
     },
-    getUserException: function(userException){
-        var reason = (userException instanceof Object ?
-            userException.reason : userException);
+    getUserException: function(reason){
         return new Error('UserException: ' + reason);
-    }
+    },
+    Exception: Exception
 };
 
 /**

@@ -68,15 +68,15 @@ module.exports = {
 	newObject: function(classToken){
 		switch (classToken) {
 			case 3:
-        return new applet.Applet();
-      case 6:
-        return new aid.AID();
-      case 9:
-        return new ownerPIN.OwnerPIN();
-      case 10:
-        return new apdu.APDU();
-      default:
-        return new Error('Unsupported Object');
+        		return new applet.Applet();
+      		case 6:
+        		return new aid.AID();
+      		case 9:
+        		return new ownerPIN.OwnerPIN();
+      		case 10:
+        		return new apdu.APDU();
+      		default:
+        		return {};
     }
 	}
 };

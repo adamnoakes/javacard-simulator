@@ -267,6 +267,12 @@ module.exports = {
 								break;
 						}
 						break;
+					case 12:
+						switch(type){
+							case 6:
+								return 1;
+						}
+						break;
 					case 13://javacard/security/KeyBuilder
 						switch(method) {
 							case 0://TODO -> equals is also 0 and requires 1 param
@@ -306,7 +312,7 @@ module.exports = {
 				}
 				break;
 	    }
-		return new Error('getNumberOfArguments has not been defined for Method ' +
+		return new Error('getNumberOfArguments has not been defined for type: ' + type + ', method ' +
 			method + ' in class ' + classToken + ', package AID: ' + packageAID);
 	}
 };

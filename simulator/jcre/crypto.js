@@ -40,11 +40,6 @@ module.exports = {
 	},
 
   newObject: function(classToken){
-      switch (classToken) {
-        case 16:
-          return new keyPair.KeyPair();
-    		default:
-          return new Error('Unsupported Object');
-      }
+	return {};
   }
 };

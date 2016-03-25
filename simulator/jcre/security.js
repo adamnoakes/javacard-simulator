@@ -15,6 +15,7 @@ var rsaPublicKey = require('../javacard/security/rsa-public-key.js');
 var keyBuilder = require('../javacard/security/key-builder.js');
 var keyPair = require('../javacard/security/key-pair.js');
 var messageDigest = require('../javacard/security/message-digest.js');
+var cryptoException = require('../javacard/security/crypto-exception.js');
 /**
  * Module exports.
  * @public
@@ -55,7 +56,7 @@ module.exports = {
             case 11://javacard/security/MessageDigest
 				return messageDigest.run(obj, method, type, param);
             case 12://javacard/security/CryptoException
-           		return new Error('Unsupported class');
+           		return cryptoException.run(obj, method, type, param);
             case 13://javacard/security/KeyBuilder
             	return keyBuilder.run(obj, method, type, param);
             case 14://javacard/security/RandomData
@@ -84,7 +85,7 @@ module.exports = {
             case 16:
                 return new keyPair.KeyPair();
             default:
-                return new Error('Unsupported Object');
+                return {};
         }
     }
 };
