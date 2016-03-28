@@ -44,7 +44,7 @@ module.exports = {
         }
 
         //If the selected applet is the installer and an install command has been sent, process by installer module
-        if((smartcard.RAM.selectedApplet.AID.join() === installer.AID.join()) && (theAPDU.cla == 0x80)){
+        if((smartcard.RAM.selectedApplet.AID.join() === installer.AID.join())){
             return installer.process(smartcard, buffer, cb);
         }
         jcvm.process(smartcard, [0], function(err, res){

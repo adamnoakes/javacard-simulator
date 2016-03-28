@@ -24,6 +24,9 @@ var eeprom = require('./eeprom.js');
  */
 function process(smartcard, buffer, cb) {
 
+    if(buffer[0] !== 0x80){
+        return cb(new Error('SW_CLA_NOT_SUPPORTED'), '0x6E00');
+    }
     /**
      * Create a new package.
      * 
