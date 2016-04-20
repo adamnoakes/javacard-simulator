@@ -96,8 +96,15 @@ describe('Applet', function(){
         });
       });
       it('Should evaluate 3 + 2 = 5', sendAPDU(
-          calculatorApplet.sendEquals,
-          '0x00 0x00 0x00 0x00 0x05 0x9000'
+        calculatorApplet.sendEquals,
+        '0x00 0x00 0x00 0x00 0x05 0x9000'
+      ));
+    });
+
+    describe('Multiply', function(){
+      it('Should evaluate 30*25', sendAPDU(
+        calculatorApplet.multiplyTest,
+        calculatorApplet.multiplyExpected
       ));
     });
 
@@ -176,6 +183,10 @@ describe('Applet', function(){
       it('Should digest abc', sendAPDU(
         shaDigest.digestabc,
         shaDigest.expectedDigested
+      ));
+      it('Should digest "An Open Platform for the Simulation of Java Card Applets"', sendAPDU(
+        shaDigest.digestAnOpenPlatform,
+        shaDigest.expectedAnOpenPlatform
       ));
     });
   }));

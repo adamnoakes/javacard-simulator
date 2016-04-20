@@ -1,3 +1,16 @@
+/*!
+ * jcvm
+ *
+ * The Java Card Virtual Machine implementation
+ *
+ * @author Adam Noakes
+ * University of Southampton
+ */
+
+/**
+ * Module dependencies.
+ * @private
+ */
 var api = require('./api-dispatcher.js');
 var mnemonics = require('../utilities/mnemonics.js');
 var eeprom = require('../smartcard/eeprom.js');
@@ -7,8 +20,10 @@ var utilities = require('../utilities/utilities.js');
 var cap = require('../smartcard/cap.js');
 var ISO7816 = require('../javacard/framework/ISO7816.js');
 
-//JCVM
-
+/**
+ * Module exports.
+ * @public
+ */
 module.exports = {
     /**
      * Sets up execution environment for standard APDU command and pushes
