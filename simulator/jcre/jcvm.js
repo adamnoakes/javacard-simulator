@@ -153,6 +153,8 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
     var v, w, v1, v2, v1w1, v1w2, v2w1, v2w2, val, val1, val2, vres, sa;
     var res, lc, branch;
     var info, objref, retval;
+    var ref, clsno, offset, dis;
+    var j, k, index;
 
     switch (opcodes[i]) {
         case mnemonics.nop: //0x0
@@ -633,10 +635,10 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             else { operandStack.push(0); }
             i++; break;
         case mnemonics.ifeq: //0x60
-            i += (operandStack.pop() == 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
+            i += (operandStack.pop() === 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
             break;
         case mnemonics.ifne: //0x61
-            i += (operandStack.pop() != 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
+            i += (operandStack.pop() !== 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
             break;
         case mnemonics.iflt: //0x62 //iflt, branch
             i += (operandStack.pop() < 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
@@ -896,28 +898,27 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
         case mnemonics.new_v: //0x8F
 
             //new, ind1, ind2
-            var ref = heap.length;
+            ref = heap.length;
 
             var done = false;
             info = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
             //var hv = "";
 
             while (!done) {
-
                 if (info[0] < 128) {
                     //get class
-                    var offset = (info[0] << 8) + info[1];
-                    var clsno;
-                    for (var j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
+                    offset = (info[0] << 8) + info[1];
+                    
+                    for (j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
                         if (capFile.COMPONENT_Class.interface_info[j].start == offset) {
                             //allocate space on the heap
                             clsno = j;
-                            var dis = capFile.COMPONENT_Class.interface_info[j].declared_instance_size;
+                            dis = capFile.COMPONENT_Class.interface_info[j].declared_instance_size;
                             //hv += ","+offset;
                             eeprom.pushToHeap(smartcard, offset);
 
                             //for (var k = 0; k < dis; k++) { hv += ",0"; }
-                            for (var k = 0; k < dis; k++) { eeprom.pushToHeap(smartcard, 0); }
+                            for (k = 0; k < dis; k++) { eeprom.pushToHeap(smartcard, 0); }
 
                             info[0] = capFile.COMPONENT_Class.interface_info[j].super_class_ref1;
                             info[1] = capFile.COMPONENT_Class.interface_info[j].super_class_ref2;
@@ -927,7 +928,7 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                     }
 
                 } else {
-                    var clsno = ((info[0] - 128) << 8) + info[1];
+                    clsno = ((info[0] - 128) << 8) + info[1];
                     //hv += ",A"+clsno+","+objectheap.length;
                     eeprom.pushToHeap(smartcard, 160+clsno);
                     eeprom.pushToHeap(smartcard, smartcard.EEPROM.objectheap.length);
@@ -948,13 +949,13 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             //newarray, atype
             var count = operandStack.pop();
             //var atype = opcodes[i + 1];
-            var ref = heap.length;
+            ref = heap.length;
             if (count < 0) { executeBytecode.exception_handler(mnemonics.jlang,6,"");}
 
             //allocate space on heap
            // var heapspace = [];
             eeprom.pushToHeap(smartcard, count);
-            for (var j = 0; j < count; j++) {
+            for (j = 0; j < count; j++) {
                eeprom.pushToHeap(smartcard, 0);
             }
             //newHeap(hv);
@@ -965,14 +966,14 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             i += 2;
             break;
         case mnemonics.anewarray: //0x91
-            var index = (opcodes[i + 1] << 8) + opcodes[i + 2];
+            index = (opcodes[i + 1] << 8) + opcodes[i + 2];
             info = constantPool[index].info.slice(0);
-            var count = utilities.shortToValue(operandStack().pop());
+            count = utilities.shortToValue(operandStack().pop());
             if (count < 0) { executeBytecode.exception_handler(mnemonics.jlang,6,""); }
-            var dis = 0;
+            dis = 0;
             //var ref = heap.length;
 
-            var done = false;
+            done = false;
             info = constantPool[(opcodes[i + 1] << 8) + opcodes[i + 2]].info.slice(0);
             var hv = "";
             var tv = [];
@@ -981,16 +982,16 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
 
                 if (info[0] < 128) {
                     //get class
-                    var offset = (info[0] << 8) + info[1];
-                    var clsno;
-                    for (var j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
+                    offset = (info[0] << 8) + info[1];
+                    
+                    for (j = 0; j < capFile.COMPONENT_Class.i_count; j++) {
                         if (capFile.COMPONENT_Class.interface_info[j].start == offset) {
                             //allocate space on the heap
                             clsno = j;
-                            var dis = capFile.COMPONENT_Class.interface_info[j].declared_instance_size;
+                            dis = capFile.COMPONENT_Class.interface_info[j].declared_instance_size;
                             tv.push(offset);
 
-                            for (var k = 0; k < dis; k++) { tv.push(0); }
+                            for (k = 0; k < dis; k++) { tv.push(0); }
 
                             info[0] = capFile.COMPONENT_Class.interface_info[j].super_class_ref1;
                             info[1] = capFile.COMPONENT_Class.interface_info[j].super_class_ref2;
@@ -1000,7 +1001,7 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                     }
 
                 } else {
-                    var clsno = ((info[0] - 128) << 8) + info[1];
+                    clsno = ((info[0] - 128) << 8) + info[1];
                     //tv += ",A" + clsno + "," + objectheap.length;
                     tv.push(160+clsno);
                     tv.push(smartcard.EEPROM.objectheap.length);
@@ -1011,18 +1012,18 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
                 }
             }
 
-            var ref = heap.length;
+            ref = heap.length;
 
             //var hv = "," + count;
             eeprom.pushToHeap(smartcard, count);
             var ival = 0;
-            for (var j = 0; j < count; j++) {
+            for (j = 0; j < count; j++) {
                 ival = ref + dis * (j + 1) + 1;
                 eeprom.pushToHeap(smartcard, ival);
                 //hv += "," + ival;
             }
 
-            for (var j = 0; j < count; j++) {
+            for (j = 0; j < count; j++) {
                 //hv += ","+ dis;
                 //hv += tv;
                 eeprom.pushToHeap(smartcard, tv);
@@ -1061,13 +1062,11 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
         //    i += 4;
         //    break;
         case mnemonics.sinc_w: //0x96
-            var index = opcodes[i + 1];
-            var byte = (opcodes[i + 2] << 8) + opcodes[i + 3];
-            localVariables[index] += byte;
+            localVariables[opcodes[i + 1]] += (opcodes[i + 2] << 8) + opcodes[i + 3];
             i += 4;
             break;
         case mnemonics.iinc_w: //0x97
-            var index = opcodes[i + 1];
+            index = opcodes[i + 1];
             var byte = (opcodes[i + 2] << 8) + opcodes[i + 3];
             var inc = utilities.convertIntegerToWords(localVariables[index] * mnemonics.short_s + localVariables[index + 1] + byte);
             localVariables[index] = inc[0];
