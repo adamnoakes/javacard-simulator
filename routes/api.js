@@ -28,7 +28,6 @@ module.exports = function () {
 
     /* GET smartcards -> Return available smart cards. */
 	router.get('/smartcards', function(req, res){
-		console.log(req.query["name"]);
 		if(!req.session.smartcards){
 			req.session.smartcards = {};
 		}
