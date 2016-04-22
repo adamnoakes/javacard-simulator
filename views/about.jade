@@ -1,14 +1,18 @@
 extends layout
 block content
+  style.
+    body {
+      overflow: scroll;
+    }
   .container
     .row
-      .col-sm-9
+      .col-md-8.col-md-push-2
         h1.page-header About
         h3 An Open Platform For the Simulation of Java Card Applets
         p.
-          Software development for smart cards is a specialized and costly activity partly because of the restrictive, closed-source models imposed by the chip and operating system manufacturers. Currently, there are only a handful of tools available to test smart card applications, with the official Java Card Platform Simulator (cref) being restricted to Microsoft Windows-based operating systems [1]. The main goal of this project is to produce an open platform that allows the users to simulate the execution of commands sent to smart cards, using the Java Card platform, and hence develop and test smart card apps. In addition, a secondary goal is to provide a teaching environment that can assist in  the understanding of the Java Card platform. <br/><br/>
+          Software development for smart cards is a specialized and costly activity partly because of the restrictive, closed-source models imposed by the chip and operating system manufacturers. Currently, there are only a handful of tools available to test smart card applications, with the official Java Card Platform Simulator (cref) being restricted to Microsoft Windows-based operating systems. The main goal of this project is to produce an open platform that allows the users to simulate the execution of commands sent to smart cards, using the Java Card platform, and hence develop and test smart card apps. In addition, a secondary goal is to provide a teaching environment that can assist in  the understanding of the Java Card platform. <br/><br/>
 
-          This project presents an open system  which can accurately simulate smart card applications that conform to the Java Card platform specification. The current project extends the work reported in  the MSc dissertation “Simulation of the Java Card Platform” submitted Robin Williams in 2014 [2]. The current project involves a major refactoring of the previous C# and JavaScript-based Java Card simulator (which was developed for the M.Sc project work) to run in a server-based environment using a RESTful API as a means of communicating with virtual smart card objects. The server environment has been written in JavaScript, utilising the Node.js server side framework, a framework that has generated significant interest and adoption since it was first released in 2009.<br/><br/>
+          This project presents an open system  which can accurately simulate smart card applications that conform to the Java Card platform specification. The current project extends the work reported in  the MSc dissertation “Simulation of the Java Card Platform” submitted Robin Williams in 2014. The current project involves a major refactoring of the previous C# and JavaScript-based Java Card simulator (which was developed for the M.Sc project work) to run in a server-based environment using a RESTful API as a means of communicating with virtual smart card objects. The server environment has been written in JavaScript, utilising the Node.js server side framework, a framework that has generated significant interest and adoption since it was first released in 2009.<br/><br/>
 
           Furthermore, the current project has been extended to provide a significant extension to the original simulator’s capability by supporting the Java Card packages necessary for cryptographic functions (javacard.security and javacardx.crypto), thus enabling the simulator to be used to test applets that have been designed for security purposes. 
   .container
@@ -17,3 +21,4 @@ block content
       p 
         a(href='http://www.adamnoakes.co.uk') Adam Noakes
         |  - University of Southampton 2016
+

@@ -2,33 +2,37 @@ extends layout
 block content
   .jumbotron
     .container
-     h1 Java Card Online Simulator
-     p
-       | An Open Platform for the Simulation of Java Card Applets.
-       br
-       | A BSc Disertation Project by Adam Noakes.
-     p 
-       a.btn.btn-primary.btn-lg(href='/simulator') Simulator »
+      .col-md-7
+       h1 Java Card Online Simulator
+       p
+         | An Open Platform for the Simulation of Java Card Applets.
+         br
+         | A BSc Disertation Project by Adam Noakes.
+       p 
+         a.btn.btn-primary.btn-lg(href='/simulator') Simulator »
+      .col-md-5.hidden-sm.hidden-xs
+        .row
+          img.center-block.img-responsive(src= "/images/coverphoto.png")
   .container
     .row
       .col-md-4
+        h2 Java Card Platform
+        p
+          | Java Card technology was developed by Sun Microsystems (now a subsidy of Oracle) to enable applications written in a subset of the Java programming language, to be run in a secure environment on devices such as smart cards.
+        p
+          a.btn.btn-default(href='http://www.oracle.com/technetwork/java/embedded/javacard/overview/index.html', role='button') Java Card »
+      .col-md-4  
         h2 Node.JS
         p
-          | Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
+          | Node.js is a framework for developing fast and scalable server-side web applications, written in the JavaScript programming language. This project uses Node.js to simulate the Java Card Runtime Environment.
         p
           a.btn.btn-default(href='https://nodejs.org/en/', role='button') Node.js »
       .col-md-4
         h2 Open Source
         p
-          | Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui.
+          | This project was prodcued as part of a BSc Dissertation. All of the code generated for this project is provided Open Source and intended to be further developed.
         p
-          a.btn.btn-default(href='https://github.com/adamnoakes/year3project', role='button') View code »
-      .col-md-4
-        h2 Heading
-        p
-          | Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.
-        p
-          a.btn.btn-default(href='#', role='button') View details »
+          a.btn.btn-default(href='https://github.com/adamnoakes/year3project', role='button') View code »        
     hr
     footer
       p University of Southampton 2016 - 
