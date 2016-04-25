@@ -261,10 +261,6 @@ function runStaticMethod(method, param, obj){
  * ADAM'S CODE ENDS HERE
  */
 
-/**
- * ROBIN'S CODE
- */
-
 function getInLengths(apdu){
     var temp = [];
     if(apdu._buffer[ISO7816.get('OFFSET_LC')] === 0){

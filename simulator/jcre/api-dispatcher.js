@@ -22,14 +22,14 @@ var mnemonics = require('../utilities/mnemonics.js');
 
 module.exports = {
 	/**
-	 * Handles all api calls and routes them to the releveant handlers.
+	 * Handles all api calls and routes them to the relevant handlers.
 	 *
 	 * @param  {Array} packageAID     The package AID of the class being referenced.
 	 * @param  {Number} classToken    The class token of the class being referenced.
 	 * @param  {Number} method        The method token.
 	 * @param  {Number} type          The method type token.
 	 * @param  {Array}  param         Parameters popped from operand stack.
-	 * @param  {Object} obj           The object if the method is being caleld on an object.
+	 * @param  {Object} obj           The object if the method is being called on an object.
 	 * @param  {Smartcard} smartcard  The smartcard object required for JCSystem.
 	 * @return 											  Error or the result of called function.
 	 */

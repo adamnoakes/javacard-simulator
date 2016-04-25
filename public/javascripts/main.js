@@ -73,7 +73,8 @@ function sendCommand(input, handler){
             deleteCard(handler,  words[1]);
             break;
         default:
-            var lines = input.split(";");
+            input = input.replace(/; /g, ';')
+            var lines = input.split(';');
             if(lines[lines.length -1] === ''){
               lines.pop();
             }
