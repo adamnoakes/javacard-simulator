@@ -54,7 +54,7 @@ module.exports = {
                 var output = "";
                 var apdu = smartcard.EEPROM.objectheap[0];
                 if (apdu.state >= 3) {
-                    var outputLength = Math.min(apdu.le, apdu._buffer.length);
+                    var outputLength = Math.min(apdu.le, apdu.outGoingLength);
                     for (var k = 0; k < outputLength ; k++) {
                         if(apdu._buffer[k]){
                             output += util.addX(util.addpad(apdu._buffer[k])) + " ";

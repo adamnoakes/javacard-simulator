@@ -17,3 +17,9 @@ npm-debug.log
 .idea/**
 
 .jshintrc
+
+echo
+
+encrpted.txt
+
+hexdump

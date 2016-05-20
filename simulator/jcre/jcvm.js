@@ -104,7 +104,6 @@ module.exports = {
         var currentFrame = 0;
         var frames = [];
         frames[currentFrame] = new this.Frame();
-
         frames[currentFrame].local_vars.push(params[0]);
         frames[currentFrame].local_vars.push(params[1]);
         frames[currentFrame].local_vars.push(params[2]);
@@ -635,10 +634,10 @@ function executeBytecode(smartcard, capFile, i, frames, currentFrame, cb){
             else { operandStack.push(0); }
             i++; break;
         case mnemonics.ifeq: //0x60
-            i += (operandStack.pop() === 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
+            i += (operandStack.pop() == 0  ? utilities.byteToValue(opcodes[i + 1]) : 2);
             break;
         case mnemonics.ifne: //0x61
-            i += (operandStack.pop() !== 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
+            i += (operandStack.pop() != 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
             break;
         case mnemonics.iflt: //0x62 //iflt, branch
             i += (operandStack.pop() < 0 ? utilities.byteToValue(opcodes[i + 1]) : 2);
