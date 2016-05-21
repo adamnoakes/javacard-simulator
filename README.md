@@ -1,7 +1,5 @@
 #An Open Platform for the Simulation of Java Card Applets
 
-##Introduction
-
 This project was produced as part of a BSc Dissertation and was based on a proof of concept MSc Dissertation by Robin Williams.
 
 This project provides an implementation of a Java Card Runtime Enviornment (JCRE) produced using Node.js which is capable of creating virtual smart card devices and sending APDU commands to the smart card devices for execution via a RESTful API. The project also provides a web-based interface for interacting with the JCRE.
@@ -18,7 +16,11 @@ $ npm build
 $ npm start
 ```
 
+Then go to http://localhost:3000 in a web browser.
+
 ## Supported Classes
+
+The list of implemented Java Card API classes...
 
 ## Tests
 
