@@ -10,6 +10,14 @@ A deployment of the platform is available at https://jcsimulator.heroku.com.
 
 ## Installation
 
+```bash
+$ git clone https://github.com/adamnoakes/javacard-simulator.git
+$ cd javacard-simulator
+$ npm install
+$ npm build
+$ npm start
+```
+
 ## Supported Classes
 
 ## Tests
