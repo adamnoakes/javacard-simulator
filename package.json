@@ -19,7 +19,7 @@
     "express-session": "^1.13.0",
     "hashmap": "^2.0.4",
     "jade": "~1.11.0",
-    "mongodb": "^2.1.4",
+    "mongodb": "^3.6.1",
     "morgan": "~1.6.1",
     "node-rsa": "^0.3.2",
     "rimraf": "^2.4.3",
